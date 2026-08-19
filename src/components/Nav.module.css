@@ -66,22 +66,45 @@
 }
 
 .cta {
+  position: relative;
+  isolation: isolate;
   display: inline-flex;
   align-items: center;
   margin-left: 10px;
   padding: 11px 22px;
   border-radius: 999px;
-  background: var(--grad-brand);
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
   color: #fff;
   font-weight: 700;
   letter-spacing: 0.06em;
-  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 0.25s ease;
+  overflow: hidden;
+  transition: border-color 0.3s ease, transform 0.25s cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 0.25s ease;
+}
+
+.cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--grad-brand);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.3, 1);
+  z-index: -1;
+}
+
+.ctaLabel {
+  position: relative;
 }
 
 .cta:hover {
-  color: #fff;
+  border-color: transparent;
   transform: translateY(-2px) scale(1.03);
   box-shadow: 0 8px 20px rgba(216, 34, 78, 0.45);
+}
+
+.cta:hover::before {
+  transform: scaleX(1);
 }
 
 .cta:active {

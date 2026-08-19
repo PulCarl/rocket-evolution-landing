@@ -19,7 +19,7 @@ export default function Nav() {
           </a>
         ))}
         <a href="https://discord.gg/6dbDnF3JCy" className={styles.cta}>
-          Rejoindre le Discord
+          <span className={styles.ctaLabel}>Rejoindre le Discord</span>
         </a>
       </nav>
     </header>
