@@ -1,5 +1,5 @@
 import Reveal from "./Reveal.jsx";
-import { latestVideos } from "../data/content.js";
+import latestVideos from "../data/videos.json";
 import styles from "./Videos.module.css";
 
 export default function Videos() {

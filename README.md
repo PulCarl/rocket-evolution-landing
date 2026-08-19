@@ -60,11 +60,14 @@ Exemple : `Or 3 -> Platine 2 : Le serveur est ce qui m'a fait rester...`
    - `DISCORD_APPROVER_IDS` — les ids Discord des coachs autorisés à approuver (séparés par des virgules)
 3. Le workflow tourne automatiquement ensuite (au plus 3 témoignages affichés, les plus récents approuvés).
 
+## Dernières vidéos (sync automatique depuis YouTube)
+
+Les 3 vignettes de la section "Les dernières vidéos" viennent de [`src/data/videos.json`](./src/data/videos.json), mis à jour automatiquement par [`.github/workflows/sync-videos.yml`](./.github/workflows/sync-videos.yml) (toutes les 6h, ou déclenchable manuellement depuis l'onglet Actions de GitHub). Aucune clé API ni secret requis — il interroge simplement le flux RSS public de la chaîne (`youtube.com/feeds/videos.xml?channel_id=UCBiuzf9xGJXJflCjHWUwqZg`), prend les 3 dernières vidéos et commit le résultat s'il a changé.
+
 ## À faire avant mise en ligne (voir README du handoff design)
 
-- Tant qu'aucun avis Discord n'a été approuvé, les 3 témoignages affichés restent des exemples fictifs (Nyko, Lisa, Team Nova) — voir ci-dessus pour les remplacer.
+- Tant qu'aucun avis Discord n'a été approuvé, les 3 témoignages affichés restent des exemples fictifs (Nyko, Lisa, Max) — voir ci-dessus pour les remplacer.
 - Reconfirmer les chiffres (+1 rang, 50+ replays, 4 500h, 500+ membres, depuis 2026).
-- Brancher l'API YouTube Data v3 (ou un flux RSS côté serveur) sur la chaîne `UCBiuzf9xGJXJflCjHWUwqZg` pour afficher les 3 dernières vidéos dans `Videos.jsx` (actuellement figées au build, voir commentaire dans `content.js`).
 - Confirmer le lien `@Francky_coaching` (pointe actuellement vers le TikTok `@homelubby`).
 - Vérifier les droits d'utilisation de la photo de Coach Francky (watermark visible — probablement une photo de presse/agence).
 - Ajouter mentions légales / politique de confidentialité si la page collecte des données.
