@@ -176,6 +176,22 @@
   animation: reFloat 6s ease-in-out infinite;
 }
 
+@keyframes reFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-4deg);
+  }
+  50% {
+    transform: translateY(-18px) rotate(-4deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logoSvg {
+    animation: none;
+  }
+}
+
 @media (max-width: 780px) {
   .visual {
     display: none;
