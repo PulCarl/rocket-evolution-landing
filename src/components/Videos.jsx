@@ -1,4 +1,5 @@
 import Reveal from "./Reveal.jsx";
+import { latestVideos } from "../data/content.js";
 import styles from "./Videos.module.css";
 
 export default function Videos() {
@@ -14,9 +15,22 @@ export default function Videos() {
           </Reveal>
         </div>
         <div className={styles.grid}>
-          {[1, 2, 3].map((i) => (
-            <Reveal key={i} delay={i * 90} className={styles.thumb}>
-              <span>Miniature YouTube {i}</span>
+          {latestVideos.map((video, i) => (
+            <Reveal
+              key={video.id}
+              delay={i * 90}
+              as="a"
+              href={`https://www.youtube.com/watch?v=${video.id}`}
+              target="_blank"
+              rel="noopener"
+              className={styles.thumb}
+            >
+              <img
+                src={`https://img.youtube.com/vi/${video.id}/maxresdefault.jpg`}
+                alt={video.title}
+                loading="lazy"
+                className={styles.thumbImg}
+              />
             </Reveal>
           ))}
         </div>

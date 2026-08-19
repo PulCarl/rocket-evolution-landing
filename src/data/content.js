@@ -113,6 +113,16 @@ export const resultsStats = [
   },
 ];
 
+// Récupérées depuis le flux RSS de la chaîne (https://www.youtube.com/feeds/videos.xml?channel_id=UCBiuzf9xGJXJflCjHWUwqZg)
+// le 2026-08-19. Liste figée au build : à remettre à jour manuellement, ou brancher
+// l'API YouTube Data v3 / un flux RSS mis en cache côté serveur pour un affichage
+// toujours à jour (voir README).
+export const latestVideos = [
+  { id: "m4YkV8f0Adw", title: "Bienvenue sur Rocket Evolution" },
+  { id: "Fbs9WzSJOFk", title: "Quel niveau aurait les PRO de 2021 en 2026 ?" },
+  { id: "OZXZcYSe34U", title: "Je coach un joueur clavier/souris en 2026" },
+];
+
 export const testimonials = [
   {
     quote:
