@@ -8,7 +8,7 @@ export default function Hero() {
       <div className={styles.haloPink} aria-hidden="true" />
       <div className={styles.haloOrange} aria-hidden="true" />
       <div className={styles.grid}>
-        <div>
+        <div className={styles.textCol}>
           <Reveal className={styles.badge}>
             <span className={styles.badgeDot} />
             Coaching Rocket League · France

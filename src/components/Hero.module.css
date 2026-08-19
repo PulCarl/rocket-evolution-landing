@@ -59,22 +59,20 @@
   box-shadow: 0 0 14px rgba(254, 152, 12, 0.9);
 }
 
+.textCol {
+  container-type: inline-size;
+}
+
 .title {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: clamp(44px, 6vw, 84px);
+  font-size: clamp(30px, 10cqi, 84px);
   line-height: 0.94;
   letter-spacing: -0.035em;
   margin: 0 0 24px;
   text-transform: uppercase;
   text-wrap: balance;
   overflow-wrap: break-word;
-}
-
-@media (max-width: 420px) {
-  .title {
-    font-size: clamp(28px, 9vw, 40px);
-  }
 }
 
 .gradientText {
