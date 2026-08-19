@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "./CustomCursor.module.css";
 
 const INTERACTIVE_SELECTOR = 'a, button, [role="button"], input, textarea, select, label';
@@ -6,13 +6,23 @@ const INTERACTIVE_SELECTOR = 'a, button, [role="button"], input, textarea, selec
 export default function CustomCursor() {
   const dotRef = useRef(null);
   const ringRef = useRef(null);
+  const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
     const canHover = window.matchMedia("(pointer: fine)").matches;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!canHover || reducedMotion) return undefined;
 
+    setEnabled(true);
     document.body.classList.add(styles.cursorEnabled);
+
+    return () => {
+      document.body.classList.remove(styles.cursorEnabled);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) return undefined;
 
     const dot = dotRef.current;
     const ring = ringRef.current;
@@ -56,7 +66,7 @@ export default function CustomCursor() {
     raf = requestAnimationFrame(tick);
 
     return () => {
-      document.body.classList.remove(styles.cursorEnabled, styles.cursorHidden);
+      document.body.classList.remove(styles.cursorHidden);
       window.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseover", onOver);
       document.removeEventListener("mouseout", onOut);
@@ -66,7 +76,9 @@ export default function CustomCursor() {
       document.removeEventListener("mouseenter", onEnterWindow);
       cancelAnimationFrame(raf);
     };
-  }, []);
+  }, [enabled]);
+
+  if (!enabled) return null;
 
   return (
     <>
