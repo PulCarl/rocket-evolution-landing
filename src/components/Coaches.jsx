@@ -1,6 +1,10 @@
 import Reveal from "./Reveal.jsx";
 import { coaches } from "../data/content.js";
+import hidariPhoto from "../assets/images/coaches/hidari.jpg";
+import franckyPhoto from "../assets/images/coaches/francky.jpg";
 import styles from "./Coaches.module.css";
+
+const photos = { hidari: hidariPhoto, francky: franckyPhoto };
 
 export default function Coaches() {
   return (
@@ -20,8 +24,13 @@ export default function Coaches() {
               className={styles.card}
               style={{ background: coach.gradient }}
             >
-              <div className={styles.photo} aria-hidden="true">
-                <span>Photo / avatar {coach.name}</span>
+              <div className={styles.photo}>
+                <img
+                  src={photos[coach.id]}
+                  alt={coach.name}
+                  className={styles.photoImg}
+                  style={{ objectPosition: coach.photoPosition }}
+                />
               </div>
               <div className={styles.body}>
                 <h3 className={styles.name}>{coach.name}</h3>

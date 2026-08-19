@@ -49,20 +49,16 @@
 .photo {
   position: relative;
   height: 260px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background: rgba(255, 255, 255, 0.04);
   border-bottom: 1px solid var(--border-on-dark);
+  overflow: hidden;
 }
 
-.photo span {
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.35);
-  padding: 0 20px;
-  text-align: center;
+.photoImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .body {

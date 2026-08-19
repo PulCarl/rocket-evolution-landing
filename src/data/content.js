@@ -64,6 +64,7 @@ export const coaches = [
       },
     ],
     link: { label: "@Coach_Hidari →", href: "https://x.com/Coach_Hidari" },
+    photoPosition: "center 60%",
   },
   {
     id: "francky",
