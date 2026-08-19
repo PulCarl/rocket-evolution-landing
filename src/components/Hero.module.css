@@ -68,6 +68,13 @@
   margin: 0 0 24px;
   text-transform: uppercase;
   text-wrap: balance;
+  overflow-wrap: break-word;
+}
+
+@media (max-width: 420px) {
+  .title {
+    font-size: clamp(28px, 9vw, 40px);
+  }
 }
 
 .gradientText {
