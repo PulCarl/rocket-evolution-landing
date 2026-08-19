@@ -16,5 +16,11 @@
     "author": "Team Nova — structure amateur",
     "barColor": "var(--pink)",
     "discordMessageId": null
+  },
+  {
+    "quote": "« Passer de Champion à GC1, c'est surtout du mental et de la lecture des rotations à haute vitesse. Les sessions m'ont fait bosser exactement ce qui manquait. »",
+    "author": "Max — Champion → Grand Champion 1",
+    "barColor": "var(--orange)",
+    "discordMessageId": null
   }
 ]
