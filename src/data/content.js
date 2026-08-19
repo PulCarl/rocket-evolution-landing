@@ -7,7 +7,7 @@
 export const socialLinks = [
   { id: "discord", label: "Discord", href: "https://discord.gg/6dbDnF3JCy", hoverBg: "#FE980C" },
   { id: "youtube", label: "YouTube", href: "https://www.youtube.com/@RocketEvoRL", hoverBg: "#F4791C" },
-  { id: "tiktok", label: "TikTok", href: "https://www.tiktok.com/@homelubby", hoverBg: "#D8224E" },
+  { id: "tiktok", label: "TikTok", href: "https://www.tiktok.com/@rocketevolutionrl", hoverBg: "#D8224E" },
   { id: "x", label: "X", href: "https://x.com/Coach_Hidari", hoverBg: "#FFFFFF" },
 ];
 
