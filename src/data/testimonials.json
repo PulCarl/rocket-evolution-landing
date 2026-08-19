@@ -12,15 +12,9 @@
     "discordMessageId": null
   },
   {
-    "quote": "« On est venus à trois en équipe. On a bossé les kickoffs et la couverture pendant un mois, on a gagné notre premier tournoi amateur. »",
-    "author": "Team Nova — structure amateur",
-    "barColor": "var(--pink)",
-    "discordMessageId": null
-  },
-  {
     "quote": "« Passer de Champion à GC1, c'est surtout du mental et de la lecture des rotations à haute vitesse. Les sessions m'ont fait bosser exactement ce qui manquait. »",
     "author": "Max — Champion → Grand Champion 1",
-    "barColor": "var(--orange)",
+    "barColor": "var(--pink)",
     "discordMessageId": null
   }
 ]
