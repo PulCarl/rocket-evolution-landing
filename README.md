@@ -40,13 +40,33 @@ vercel        # preview
 vercel --prod # production
 ```
 
+## Témoignages (sync automatique depuis Discord)
+
+Les avis affichés dans la section Résultats viennent de [`src/data/testimonials.json`](./src/data/testimonials.json), mis à jour automatiquement par [`.github/workflows/sync-testimonials.yml`](./.github/workflows/sync-testimonials.yml) (toutes les 30 min, ou déclenchable manuellement depuis l'onglet Actions de GitHub).
+
+**Flux** : un membre poste son avis dans un salon Discord dédié → un coach réagit avec ✅ sur les messages à publier → le workflow les récupère, les ajoute au JSON, commit → Vercel redéploie automatiquement.
+
+**Format attendu du message Discord** (sinon il est ignoré) :
+```
+Rang avant -> Rang après : le texte de l'avis
+```
+Exemple : `Or 3 -> Platine 2 : Le serveur est ce qui m'a fait rester...`
+
+**Mise en place requise** (une seule fois) :
+1. Créer une application + bot sur [discord.com/developers/applications](https://discord.com/developers/applications), l'inviter sur le serveur avec la permission *Read Message History* sur le salon des avis.
+2. Dans les Settings du repo GitHub → *Secrets and variables → Actions*, ajouter :
+   - `DISCORD_BOT_TOKEN` — le token du bot
+   - `DISCORD_CHANNEL_ID` — l'id du salon où sont postés les avis
+   - `DISCORD_APPROVER_IDS` — les ids Discord des coachs autorisés à approuver (séparés par des virgules)
+3. Le workflow tourne automatiquement ensuite (au plus 3 témoignages affichés, les plus récents approuvés).
+
 ## À faire avant mise en ligne (voir README du handoff design)
 
-- Remplacer les 3 témoignages fictifs (Nyko, Lisa, Team Nova) par de vrais retours — [`src/data/content.js`](./src/data/content.js).
+- Tant qu'aucun avis Discord n'a été approuvé, les 3 témoignages affichés restent des exemples fictifs (Nyko, Lisa, Team Nova) — voir ci-dessus pour les remplacer.
 - Reconfirmer les chiffres (+1 rang, 50+ replays, 4 500h, 500+ membres, depuis 2026).
-- Fournir les photos des coachs (emplacements actuellement en placeholder dans `Coaches.jsx`).
-- Brancher l'API YouTube Data v3 (ou un flux RSS côté serveur) sur la chaîne `UCBiuzf9xGJXJflCjHWUwqZg` pour afficher les 3 dernières vidéos dans `Videos.jsx` (actuellement en placeholder).
+- Brancher l'API YouTube Data v3 (ou un flux RSS côté serveur) sur la chaîne `UCBiuzf9xGJXJflCjHWUwqZg` pour afficher les 3 dernières vidéos dans `Videos.jsx` (actuellement figées au build, voir commentaire dans `content.js`).
 - Confirmer le lien `@Francky_coaching` (pointe actuellement vers le TikTok `@homelubby`).
+- Vérifier les droits d'utilisation de la photo de Coach Francky (watermark visible — probablement une photo de presse/agence).
 - Ajouter mentions légales / politique de confidentialité si la page collecte des données.
 
 ## Structure

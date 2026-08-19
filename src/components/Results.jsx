@@ -1,5 +1,6 @@
 import Reveal from "./Reveal.jsx";
-import { resultsStats, testimonials } from "../data/content.js";
+import { resultsStats } from "../data/content.js";
+import testimonials from "../data/testimonials.json";
 import styles from "./Results.module.css";
 
 export default function Results() {

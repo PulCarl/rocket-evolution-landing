@@ -1,8 +1,9 @@
 // Contenu éditorial de la landing page.
 // ⚠️ Éléments à valider avec le client avant mise en ligne — voir README du handoff :
-// - les 3 témoignages ci-dessous sont des exemples fictifs (Nyko, Lisa, Team Nova)
 // - les chiffres (+1 rang, 50+ replays, 4 500h, 500+ membres, depuis 2026) à reconfirmer
 // - le lien @Francky_coaching pointe vers le TikTok @homelubby, à confirmer
+// - les témoignages sont dans testimonials.json (placeholders tant qu'aucun avis
+//   Discord n'a été approuvé — voir sync-testimonials.mjs)
 
 export const socialLinks = [
   { id: "discord", label: "Discord", href: "https://discord.gg/6dbDnF3JCy", hoverBg: "#FE980C" },
@@ -124,23 +125,7 @@ export const latestVideos = [
   { id: "OZXZcYSe34U", title: "Je coach un joueur clavier/souris en 2026" },
 ];
 
-export const testimonials = [
-  {
-    quote:
-      "« J'étais bloqué Diamant 1 depuis un an. Deux reviews de replay et j'ai compris que le problème c'était mes rotations, pas mes airs. »",
-    author: "Nyko — Diamant 1 → Champion 1",
-    barColor: "var(--orange)",
-  },
-  {
-    quote:
-      "« Le serveur est ce qui m'a fait rester. Toujours quelqu'un de mon niveau pour du 2v2, et les coachs répondent vraiment. »",
-    author: "Lisa — Or 3 → Platine 2",
-    barColor: "var(--orange-2)",
-  },
-  {
-    quote:
-      "« On est venus à trois en équipe. On a bossé les kickoffs et la couverture pendant un mois, on a gagné notre premier tournoi amateur. »",
-    author: "Team Nova — structure amateur",
-    barColor: "var(--pink)",
-  },
-];
+// Les témoignages vivent dans testimonials.json (pas ici) : ce fichier est mis à
+// jour automatiquement par .github/workflows/sync-testimonials.yml, qui récupère
+// les avis approuvés (réaction ✅ d'un coach) depuis un salon Discord dédié.
+// Voir scripts/sync-testimonials.mjs pour la logique et le format attendu.

@@ -1,0 +1,38 @@
+name: Sync testimonials from Discord
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Fetch approved testimonials from Discord
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID }}
+          DISCORD_APPROVER_IDS: ${{ secrets.DISCORD_APPROVER_IDS }}
+        run: node scripts/sync-testimonials.mjs
+
+      - name: Commit changes if any
+        run: |
+          if git diff --quiet -- src/data/testimonials.json; then
+            echo "No changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/data/testimonials.json
+          git commit -m "Sync testimonials from Discord"
+          git push
