@@ -1,3 +1,4 @@
+import CustomCursor from "./components/CustomCursor.jsx";
 import SocialRail from "./components/SocialRail.jsx";
 import Nav from "./components/Nav.jsx";
 import Hero from "./components/Hero.jsx";
@@ -14,6 +15,7 @@ import styles from "./App.module.css";
 export default function App() {
   return (
     <div className={styles.page}>
+      <CustomCursor />
       <SocialRail />
       <Nav />
       <main>
