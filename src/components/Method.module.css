@@ -96,9 +96,9 @@
 
 .decor {
   position: absolute;
-  left: -120px;
-  bottom: -90px;
-  width: 320px;
+  left: -220px;
+  bottom: -230px;
+  width: 620px;
   height: auto;
   transform: rotate(-10deg);
   filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.45));
