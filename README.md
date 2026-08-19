@@ -68,7 +68,6 @@ Les 3 vignettes de la section "Les dernières vidéos" viennent de [`src/data/vi
 
 - Tant qu'aucun avis Discord n'a été approuvé, les 3 témoignages affichés restent des exemples fictifs (Nyko, Lisa, Max) — voir ci-dessus pour les remplacer.
 - Reconfirmer les chiffres (+1 rang, 50+ replays, 4 500h, 500+ membres, depuis 2026).
-- Confirmer le lien `@Francky_coaching` (pointe actuellement vers le TikTok `@homelubby`).
 - Vérifier les droits d'utilisation de la photo de Coach Francky (watermark visible — probablement une photo de presse/agence).
 - Ajouter mentions légales / politique de confidentialité si la page collecte des données.
 

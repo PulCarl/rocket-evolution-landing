@@ -1,7 +1,6 @@
 // Contenu éditorial de la landing page.
 // ⚠️ Éléments à valider avec le client avant mise en ligne — voir README du handoff :
 // - les chiffres (+1 rang, 50+ replays, 4 500h, 500+ membres, depuis 2026) à reconfirmer
-// - le lien @Francky_coaching pointe vers le TikTok @homelubby, à confirmer
 // - les témoignages sont dans testimonials.json (placeholders tant qu'aucun avis
 //   Discord n'a été approuvé — voir sync-testimonials.mjs)
 
@@ -83,7 +82,7 @@ export const coaches = [
         items: ["Plus de 2 500 heures de coaching à son actif."],
       },
     ],
-    link: { label: "@Francky_coaching →", href: "https://www.tiktok.com/@homelubby" },
+    link: { label: "@Francky_coaching →", href: "https://www.youtube.com/@Francky_coaching" },
   },
 ];
 
