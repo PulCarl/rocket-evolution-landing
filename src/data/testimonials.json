@@ -1,19 +1,19 @@
 [
   {
-    "quote": "« J'étais bloqué Diamant 1 depuis un an. Deux reviews de replay et j'ai compris que le problème c'était mes rotations, pas mes airs. »",
-    "author": "Nyko — Diamant 1 → Champion 1",
+    "quote": "« Toujours aussi bien ! Grâce à son coaching précédent, je suis monté de C2 Mid à C3 High. Super bonne explication, je garantis le rank up avec ce coach ! »",
+    "author": "すんらく — coaché par Francky, C2 Mid → C3 High",
     "barColor": "var(--orange)",
     "discordMessageId": null
   },
   {
-    "quote": "« Le serveur est ce qui m'a fait rester. Toujours quelqu'un de mon niveau pour du 2v2, et les coachs répondent vraiment. »",
-    "author": "Lisa — Or 3 → Platine 2",
+    "quote": "« Un très bon coach qui explique bien et précisément, il m'a permis d'en apprendre davantage sur la rotation et la vitesse de jeu. »",
+    "author": "Mclovin — coaché par Hidari",
     "barColor": "var(--orange-2)",
     "discordMessageId": null
   },
   {
-    "quote": "« Passer de Champion à GC1, c'est surtout du mental et de la lecture des rotations à haute vitesse. Les sessions m'ont fait bosser exactement ce qui manquait. »",
-    "author": "Max — Champion → Grand Champion 1",
+    "quote": "« Très bon coaching. Il analyse nos erreurs et nous donne de très bons conseils pour progresser vite. Je recommande, merci à lui. »",
+    "author": "Rameny — coaché par Francky",
     "barColor": "var(--pink)",
     "discordMessageId": null
   }

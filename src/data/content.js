@@ -1,8 +1,8 @@
 // Contenu éditorial de la landing page.
 // ⚠️ Éléments à valider avec le client avant mise en ligne — voir README du handoff :
 // - les chiffres (+1 rang, 50+ replays, 4 500h, 500+ membres, depuis 2026) à reconfirmer
-// - les témoignages sont dans testimonials.json (placeholders tant qu'aucun avis
-//   Discord n'a été approuvé — voir sync-testimonials.mjs)
+// - les témoignages sont dans testimonials.json — 3 vrais avis pris manuellement
+//   depuis Discord (sync automatique en pause pour l'instant, voir sync-testimonials.mjs)
 
 export const socialLinks = [
   { id: "discord", label: "Discord", href: "https://discord.gg/6dbDnF3JCy", hoverBg: "#FE980C" },
