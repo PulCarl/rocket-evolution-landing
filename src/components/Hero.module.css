@@ -1,0 +1,183 @@
+.hero {
+  position: relative;
+  padding: 150px 20px 80px;
+  overflow: hidden;
+}
+
+.haloPink {
+  position: absolute;
+  top: -220px;
+  right: -180px;
+  width: 620px;
+  height: 620px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(216, 34, 78, 0.38), transparent 62%);
+  pointer-events: none;
+}
+
+.haloOrange {
+  position: absolute;
+  bottom: -260px;
+  left: -200px;
+  width: 640px;
+  height: 640px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(254, 152, 12, 0.28), transparent 62%);
+  pointer-events: none;
+}
+
+.grid {
+  position: relative;
+  max-width: var(--container);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 48px;
+  align-items: center;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  border: 1px solid rgba(254, 152, 12, 0.5);
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 28px;
+}
+
+.badgeDot {
+  width: 9px;
+  height: 9px;
+  transform: rotate(45deg);
+  background: linear-gradient(135deg, #fe980c, #d8224e);
+  display: block;
+  box-shadow: 0 0 14px rgba(254, 152, 12, 0.9);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(44px, 6vw, 84px);
+  line-height: 0.94;
+  letter-spacing: -0.035em;
+  margin: 0 0 24px;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.gradientText {
+  background: var(--grad-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.slogan {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(18px, 2vw, 24px);
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 0 22px;
+}
+
+.paragraph {
+  max-width: 520px;
+  margin: 0 0 36px;
+  font-size: 16px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.66);
+  text-wrap: pretty;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 40px;
+}
+
+.primaryButton,
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 30px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  transition: transform 0.2s ease, opacity 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+.primaryButton {
+  background: var(--grad-brand);
+  color: #fff;
+}
+
+.primaryButton:hover {
+  color: #fff;
+  opacity: 0.9;
+  transform: translateY(-2px) scale(1.02);
+}
+
+.secondaryButton {
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  color: #fff;
+}
+
+.secondaryButton:hover {
+  color: var(--orange);
+  border-color: var(--orange);
+  transform: translateY(-2px) scale(1.02);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  max-width: 520px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 24px;
+}
+
+.statValue {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 32px;
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 6px;
+}
+
+.visual {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.logoSvg {
+  width: min(360px, 80%);
+  height: auto;
+  filter: drop-shadow(0 30px 60px rgba(216, 34, 78, 0.35));
+  animation: reFloat 6s ease-in-out infinite;
+}
+
+@media (max-width: 780px) {
+  .visual {
+    display: none;
+  }
+}

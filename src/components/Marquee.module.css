@@ -1,0 +1,25 @@
+.wrapper {
+  overflow: hidden;
+  background: linear-gradient(90deg, #fe980c, #f4791c 50%, #d8224e);
+  padding: 14px 0;
+}
+
+.track {
+  display: flex;
+  width: max-content;
+  animation: reMarquee 26s linear infinite;
+  will-change: transform;
+}
+
+.group {
+  display: flex;
+  gap: 44px;
+  padding-right: 44px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fff;
+  white-space: nowrap;
+}

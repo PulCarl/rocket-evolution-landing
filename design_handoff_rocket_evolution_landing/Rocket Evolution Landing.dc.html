@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,600;0,700;0,800;1,800&amp;family=Azeret+Mono:wght@300;400;500;700&amp;display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<style>
+  html { scroll-behavior:smooth; }
+  html, body { margin:0; padding:0; background:#1D1D1D; }
+  a, image-slot, [data-motion] { transition: color .25s ease, background-color .25s ease, border-color .25s ease, opacity .3s ease, transform .45s cubic-bezier(.2,.7,.3,1), box-shadow .35s ease; }
+  * { box-sizing:border-box; }
+  a { color:#FE980C; text-decoration:none; }
+  a:hover { color:#D8224E; }
+  ::selection { background:#D8224E; color:#fff; }
+  @keyframes reMarquee { from { transform:translateX(0); } to { transform:translateX(-50%); } }
+  @keyframes reFloat { 0%,100% { transform:translateY(0) rotate(-4deg); } 50% { transform:translateY(-18px) rotate(-4deg); } }
+</style>
+</helmet>
+<div style="background: #1D1D1D; color: #fff; font-family: 'Azeret Mono',monospace; overflow-x: hidden; position: relative">
+
+  <div style="position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:60;display:flex;flex-direction:column;gap:10px;padding:12px 8px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(12px)">
+    <a href="https://discord.gg/6dbDnF3JCy" target="_blank" rel="noopener" title="Discord" style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;color:rgba(255,255,255,.8)" style-hover="color:#1D1D1D;background:#FE980C">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.32 4.57A19.8 19.8 0 0 0 15.4 3.1a13.6 13.6 0 0 0-.63 1.28 18.3 18.3 0 0 0-5.53 0A13 13 0 0 0 8.6 3.1a19.7 19.7 0 0 0-4.93 1.47C.54 9.2-.32 13.7.11 18.15a19.9 19.9 0 0 0 6.03 3.03c.49-.66.92-1.36 1.29-2.09-.71-.26-1.39-.59-2.03-.97.17-.13.34-.26.5-.4a14.2 14.2 0 0 0 12.2 0c.16.14.33.28.5.4-.64.39-1.32.71-2.03.98.37.73.8 1.43 1.29 2.09a19.8 19.8 0 0 0 6.03-3.03c.5-5.16-.86-9.62-3.57-13.58ZM8.02 15.43c-1.18 0-2.16-1.08-2.16-2.41 0-1.33.95-2.42 2.16-2.42 1.22 0 2.19 1.09 2.17 2.42 0 1.33-.96 2.41-2.17 2.41Zm7.96 0c-1.19 0-2.16-1.08-2.16-2.41 0-1.33.95-2.42 2.16-2.42 1.22 0 2.19 1.09 2.17 2.42 0 1.33-.95 2.41-2.17 2.41Z"></path></svg>
+    </a>
+    <a href="https://www.youtube.com/@RocketEvoRL" target="_blank" rel="noopener" title="YouTube" style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;color:rgba(255,255,255,.8)" style-hover="color:#1D1D1D;background:#F4791C">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.12-2.12C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.38.53A3 3 0 0 0 .5 6.2 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.8 3 3 0 0 0 2.12 2.12c1.88.53 9.38.53 9.38.53s7.5 0 9.38-.53a3 3 0 0 0 2.12-2.12A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.8ZM9.6 15.57V8.43L15.82 12 9.6 15.57Z"></path></svg>
+    </a>
+    <a href="https://www.tiktok.com/@homelubby" target="_blank" rel="noopener" title="TikTok" style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;color:rgba(255,255,255,.8)" style-hover="color:#1D1D1D;background:#D8224E">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.6 5.82A5.34 5.34 0 0 1 15.4 2h-3.3v13.1a3.06 3.06 0 0 1-3.06 3.02 3.05 3.05 0 1 1 .9-5.97V8.8a6.42 6.42 0 0 0-.9-.06A6.35 6.35 0 1 0 15.4 15.1V8.7a8.6 8.6 0 0 0 5.02 1.6V7.03a5.3 5.3 0 0 1-3.82-1.21Z"></path></svg>
+    </a>
+    <a href="https://x.com/Coach_Hidari" target="_blank" rel="noopener" title="X" style="display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;color:rgba(255,255,255,.8)" style-hover="color:#1D1D1D;background:#fff">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.24 2.25h3.31l-7.23 8.26 8.5 11.24h-6.65l-5.21-6.82-5.97 6.82H1.68l7.73-8.84L1.25 2.25h6.82l4.71 6.23 5.46-6.23Zm-1.16 17.52h1.83L7.01 4.13H5.05l12.03 15.64Z"></path></svg>
+    </a>
+  </div>
+
+  <header style="position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:60;width:min(1160px,calc(100% - 36px));display:flex;align-items:center;justify-content:space-between;gap:24px;padding:10px 12px 10px 20px;border-radius:999px;background:rgba(29,29,29,.62);backdrop-filter:blur(18px) saturate(140%);border:1px solid rgba(255,255,255,.14);box-shadow:0 18px 44px rgba(0,0,0,.38)">
+    <div style="display:flex;align-items:center;gap:12px">
+      <svg width="28" height="33" viewBox="0 0 321 373" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block"><path fill-rule="evenodd" clip-rule="evenodd" d="M289.625 305.816C243.229 393.583 29.6433 330.028 65.6719 240.237C97.1608 161.761 190.703 94.0074 192.309 94.7C195.159 95.9295 187.275 114.833 192.208 116.124C202.094 118.712 213.217 113.278 205.746 120.395C172.588 151.985 91.1214 288.91 146.915 313.716C195.594 335.359 293.985 299.933 250.588 247.464C232.545 225.649 201.705 219.209 212.387 218.802C212.45 218.8 251.107 230.239 272.218 248.754C301.185 274.157 291.262 301.333 289.625 305.816Z" fill="#F4791C"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M227.971 361.204C73.5946 409.473 -68.0653 299.087 35.2934 220.194C48.35 210.228 75.6529 197.391 67.0813 207.397C48.4572 229.139 46.1186 251.577 45.6798 255.787C38.2235 327.328 171.199 379.516 251.006 349.13C251.25 349.038 261.517 347.357 252.777 351.873C248.334 354.168 229.975 360.512 227.971 361.204L227.971 361.204Z" fill="#FE980C"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M253.506 129.798C253.111 130.27 249.027 136.319 247.244 132.534C237.174 111.164 237.338 104.732 226.525 108.271C215.269 111.954 197.393 112.46 196.568 111.499C195.594 110.364 197.183 110.316 198.691 92.9279C199.787 80.2846 211.773 73.3612 192.551 63.9008C181.435 58.4298 180.788 56.5699 182.881 54.8966C197.53 43.1919 198.029 43.29 216.549 40.9125C218.976 40.6009 228.091 40.8841 229.294 39.752C240.323 29.3716 265.475 -1.77687 316.632 0.0795525C325.58 0.404175 316.966 35.0026 303.151 53.848C284.694 79.0273 271.676 83.6219 270.936 88.5954C270.61 90.7895 267.949 108.675 265.158 115.716C264.547 117.257 264.379 117.072 253.506 129.798Z" fill="#D8224E"></path><ellipse cx="279.656" cy="37.1113" rx="9.81248" ry="9.43508" fill="white"></ellipse><ellipse cx="260.685" cy="53.4654" rx="7.19582" ry="6.91906" fill="white"></ellipse></svg>
+      <span style="font-family:'Poppins',sans-serif;font-weight:800;font-size:16px;letter-spacing:-.02em;color:#fff">ROCKET EVOLUTION</span>
+    </div>
+    <nav style="display:flex;align-items:center;gap:6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase">
+      <a href="#methode" style="padding:10px 16px;border-radius:999px;color:rgba(255,255,255,.72)" style-hover="color:#fff;background:rgba(255,255,255,.09)">Méthode</a>
+      <a href="#coachs" style="padding:10px 16px;border-radius:999px;color:rgba(255,255,255,.72)" style-hover="color:#fff;background:rgba(255,255,255,.09)">Coachs</a>
+      <a href="#resultats" style="padding:10px 16px;border-radius:999px;color:rgba(255,255,255,.72)" style-hover="color:#fff;background:rgba(255,255,255,.09)">Résultats</a>
+      <a href="https://discord.gg/6dbDnF3JCy" style="display:inline-flex;align-items:center;margin-left:10px;padding:11px 22px;border-radius:999px;background:linear-gradient(90deg,#FE980C,#D8224E);color:#fff;font-weight:700;letter-spacing:.06em" style-hover="color:#fff;opacity:.88">Rejoindre le Discord</a>
+    </nav>
+  </header>
+
+  <section style="position:relative;padding:150px 20px 80px;overflow:hidden">
+    <div style="position:absolute;top:-220px;right:-180px;width:620px;height:620px;border-radius:50%;background:radial-gradient(circle,rgba(216,34,78,.38),transparent 62%);pointer-events:none"></div>
+    <div style="position:absolute;bottom:-260px;left:-200px;width:640px;height:640px;border-radius:50%;background:radial-gradient(circle,rgba(254,152,12,.28),transparent 62%);pointer-events:none"></div>
+    <div style="position:relative;max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:48px;align-items:center">
+      <div>
+        <div style="display:inline-flex;align-items:center;gap:10px;padding:8px 16px;border:1px solid rgba(254,152,12,.5);border-radius:999px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#FE980C;margin-bottom:28px">
+          <span style="width:9px;height:9px;transform:rotate(45deg);background:linear-gradient(135deg,#FE980C,#D8224E);display:block;box-shadow:0 0 14px rgba(254,152,12,.9)"></span>Coaching Rocket League · France
+        </div>
+        <h1 style="font-family:'Poppins',sans-serif;font-weight:800;font-size:clamp(44px,6vw,84px);line-height:.94;letter-spacing:-.035em;margin:0 0 24px;text-transform:uppercase;text-wrap:balance">
+          Coaching <span style="background:linear-gradient(90deg,#FE980C,#F4791C 45%,#D8224E);-webkit-background-clip:text;background-clip:text;color:transparent">Rocket League</span><br>communautaire
+        </h1>
+        <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:clamp(18px,2vw,24px);letter-spacing:-.01em;text-transform:uppercase;color:rgba(255,255,255,.9);margin:0 0 22px">Monte en grade. Pas tout seul.</div>
+        <p style="max-width:520px;margin:0 0 36px;font-size:16px;line-height:1.7;color:rgba(255,255,255,.66);text-wrap:pretty">
+          Rocket Evolution, c'est du coaching communautaire : des reviews de replay, des sessions live et une communauté de joueurs qui progressent ensemble. Tous les rangs, du Bronze au SSL, on t'aide à débloquer ta progression.
+        </p>
+        <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:40px">
+          <a href="https://discord.gg/6dbDnF3JCy" style="display:inline-flex;align-items:center;gap:10px;padding:16px 30px;border-radius:999px;background:linear-gradient(90deg,#FE980C,#D8224E);color:#fff;font-weight:700;font-size:14px;letter-spacing:.04em" style-hover="color:#fff;opacity:.9">Rejoindre la communauté →</a>
+          <a href="https://www.youtube.com/@RocketEvoRL" style="display:inline-flex;align-items:center;gap:10px;padding:16px 30px;border-radius:999px;border:1px solid rgba(255,255,255,.24);color:#fff;font-weight:700;font-size:14px;letter-spacing:.04em" style-hover="color:#FE980C;border-color:#FE980C">Voir la chaîne YouTube</a>
+        </div>
+        <sc-if value="{{ showStats }}" hint-placeholder-val="{{ true }}">
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;max-width:520px;border-top:1px solid rgba(255,255,255,.12);padding-top:24px">
+            <div>
+              <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:32px;color:#FE980C;line-height:1">500+</div>
+              <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:6px">Membres</div>
+            </div>
+            <div>
+              <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:32px;color:#F4791C;line-height:1">2</div>
+              <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:6px">Coachs dédiés</div>
+            </div>
+            <div>
+              <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:32px;color:#D8224E;line-height:1">2026</div>
+              <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-top:6px">Depuis</div>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+      <div data-hero-visual="" style="position:relative;display:flex;justify-content:center;align-items:center">
+        <svg viewBox="0 0 321 373" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:min(360px,80%);height:auto;filter:drop-shadow(0 30px 60px rgba(216,34,78,.35));animation:reFloat 6s ease-in-out infinite"><path fill-rule="evenodd" clip-rule="evenodd" d="M289.625 305.816C243.229 393.583 29.6433 330.028 65.6719 240.237C97.1608 161.761 190.703 94.0074 192.309 94.7C195.159 95.9295 187.275 114.833 192.208 116.124C202.094 118.712 213.217 113.278 205.746 120.395C172.588 151.985 91.1214 288.91 146.915 313.716C195.594 335.359 293.985 299.933 250.588 247.464C232.545 225.649 201.705 219.209 212.387 218.802C212.45 218.8 251.107 230.239 272.218 248.754C301.185 274.157 291.262 301.333 289.625 305.816Z" fill="url(#reg0)"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M227.971 361.204C73.5946 409.473 -68.0653 299.087 35.2934 220.194C48.35 210.228 75.6529 197.391 67.0813 207.397C48.4572 229.139 46.1186 251.577 45.6798 255.787C38.2235 327.328 171.199 379.516 251.006 349.13C251.25 349.038 261.517 347.357 252.777 351.873C248.334 354.168 229.975 360.512 227.971 361.204L227.971 361.204Z" fill="url(#reg1)"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M253.506 129.798C253.111 130.27 249.027 136.319 247.244 132.534C237.174 111.164 237.338 104.732 226.525 108.271C215.269 111.954 197.393 112.46 196.568 111.499C195.594 110.364 197.183 110.316 198.691 92.9279C199.787 80.2846 211.773 73.3612 192.551 63.9008C181.435 58.4298 180.788 56.5699 182.881 54.8966C197.53 43.1919 198.029 43.29 216.549 40.9125C218.976 40.6009 228.091 40.8841 229.294 39.752C240.323 29.3716 265.475 -1.77687 316.632 0.0795525C325.58 0.404175 316.966 35.0026 303.151 53.848C284.694 79.0273 271.676 83.6219 270.936 88.5954C270.61 90.7895 267.949 108.675 265.158 115.716C264.547 117.257 264.379 117.072 253.506 129.798Z" fill="url(#reg2)"></path><ellipse cx="279.656" cy="37.1113" rx="9.81248" ry="9.43508" fill="white"></ellipse><ellipse cx="260.685" cy="53.4654" rx="7.19582" ry="6.91906" fill="white"></ellipse><defs><linearGradient id="reg0" x1="61.6" y1="94.7" x2="371.5" y2="138.9" gradientUnits="userSpaceOnUse"><stop stop-color="#FE990B"></stop><stop offset="1" stop-color="#CE0160"></stop></linearGradient><linearGradient id="reg1" x1="0" y1="203.8" x2="332.2" y2="282.4" gradientUnits="userSpaceOnUse"><stop stop-color="#FE990B"></stop><stop offset="1" stop-color="#CE0160"></stop></linearGradient><linearGradient id="reg2" x1="181.9" y1="0" x2="633.2" y2="78.3" gradientUnits="userSpaceOnUse"><stop stop-color="#FE990B"></stop><stop offset="1" stop-color="#CE0160"></stop></linearGradient></defs></svg>
+      </div>
+    </div>
+  </section>
+
+  <div style="overflow:hidden;background:linear-gradient(90deg,#FE980C,#F4791C 50%,#D8224E);padding:14px 0">
+    <div style="display:flex;width:max-content;animation:reMarquee 26s linear infinite;will-change:transform">
+      <div style="display:flex;gap:44px;padding-right:44px;font-family:'Poppins',sans-serif;font-weight:800;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:#fff;white-space:nowrap">
+        <span>Replay review</span><span>·</span><span>Sessions live</span><span>·</span><span>Mécaniques</span><span>·</span><span>Game sense</span><span>·</span><span>Rotations</span><span>·</span><span>Mental</span><span>·</span>
+      </div>
+      <div style="display:flex;gap:44px;padding-right:44px;font-family:'Poppins',sans-serif;font-weight:800;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:#fff;white-space:nowrap">
+        <span>Replay review</span><span>·</span><span>Sessions live</span><span>·</span><span>Mécaniques</span><span>·</span><span>Game sense</span><span>·</span><span>Rotations</span><span>·</span><span>Mental</span><span>·</span>
+      </div>
+      <div style="display:flex;gap:44px;padding-right:44px;font-family:'Poppins',sans-serif;font-weight:800;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:#fff;white-space:nowrap">
+        <span>Replay review</span><span>·</span><span>Sessions live</span><span>·</span><span>Mécaniques</span><span>·</span><span>Game sense</span><span>·</span><span>Rotations</span><span>·</span><span>Mental</span><span>·</span>
+      </div>
+      <div style="display:flex;gap:44px;padding-right:44px;font-family:'Poppins',sans-serif;font-weight:800;font-size:15px;letter-spacing:.14em;text-transform:uppercase;color:#fff;white-space:nowrap">
+        <span>Replay review</span><span>·</span><span>Sessions live</span><span>·</span><span>Mécaniques</span><span>·</span><span>Game sense</span><span>·</span><span>Rotations</span><span>·</span><span>Mental</span><span>·</span>
+      </div>
+    </div>
+  </div>
+
+  <section id="methode" style="scroll-margin-top:110px;position:relative;z-index:2;background:#fff;color:#1D1D1D;padding:clamp(56px,8vw,96px) 20px">
+    
+    <div style="max-width:1200px;margin:0 auto">
+      <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:56px">
+        <div>
+          <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#D8224E;margin-bottom:14px">Comment ça marche</div>
+          <h2 style="font-family:'Poppins',sans-serif;font-weight:800;font-size:clamp(32px,4.2vw,54px);line-height:1;letter-spacing:-.03em;text-transform:uppercase;margin:0">Trois étapes,<br>zéro blabla</h2>
+        </div>
+        <p style="max-width:380px;margin:0;font-size:14px;line-height:1.7;color:rgba(29,29,29,.62)">Pas de programme figé. On regarde tes replays, on cible les deux erreurs qui te coûtent le plus de matchs, et on travaille dessus jusqu'à ce que ça rentre.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px">
+        <div style="border:1px solid rgba(29,29,29,.12);border-radius:22px;padding:34px 30px 30px" style-hover="border-color:#FE980C">
+          <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:46px;line-height:1;background:linear-gradient(90deg,#FE980C,#D8224E);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:18px">01</div>
+          <h3 style="font-family:'Poppins',sans-serif;font-weight:700;font-size:20px;margin:0 0 12px;text-transform:uppercase;letter-spacing:-.01em">Tu rejoins le Discord</h3>
+          <p style="margin:0;font-size:14px;line-height:1.7;color:rgba(29,29,29,.62)">Accès gratuit au serveur, aux salons par rang et aux annonces de sessions. Tu te présentes, tu dis ton rang, on te place.</p>
+        </div>
+        <div style="border:1px solid rgba(29,29,29,.12);border-radius:22px;padding:34px 30px 30px" style-hover="border-color:#F4791C">
+          <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:46px;line-height:1;background:linear-gradient(90deg,#FE980C,#D8224E);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:18px">02</div>
+          <h3 style="font-family:'Poppins',sans-serif;font-weight:700;font-size:20px;margin:0 0 12px;text-transform:uppercase;letter-spacing:-.01em">Tu ouvres un ticket</h3>
+          <p style="margin:0;font-size:14px;line-height:1.7;color:rgba(29,29,29,.62)">Sur le salon dédié, tu ouvres un ticket : ton rang, ton objectif, tes dispos. C'est le point de départ de ton suivi.</p>
+        </div>
+        <div style="border:1px solid rgba(29,29,29,.12);border-radius:22px;padding:34px 30px 30px" style-hover="border-color:#D8224E">
+          <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:46px;line-height:1;background:linear-gradient(90deg,#FE980C,#D8224E);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:18px">03</div>
+          <h3 style="font-family:'Poppins',sans-serif;font-weight:700;font-size:20px;margin:0 0 12px;text-transform:uppercase;letter-spacing:-.01em">Le coach te fixe un rendez-vous</h3>
+          <p style="margin:0;font-size:14px;line-height:1.7;color:rgba(29,29,29,.62)">Un coach reprend ton ticket et cale une session avec toi. Le jour J, vous bossez ensemble sur ton jeu, et c'est parti.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="coachs" style="scroll-margin-top: 110px; padding: clamp(56px,8vw,96px) 20px; background: #1D1D1D; position: relative">
+    <div style="max-width:1200px;margin:0 auto">
+      <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#FE980C;margin-bottom:14px">Les coachs</div>
+      <h2 style="font-family:'Poppins',sans-serif;font-weight:800;font-size:clamp(32px,4.2vw,54px);line-height:1;letter-spacing:-.03em;text-transform:uppercase;margin:0 0 48px">Hidari &amp; Francky</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px">
+        <div style="border:1px solid rgba(255,255,255,.12);border-radius:24px;overflow:hidden;background:linear-gradient(180deg,rgba(254,152,12,.09),rgba(255,255,255,.02))">
+          <div style="position:relative;height:260px">
+            <image-slot id="coach-hidari" shape="rect" placeholder="Photo / avatar Coach Hidari"></image-slot>
+          </div>
+          <div style="padding:28px 30px 30px">
+            <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:12px">
+              <h3 style="font-family:'Poppins',sans-serif;font-weight:800;font-size:26px;margin:0;text-transform:uppercase;letter-spacing:-.02em">Coach Hidari</h3>
+            </div>
+            <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:rgba(255,255,255,.62)">Bonjour, je suis Coach Hidari.</p>
+            <p style="margin:0 0 22px;font-size:14px;line-height:1.7;color:rgba(255,255,255,.62)">J'aime Rocket League et surtout aider les joueurs à se développer. Mon objectif est d'aider chacun à comprendre le jeu, corriger ses erreurs et progresser efficacement grâce à une méthode adaptée à tous.</p>
+            <div style="display:grid;gap:16px;margin-bottom:22px;border-top:1px solid rgba(255,255,255,.12);padding-top:20px">
+              <div>
+                <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#FE980C;margin-bottom:8px">Palmarès</div>
+                <div style="display:grid;gap:5px;font-size:14px;line-height:1.6;color:rgba(255,255,255,.72)">
+                  <div>Une participation au Main Event RLCS</div>
+                  <div>Plusieurs qualifications en Day 3 RLCS</div>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#FE980C;margin-bottom:8px">Expérience</div>
+                <div style="font-size:14px;line-height:1.6;color:rgba(255,255,255,.72)">Plus de 2 000 heures d'expérience en tant que coach sur Rocket League, notamment à haut niveau.</div>
+              </div>
+            </div>
+            <a href="https://x.com/Coach_Hidari" style="font-size:12px;letter-spacing:.08em;text-transform:uppercase">@Coach_Hidari →</a>
+          </div>
+        </div>
+        <div style="border:1px solid rgba(255,255,255,.12);border-radius:24px;overflow:hidden;background:linear-gradient(180deg,rgba(216,34,78,.12),rgba(255,255,255,.02))">
+          <div style="position:relative;height:260px">
+            <image-slot id="coach-francky" shape="rect" placeholder="Photo / avatar Coach Francky"></image-slot>
+          </div>
+          <div style="padding:28px 30px 30px">
+            <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:12px">
+              <h3 style="font-family:'Poppins',sans-serif;font-weight:800;font-size:26px;margin:0;text-transform:uppercase;letter-spacing:-.02em">Coach Francky</h3>
+            </div>
+            <p style="margin:0 0 18px;font-size:14px;line-height:1.7;color:rgba(255,255,255,.62)">Bonjour, je suis Coach Francky.</p>
+            <p style="margin:0 0 22px;font-size:14px;line-height:1.7;color:rgba(255,255,255,.62)">À 31 ans, j'ai transformé ma passion pour Rocket League en expertise.</p>
+            <div style="display:grid;gap:16px;margin-bottom:22px;border-top:1px solid rgba(255,255,255,.12);padding-top:20px">
+              <div>
+                <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#FE980C;margin-bottom:8px">Spécialités</div>
+                <div style="display:grid;gap:5px;font-size:14px;line-height:1.6;color:rgba(255,255,255,.72)">
+                  <div>Coaching 2v2 et 3v3 jusqu'à SSL</div>
+                  <div>On décortique tout ensemble pour vous faire progresser</div>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#FE980C;margin-bottom:8px">Expérience</div>
+                <div style="font-size:14px;line-height:1.6;color:rgba(255,255,255,.72)">Plus de 2 500 heures de coaching à son actif.</div>
+              </div>
+            </div>
+            <a href="https://www.tiktok.com/@homelubby" style="font-size:12px;letter-spacing:.08em;text-transform:uppercase">@Francky_coaching →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="resultats" style="scroll-margin-top:110px;background:#fff;color:#1D1D1D;padding:clamp(56px,8vw,96px) 20px">
+    <div style="max-width:1200px;margin:0 auto">
+      <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#D8224E;margin-bottom:14px">Résultats</div>
+      <h2 style="font-family:'Poppins',sans-serif;font-weight:800;font-size:clamp(32px,4.2vw,54px);line-height:1;letter-spacing:-.03em;text-transform:uppercase;margin:0 0 48px">Ce que ça donne<br>sur le ladder</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:64px">
+        <div style="border-radius:20px;padding:30px;background:linear-gradient(135deg,#FE980C,#F4791C);color:#fff">
+          <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:44px;line-height:1">+1</div>
+          <div style="font-size:13px;line-height:1.6;margin-top:10px;opacity:.92">rang gagné minimum, souvent un nouveau peak, pour chaque joueur suivi régulièrement</div>
+        </div>
+        <div style="border-radius:20px;padding:30px;background:linear-gradient(135deg,#F4791C,#D8224E);color:#fff">
+          <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:44px;line-height:1">50+</div>
+          <div style="font-size:13px;line-height:1.6;margin-top:10px;opacity:.92">replays analysés depuis l'ouverture du serveur</div>
+        </div>
+        <div style="border-radius:20px;padding:30px;background:#1D1D1D;color:#fff">
+          <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:44px;line-height:1">4 500 h</div>
+          <div style="font-size:13px;line-height:1.6;margin-top:10px;color:rgba(255,255,255,.7)">de coaching cumulées entre les deux coachs</div>
+        </div>
+        <div style="border-radius:20px;padding:30px;border:1px solid rgba(29,29,29,.14)">
+          <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:44px;line-height:1;color:#D8224E">0€</div>
+          <div style="font-size:13px;line-height:1.6;margin-top:10px;color:rgba(29,29,29,.62)">pour entrer dans la communauté et assister aux reviews publiques</div>
+        </div>
+      </div>
+      <sc-if value="{{ showTestimonials }}" hint-placeholder-val="{{ true }}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px">
+          <div style="border-left:3px solid #FE980C;padding:6px 0 6px 24px">
+            <p style="margin:0 0 16px;font-size:15px;line-height:1.75">« J'étais bloqué Diamant 1 depuis un an. Deux reviews de replay et j'ai compris que le problème c'était mes rotations, pas mes airs. »</p>
+            <div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:rgba(29,29,29,.5)">Nyko — Diamant 1 → Champion 1</div>
+          </div>
+          <div style="border-left:3px solid #F4791C;padding:6px 0 6px 24px">
+            <p style="margin:0 0 16px;font-size:15px;line-height:1.75">« Le serveur est ce qui m'a fait rester. Toujours quelqu'un de mon niveau pour du 2v2, et les coachs répondent vraiment. »</p>
+            <div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:rgba(29,29,29,.5)">Lisa — Or 3 → Platine 2</div>
+          </div>
+          <div style="border-left:3px solid #D8224E;padding:6px 0 6px 24px">
+            <p style="margin:0 0 16px;font-size:15px;line-height:1.75">« On est venus à trois en équipe. On a bossé les kickoffs et la couverture pendant un mois, on a gagné notre premier tournoi amateur. »</p>
+            <div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:rgba(29,29,29,.5)">Team Nova — structure amateur</div>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </section>
+
+  <sc-if value="{{ showVideos }}" hint-placeholder-val="{{ true }}">
+    <section style="padding:clamp(56px,8vw,96px) 20px;background:#1D1D1D">
+      <div style="max-width:1200px;margin:0 auto">
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:40px">
+          <h2 style="font-family:'Poppins',sans-serif;font-weight:800;font-size:clamp(28px,3.4vw,44px);line-height:1;letter-spacing:-.03em;text-transform:uppercase;margin:0">Les dernières vidéos</h2>
+          <a href="https://www.youtube.com/@RocketEvoRL" style="font-size:12px;letter-spacing:.08em;text-transform:uppercase">Tout voir sur YouTube →</a>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px">
+          <div style="position:relative;aspect-ratio:16/9;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.12)">
+            <image-slot id="yt-1" shape="rect" placeholder="Miniature YouTube 1"></image-slot>
+          </div>
+          <div style="position:relative;aspect-ratio:16/9;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.12)">
+            <image-slot id="yt-2" shape="rect" placeholder="Miniature YouTube 2"></image-slot>
+          </div>
+          <div style="position:relative;aspect-ratio:16/9;border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.12)">
+            <image-slot id="yt-3" shape="rect" placeholder="Miniature YouTube 3"></image-slot>
+          </div>
+        </div>
+      </div>
+    </section>
+  </sc-if>
+
+  <section style="padding: 0 20px clamp(56px,8vw,96px); background: #1D1D1D; position: relative">
+    <div style="max-width:1200px;margin:0 auto;border-radius:32px;padding:clamp(48px,7vw,88px) clamp(32px,6vw,72px);background:linear-gradient(120deg,#FE980C,#F4791C 45%,#D8224E);position:relative;overflow:hidden">
+      <div style="position:absolute;right:-80px;bottom:-120px;width:420px;height:420px;border-radius:50%;background:rgba(255,255,255,.12);pointer-events:none"></div>
+      
+      <div style="position:relative;max-width:660px">
+        <h2 style="font-family:'Poppins',sans-serif;font-weight:800;font-size:clamp(34px,5vw,62px);line-height:.98;letter-spacing:-.03em;text-transform:uppercase;margin:0 0 20px;color:#fff">Le serveur est ouvert</h2>
+        <p style="margin:0 0 34px;font-size:16px;line-height:1.7;color:rgba(255,255,255,.9);max-width:520px">Reviews publiques, salons par rang, sessions d'entraînement et recherche de coéquipiers. Gratuit, et tu peux repartir quand tu veux.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:14px">
+          <a href="https://discord.gg/6dbDnF3JCy" style="display:inline-flex;align-items:center;padding:17px 34px;border-radius:999px;background:#1D1D1D;color:#fff;font-weight:700;font-size:14px;letter-spacing:.04em" style-hover="color:#FE980C">Rejoindre le Discord</a>
+          <a href="https://www.youtube.com/@RocketEvoRL" style="display:inline-flex;align-items:center;padding:17px 34px;border-radius:999px;border:1px solid rgba(255,255,255,.6);color:#fff;font-weight:700;font-size:14px;letter-spacing:.04em" style-hover="color:#1D1D1D;background:#fff;border-color:#fff">YouTube</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer style="border-top:1px solid rgba(255,255,255,.1);padding:40px 20px;background:#1D1D1D">
+    <div style="max-width:1200px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:24px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-family:'Poppins',sans-serif;font-weight:800;font-size:14px;letter-spacing:-.01em">ROCKET EVOLUTION</span>
+        <span style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.4)">Hidari — Francky</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:26px;font-size:12px;letter-spacing:.08em;text-transform:uppercase">
+        <a href="https://discord.gg/6dbDnF3JCy">Discord</a>
+        <a href="https://www.youtube.com/@RocketEvoRL">YouTube</a>
+        <a href="https://www.tiktok.com/@homelubby">TikTok</a>
+        <a href="https://x.com/Coach_Hidari">X</a>
+      </div>
+    </div>
+  </footer>
+<img src="uploads/fennecballboost.png" alt="Fennec Rocket Evolution frappant la balle" data-method-car="" style="position: absolute; left: -1061px; width: 2738px; height: auto; transform: rotate(-10deg); filter: drop-shadow(0 30px 60px rgba(0,0,0,.45)); pointer-events: none; z-index: 3; top: 1057px"><img src="uploads/fennec1.png" alt="Fennec Rocket Evolution" data-cta-car="" style="position: absolute; height: 1596px; transform: rotate(-8deg); filter: drop-shadow(0 24px 50px rgba(0,0,0,.35)); pointer-events: none; left: 1680px; top: 3126px; width: 2472px; box-shadow: 0px 4px 12px 0px rgba(0, 0, 0, 0.15)"></div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showStats&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Sections&quot;},&quot;showTestimonials&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Sections&quot;},&quot;showVideos&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Sections&quot;}}">
+class Component extends DCLogic {
+  componentDidMount() {
+    this._raf = requestAnimationFrame(() => this.setupMotion());
+  }
+  componentWillUnmount() {
+    cancelAnimationFrame(this._raf);
+    if (this._io) this._io.disconnect();
+    if (this._onScroll) window.removeEventListener('scroll', this._onScroll);
+    if (this._onResize) window.removeEventListener('resize', this._onResize);
+    if (this._railUpdate) { window.removeEventListener('scroll', this._railUpdate); window.removeEventListener('resize', this._railUpdate); }
+    if (this._safety) { window.removeEventListener('scroll', this._safety); window.removeEventListener('resize', this._safety); }
+  }
+  setupResponsive(root) {
+    const nav = root.querySelector('header nav');
+    const rail = root.querySelector('header')
+      ? root.querySelector('div[style*="position:fixed"][style*="flex-direction:column"]')
+      : null;
+    const brand = root.querySelector('header span');
+    const apply = () => {
+      const w = window.innerWidth;
+      if (nav) {
+        nav.querySelectorAll('a[href^="#"]').forEach(a => { a.style.display = w < 780 ? 'none' : 'inline-flex'; });
+        const cta = nav.querySelector('a[href*="discord"]');
+        if (cta) { cta.style.marginLeft = w < 780 ? '0' : '10px'; cta.style.padding = w < 480 ? '10px 16px' : '11px 22px'; cta.style.fontSize = w < 480 ? '11px' : '12px'; }
+      }
+      if (brand) brand.style.display = w < 380 ? 'none' : 'inline';
+      const heroVisual = root.querySelector('[data-hero-visual]');
+      if (heroVisual) heroVisual.style.display = w < 780 ? 'none' : 'flex';
+      root.querySelectorAll('[data-cta-car], [data-method-car]').forEach(car => {
+        car.style.display = w < 900 ? 'none' : 'block';
+      });
+      if (rail) {
+        const small = w < 900;
+        rail.style.flexDirection = small ? 'row' : 'column';
+        rail.style.right = small ? '50%' : '18px';
+        rail.style.top = small ? 'auto' : '50%';
+        rail.style.bottom = small ? '14px' : 'auto';
+        rail.style.transform = small ? 'translateX(50%)' : 'translateY(-50%)';
+      }
+    };
+    apply();
+    this._onResize = apply;
+    window.addEventListener('resize', apply, { passive: true });
+  }
+  setupRailTheme(root) {
+    const rail = root.querySelector('div[style*="position:fixed"][style*="flex-direction:column"]')
+      || root.querySelector('div[style*="position: fixed"]');
+    if (!rail) return;
+    const light = Array.from(root.querySelectorAll('section')).filter(s => {
+      const bg = getComputedStyle(s).backgroundColor;
+      return bg === 'rgb(255, 255, 255)';
+    });
+    const links = rail.querySelectorAll('a');
+    rail.style.transition = 'background-color .3s ease, border-color .3s ease';
+    links.forEach(a => { a.style.transition = 'color .3s ease, background-color .25s ease'; });
+    const update = () => {
+      const r = rail.getBoundingClientRect();
+      const y = r.top + r.height / 2;
+      const onLight = light.some(s => {
+        const sr = s.getBoundingClientRect();
+        return y > sr.top && y < sr.bottom;
+      });
+      rail.style.background = onLight ? 'rgba(29,29,29,.05)' : 'rgba(255,255,255,.06)';
+      rail.style.borderColor = onLight ? 'rgba(29,29,29,.14)' : 'rgba(255,255,255,.14)';
+      links.forEach(a => {
+        if (a.matches(':hover')) return;
+        a.style.color = onLight ? 'rgba(29,29,29,.72)' : 'rgba(255,255,255,.8)';
+      });
+    };
+    this._railUpdate = update;
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update, { passive: true });
+    update();
+  }
+  setupMotion() {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const root = document.getElementById('dc-root') || document;
+    const items = [];
+    root.querySelectorAll('section').forEach(sec => {
+      sec.querySelectorAll(':scope > div > *, :scope > div > div[style*="grid"] > *, :scope > div > div > div[style*="grid"] > *').forEach(el => {
+        const insideOther = el.parentElement && el.parentElement.closest('[data-motion]');
+        if (!items.includes(el) && !insideOther) items.push(el);
+      });
+    });
+    const seen = new Map();
+    items.forEach(el => {
+      const p = el.parentElement;
+      const i = (seen.get(p) || 0);
+      seen.set(p, i + 1);
+      el.setAttribute('data-motion', '');
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(26px)';
+      el.style.transitionDelay = Math.min(i * 90, 360) + 'ms';
+    });
+    this._io = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.style.opacity = '1';
+          e.target.style.transform = 'none';
+          this._io.unobserve(e.target);
+        }
+      });
+    }, { rootMargin: '0px 0px -12% 0px', threshold: 0.08 });
+    const reveal = el => { el.style.opacity = '1'; el.style.transform = 'none'; };
+    items.forEach(el => {
+      const r = el.getBoundingClientRect();
+      if (r.top < window.innerHeight && r.bottom > 0) reveal(el);
+      else this._io.observe(el);
+    });
+    this._safety = () => {
+      items.forEach(el => {
+        if (el.style.opacity === '1') return;
+        const r = el.getBoundingClientRect();
+        if (r.top < window.innerHeight * 1.05 && r.bottom > 0) { reveal(el); this._io.unobserve(el); }
+      });
+    };
+    window.addEventListener('scroll', this._safety, { passive: true });
+    window.addEventListener('resize', this._safety, { passive: true });
+
+    root.querySelectorAll('[style*="border-radius:22px"], [style*="border-radius:24px"], [style*="border-radius:20px"]').forEach(card => {
+      card.addEventListener('mouseenter', () => { card.style.transform = 'translateY(-6px)'; card.style.boxShadow = '0 22px 48px rgba(0,0,0,.28)'; });
+      card.addEventListener('mouseleave', () => { card.style.transform = 'none'; card.style.boxShadow = 'none'; });
+    });
+    this.setupResponsive(root);
+    this.setupRailTheme(root);
+    const header = root.querySelector('header');
+    if (header) {
+      header.style.transition = 'width .35s cubic-bezier(.2,.7,.3,1), background-color .3s ease, box-shadow .3s ease, top .3s ease';
+      const onScroll = () => {
+        const s = window.scrollY > 40;
+        header.style.width = s ? 'min(980px,calc(100% - 36px))' : 'min(1160px,calc(100% - 36px))';
+        header.style.top = s ? '12px' : '18px';
+        header.style.backgroundColor = s ? 'rgba(29,29,29,.82)' : 'rgba(29,29,29,.62)';
+        header.style.boxShadow = s ? '0 14px 40px rgba(0,0,0,.5)' : '0 18px 44px rgba(0,0,0,.38)';
+      };
+      this._onScroll = onScroll;
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    }
+    root.querySelectorAll('a[style*="border-radius:999px"]').forEach(btn => {
+      btn.addEventListener('mouseenter', () => { btn.style.transform = 'translateY(-2px) scale(1.02)'; });
+      btn.addEventListener('mouseleave', () => { btn.style.transform = 'none'; });
+    });
+  }
+  renderVals() {
+    return {
+      showStats: this.props.showStats ?? true,
+      showTestimonials: this.props.showTestimonials ?? true,
+      showVideos: this.props.showVideos ?? true,
+    };
+  }
+}
+</script>
+</body>
+</html>

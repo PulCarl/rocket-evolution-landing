@@ -1,0 +1,113 @@
+.section {
+  scroll-margin-top: 110px;
+  position: relative;
+  z-index: 2;
+  background: var(--paper);
+  color: var(--ink);
+  padding: clamp(56px, 8vw, 96px) 20px;
+}
+
+.container {
+  max-width: var(--container);
+  margin: 0 auto;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 56px;
+}
+
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--pink);
+  margin-bottom: 14px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(32px, 4.2vw, 54px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.intro {
+  max-width: 380px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-on-light);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.card {
+  border: 1px solid var(--border-on-light);
+  border-radius: 22px;
+  padding: 34px 30px 30px;
+  transition: border-color 0.25s ease, transform 0.35s cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 0.35s ease;
+}
+
+.card:hover {
+  border-color: var(--hover-color);
+  transform: translateY(-6px);
+  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.28);
+}
+
+.number {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 46px;
+  line-height: 1;
+  background: var(--grad-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 18px;
+}
+
+.cardTitle {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 20px;
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+
+.cardText {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-on-light);
+}
+
+.decor {
+  position: absolute;
+  left: -120px;
+  bottom: -90px;
+  width: 320px;
+  height: auto;
+  transform: rotate(-10deg);
+  filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.45));
+  pointer-events: none;
+  z-index: 3;
+}
+
+@media (max-width: 900px) {
+  .decor {
+    display: none;
+  }
+}

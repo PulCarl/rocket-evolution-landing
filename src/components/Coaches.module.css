@@ -1,0 +1,121 @@
+.section {
+  scroll-margin-top: 110px;
+  padding: clamp(56px, 8vw, 96px) 20px;
+  background: var(--ink);
+  position: relative;
+}
+
+.container {
+  max-width: var(--container);
+  margin: 0 auto;
+}
+
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 14px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(32px, 4.2vw, 54px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  margin: 0 0 48px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.card {
+  border: 1px solid var(--border-on-dark);
+  border-radius: 24px;
+  overflow: hidden;
+  transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 0.35s ease;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.28);
+}
+
+.photo {
+  position: relative;
+  height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid var(--border-on-dark);
+}
+
+.photo span {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+  padding: 0 20px;
+  text-align: center;
+}
+
+.body {
+  padding: 28px 30px 30px;
+}
+
+.name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 26px;
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+
+.greeting,
+.bio {
+  margin: 0 0 18px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.bio {
+  margin-bottom: 22px;
+}
+
+.blocks {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 22px;
+  border-top: 1px solid var(--border-on-dark);
+  padding-top: 20px;
+}
+
+.blockLabel {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 8px;
+}
+
+.blockItems {
+  display: grid;
+  gap: 5px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.link {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
