@@ -8,10 +8,12 @@ import Results from "./components/Results.jsx";
 import Videos from "./components/Videos.jsx";
 import CtaBlock from "./components/CtaBlock.jsx";
 import Footer from "./components/Footer.jsx";
+import fennecBallBoost from "./assets/images/fennecballboost.webp";
+import styles from "./App.module.css";
 
 export default function App() {
   return (
-    <div>
+    <div className={styles.page}>
       <SocialRail />
       <Nav />
       <main>
@@ -24,6 +26,12 @@ export default function App() {
         <CtaBlock />
       </main>
       <Footer />
+      <img
+        src={fennecBallBoost}
+        alt="Fennec Rocket Evolution frappant la balle"
+        aria-hidden="true"
+        className={styles.decorBallBoost}
+      />
     </div>
   );
 }

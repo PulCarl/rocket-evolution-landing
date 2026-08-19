@@ -1,6 +1,5 @@
 import Reveal from "./Reveal.jsx";
 import { steps } from "../data/content.js";
-import fennecBallBoost from "../assets/images/fennecballboost.webp";
 import styles from "./Method.module.css";
 
 export default function Method() {
@@ -31,7 +30,6 @@ export default function Method() {
           ))}
         </div>
       </div>
-      <img src={fennecBallBoost} alt="" aria-hidden="true" className={styles.decor} />
     </section>
   );
 }

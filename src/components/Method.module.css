@@ -94,20 +94,3 @@
   color: var(--text-on-light);
 }
 
-.decor {
-  position: absolute;
-  left: -220px;
-  bottom: -230px;
-  width: 620px;
-  height: auto;
-  transform: rotate(-10deg);
-  filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.45));
-  pointer-events: none;
-  z-index: 3;
-}
-
-@media (max-width: 900px) {
-  .decor {
-    display: none;
-  }
-}
