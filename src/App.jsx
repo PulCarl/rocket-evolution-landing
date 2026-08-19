@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/react";
 import CustomCursor from "./components/CustomCursor.jsx";
 import SocialRail from "./components/SocialRail.jsx";
 import Nav from "./components/Nav.jsx";
@@ -34,6 +35,7 @@ export default function App() {
         aria-hidden="true"
         className={styles.decorBallBoost}
       />
+      <Analytics />
     </div>
   );
 }
