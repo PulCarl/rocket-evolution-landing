@@ -1,8 +1,12 @@
 name: Sync testimonials from Discord
 
 on:
-  schedule:
-    - cron: "*/30 * * * *"
+  # schedule trigger disabled until the DISCORD_BOT_TOKEN / DISCORD_CHANNEL_ID /
+  # DISCORD_APPROVER_IDS secrets are set up (see README) — until then every
+  # scheduled run just fails and spams GitHub notification emails.
+  # Re-enable by uncommenting the schedule block below.
+  # schedule:
+  #   - cron: "*/30 * * * *"
   workflow_dispatch: {}
 
 permissions:

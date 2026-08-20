@@ -40,9 +40,13 @@ vercel        # preview
 vercel --prod # production
 ```
 
-## Témoignages (sync automatique depuis Discord)
+## Témoignages (sync automatique depuis Discord — actuellement en pause)
 
-Les avis affichés dans la section Résultats viennent de [`src/data/testimonials.json`](./src/data/testimonials.json), mis à jour automatiquement par [`.github/workflows/sync-testimonials.yml`](./.github/workflows/sync-testimonials.yml) (toutes les 30 min, ou déclenchable manuellement depuis l'onglet Actions de GitHub).
+⚠️ Le déclenchement automatique (toutes les 30 min) est **désactivé** dans [`sync-testimonials.yml`](./.github/workflows/sync-testimonials.yml) tant que les secrets Discord ci-dessous ne sont pas configurés — sinon chaque run échoue et spamme des emails de notification GitHub. Pour l'instant les avis sont ajoutés à la main dans [`testimonials.json`](./src/data/testimonials.json).
+
+Une fois prêt à l'activer : configure les secrets (étape 2 ci-dessous), puis décommente le bloc `schedule` dans le fichier de workflow.
+
+Les avis affichés dans la section Résultats viennent de [`src/data/testimonials.json`](./src/data/testimonials.json). Une fois le schedule réactivé, ce fichier sera mis à jour automatiquement par le workflow (déclenchable manuellement dès maintenant depuis l'onglet Actions de GitHub, même sans schedule).
 
 **Flux** : un membre poste son avis dans un salon Discord dédié → un coach réagit avec ✅ sur les messages à publier → le workflow les récupère, les ajoute au JSON, commit → Vercel redéploie automatiquement.
 
