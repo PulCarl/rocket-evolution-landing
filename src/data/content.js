@@ -17,8 +17,10 @@ export const navLinks = [
   { label: "Résultats", href: "#resultats" },
 ];
 
+// Le premier stat (Membres) n'est plus ici : il vient de discordStats.json,
+// mis à jour automatiquement par .github/workflows/sync-discord-stats.yml
+// (API publique des invitations Discord, toutes les 6h). Voir Hero.jsx.
 export const heroStats = [
-  { value: "500+", label: "Membres", color: "var(--orange)" },
   { value: "2", label: "Coachs dédiés", color: "var(--orange-2)" },
   { value: "2026", label: "Depuis", color: "var(--pink)" },
 ];

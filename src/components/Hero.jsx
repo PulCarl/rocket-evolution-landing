@@ -1,6 +1,12 @@
 import Reveal from "./Reveal.jsx";
 import { heroStats } from "../data/content.js";
+import discordStats from "../data/discordStats.json";
 import styles from "./Hero.module.css";
+
+const allStats = [
+  { value: String(discordStats.memberCount), label: "Membres Discord", color: "var(--orange)" },
+  ...heroStats,
+];
 
 export default function Hero() {
   return (
@@ -35,7 +41,7 @@ export default function Hero() {
             </a>
           </Reveal>
           <Reveal delay={360} className={styles.stats}>
-            {heroStats.map((stat) => (
+            {allStats.map((stat) => (
               <div key={stat.label}>
                 <div className={styles.statValue} style={{ color: stat.color }}>
                   {stat.value}

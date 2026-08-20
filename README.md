@@ -68,9 +68,15 @@ Exemple : `Or 3 -> Platine 2 : Le serveur est ce qui m'a fait rester...`
 
 Les 3 vignettes de la section "Les dernières vidéos" viennent de [`src/data/videos.json`](./src/data/videos.json), mis à jour automatiquement par [`.github/workflows/sync-videos.yml`](./.github/workflows/sync-videos.yml) (toutes les 6h, ou déclenchable manuellement depuis l'onglet Actions de GitHub). Aucune clé API ni secret requis — il interroge simplement le flux RSS public de la chaîne (`youtube.com/feeds/videos.xml?channel_id=UCBiuzf9xGJXJflCjHWUwqZg`), prend les 3 dernières vidéos et commit le résultat s'il a changé.
 
+## Membres Discord (sync automatique)
+
+Le premier stat du hero ("Membres Discord") vient de [`src/data/discordStats.json`](./src/data/discordStats.json), mis à jour automatiquement par [`.github/workflows/sync-discord-stats.yml`](./.github/workflows/sync-discord-stats.yml) (toutes les 6h, ou déclenchable manuellement depuis l'onglet Actions de GitHub). Aucune clé API ni secret requis — il interroge l'API publique des invitations Discord (`approximate_member_count` sur l'invite `6dbDnF3JCy`).
+
+**TikTok et YouTube n'ont pas d'équivalent ici** : TikTok n'a pas d'API publique gratuite pour le nombre de followers (scraping fragile/hors ToS sinon), et l'abonnement YouTube en direct nécessiterait une clé API Data v3 (Google Cloud Console) — non mis en place pour l'instant, décision du client.
+
 ## À faire avant mise en ligne (voir README du handoff design)
 
-- Reconfirmer les chiffres (+1 rang, 50+ replays, 4 500h, 500+ membres, depuis 2026).
+- Reconfirmer les chiffres (+1 rang, 50+ replays, 4 500h, depuis 2026) — "Membres" est maintenant live depuis Discord, plus besoin de le reconfirmer manuellement.
 - Vérifier les droits d'utilisation de la photo de Coach Francky (watermark visible — probablement une photo de presse/agence).
 - Ajouter mentions légales / politique de confidentialité si la page collecte des données.
 
