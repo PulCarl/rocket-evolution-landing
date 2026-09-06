@@ -1,5 +1,5 @@
-.dot,
-.ring {
+.ball,
+.trail {
   position: fixed;
   top: 0;
   left: 0;
@@ -9,31 +9,60 @@
   will-change: transform;
 }
 
-.dot {
-  width: 8px;
-  height: 8px;
-  background: var(--orange);
-  transition: opacity 0.2s ease;
+.ball {
+  width: 16px;
+  height: 16px;
+  background: radial-gradient(circle at 32% 28%, #fff, #f1f1f1 40%, #cfcfcf 75%, #a9a9a9 100%);
+  box-shadow: 0 0 0 1.5px rgba(29, 29, 29, 0.35), 0 2px 6px rgba(0, 0, 0, 0.35);
+  transition: width 0.2s cubic-bezier(0.2, 0.7, 0.3, 1), height 0.2s cubic-bezier(0.2, 0.7, 0.3, 1),
+    box-shadow 0.25s ease;
 }
 
-.ring {
-  width: 36px;
-  height: 36px;
-  border: 1.5px solid rgba(254, 152, 12, 0.6);
-  transition: width 0.25s cubic-bezier(0.2, 0.7, 0.3, 1), height 0.25s cubic-bezier(0.2, 0.7, 0.3, 1),
-    border-color 0.25s ease, background-color 0.25s ease, opacity 0.2s ease;
+.facet {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 1px;
+  background: rgba(29, 29, 29, 0.4);
+  transform: rotate(45deg);
 }
 
-.ringHover {
-  width: 56px;
-  height: 56px;
-  border-color: transparent;
-  background: linear-gradient(90deg, rgba(254, 152, 12, 0.25), rgba(216, 34, 78, 0.25));
+.ballBoost {
+  width: 22px;
+  height: 22px;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.6), 0 0 18px 4px rgba(254, 152, 12, 0.65);
 }
 
-.ringDown {
+.ballHit {
+  width: 12px;
+  height: 12px;
+}
+
+.trail {
   width: 30px;
   height: 30px;
+  background: radial-gradient(
+    ellipse calc(11px * var(--stretch, 1)) 11px at 30% 50%,
+    rgba(254, 152, 12, 0.85),
+    rgba(244, 121, 28, 0.55) 45%,
+    rgba(216, 34, 78, 0.25) 75%,
+    transparent 100%
+  );
+  transform-origin: 50% 50%;
+  rotate: var(--angle, 0deg);
+  opacity: 0.35;
+  filter: blur(1px);
+}
+
+.trailBoost {
+  filter: blur(2px) brightness(1.3);
+}
+
+@media (max-width: 900px) {
+  .ball,
+  .trail {
+    display: none;
+  }
 }
 
 .cursorEnabled,
@@ -42,7 +71,7 @@
   cursor: none;
 }
 
-.cursorHidden .dot,
-.cursorHidden .ring {
-  opacity: 0;
+.cursorHidden .ball,
+.cursorHidden .trail {
+  opacity: 0 !important;
 }
