@@ -174,29 +174,6 @@
   align-items: center;
 }
 
-.logoSvg {
-  width: min(360px, 80%);
-  height: auto;
-  filter: drop-shadow(0 30px 60px rgba(216, 34, 78, 0.35));
-  animation: reFloat 6s ease-in-out infinite;
-}
-
-@keyframes reFloat {
-  0%,
-  100% {
-    transform: translateY(0) rotate(-4deg);
-  }
-  50% {
-    transform: translateY(-18px) rotate(-4deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .logoSvg {
-    animation: none;
-  }
-}
-
 @media (max-width: 780px) {
   .visual {
     display: none;

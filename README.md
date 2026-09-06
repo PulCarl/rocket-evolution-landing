@@ -9,6 +9,19 @@ Le design d'origine (référence pixel-perfect) se trouve dans [`design_handoff_
 - [Vite](https://vite.dev) + React 19
 - CSS Modules (pas de framework CSS) — tokens de design dans [`src/index.css`](./src/index.css)
 - Aucune dépendance backend : contenu statique dans [`src/data/content.js`](./src/data/content.js)
+- [react-three-fiber](https://r3f.docs.pmnd.rs) + [drei](https://github.com/pmndrs/drei) pour la voiture 3D du hero (voir ci-dessous)
+
+## Voiture 3D dans le hero
+
+Le visuel du hero ([`FennecCar3D.jsx`](./src/components/FennecCar3D.jsx)) charge un modèle Blender (`src/assets/3d/fennec.glb`) et le fait tourner automatiquement.
+
+- **Poids** : le fichier original exporté par Blender faisait 27 Mo (textures 2048×2048 non compressées). Optimisé avec [`@gltf-transform/cli`](https://gltf-transform.dev) (`optimize --texture-size 1024 --texture-compress webp --compress draco`) → 1,14 Mo. Pour ré-optimiser un nouveau fichier :
+  ```bash
+  npx @gltf-transform/cli optimize source.glb src/assets/3d/fennec.glb --texture-size 1024 --texture-compress webp --compress draco
+  ```
+- **Chargement** : le composant est lazy-loadé (`React.lazy` + `Suspense`) — three.js/drei (~275 Ko gzippés) et le modèle ne se chargent que si nécessaire.
+- **Mobile** : au-dessous de 780px, le composant n'est même pas monté ([`useMediaQuery`](./src/hooks/useMediaQuery.js)) — pas de coût réseau/CPU inutile là où le visuel est de toute façon masqué (`.visual { display: none }` dans `Hero.module.css`).
+- **Accessibilité** : la rotation est désactivée si `prefers-reduced-motion: reduce`.
 
 ## Démarrer en local
 

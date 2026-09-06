@@ -1,0 +1,9 @@
+.canvasWrap {
+  width: min(480px, 100%);
+  aspect-ratio: 1 / 1;
+  filter: drop-shadow(0 30px 60px rgba(216, 34, 78, 0.35));
+}
+
+.canvasWrap canvas {
+  display: block;
+}
