@@ -1,5 +1,6 @@
 import { Suspense, lazy } from "react";
 import Reveal from "./Reveal.jsx";
+import CountUp from "./CountUp.jsx";
 import { useMediaQuery } from "../hooks/useMediaQuery.js";
 import { heroStats } from "../data/content.js";
 import discordStats from "../data/discordStats.json";
@@ -52,7 +53,7 @@ export default function Hero() {
             {allStats.map((stat) => (
               <div key={stat.label}>
                 <div className={styles.statValue} style={{ color: stat.color }}>
-                  {stat.value}
+                  <CountUp value={stat.value} />
                 </div>
                 <div className={styles.statLabel}>{stat.label}</div>
               </div>

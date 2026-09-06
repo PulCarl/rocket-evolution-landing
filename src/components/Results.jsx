@@ -1,4 +1,5 @@
 import Reveal from "./Reveal.jsx";
+import CountUp from "./CountUp.jsx";
 import { resultsStats } from "../data/content.js";
 import testimonials from "../data/testimonials.json";
 import styles from "./Results.module.css";
@@ -24,7 +25,7 @@ export default function Results() {
               style={{ background: stat.background, color: stat.color }}
             >
               <div className={styles.statValue} style={stat.outline ? { color: stat.color } : undefined}>
-                {stat.value}
+                <CountUp value={stat.value} />
               </div>
               <div className={styles.statText}>{stat.text}</div>
             </Reveal>
