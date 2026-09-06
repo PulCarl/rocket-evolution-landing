@@ -2,6 +2,12 @@
   width: min(480px, 100%);
   aspect-ratio: 1 / 1;
   filter: drop-shadow(0 30px 60px rgba(216, 34, 78, 0.35));
+  cursor: grab;
+  touch-action: none;
+}
+
+.canvasWrap.grabbing {
+  cursor: grabbing;
 }
 
 .canvasWrap canvas {
