@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import fennec1 from "../assets/images/fennec1.webp";
+import logo from "../assets/logo-rocket-evolution.svg";
 import styles from "./Preloader.module.css";
 
 const MIN_DURATION = 1200;
@@ -50,7 +50,7 @@ export default function Preloader() {
   return (
     <div className={`${styles.overlay} ${leaving ? styles.leaving : ""}`} aria-hidden="true">
       <div className={styles.spinner}>
-        <img src={fennec1} alt="" className={styles.car} />
+        <img src={logo} alt="" className={styles.logo} />
       </div>
       <div className={styles.wordmark}>ROCKET EVOLUTION</div>
     </div>

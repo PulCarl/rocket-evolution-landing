@@ -19,7 +19,9 @@ function Car() {
   return (
     <group ref={group} rotation={[0, Math.PI * 0.15, 0]}>
       <Center>
-        <primitive object={scene} />
+        {/* Static tilt: stands the car nose-up (vertical) — kept separate from
+            the group's Y spin above so the two rotations don't compound. */}
+        <primitive object={scene} rotation={[Math.PI / 2, 0, 0]} />
       </Center>
     </group>
   );
@@ -36,7 +38,7 @@ export default function FennecCar3D() {
             <Car />
           </Bounds>
           <Environment preset="city" />
-          <ContactShadows position={[0, -1.05, 0]} opacity={0.5} scale={8} blur={2.4} far={2} />
+          <ContactShadows position={[0, -2.1, 0]} opacity={0.5} scale={8} blur={2.4} far={2} />
         </Suspense>
       </Canvas>
     </div>
