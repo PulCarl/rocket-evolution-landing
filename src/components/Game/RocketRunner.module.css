@@ -216,3 +216,37 @@
     width: 100%;
   }
 }
+
+/* The canvas keeps its fixed 800:280 game ratio (needed for gameplay),
+   which gets too short below ~780px of container width to also fit an
+   absolutely positioned overlay's controls (name input, or the game-over
+   score + two buttons) without clipping them. Below this width the
+   overlay drops into normal flow under the canvas instead of stacking on
+   top of it, so it can take whatever height its content needs. Matches
+   the site's existing phone/tablet breakpoint (Nav, Hero visual, etc). */
+@media (max-width: 780px) {
+  .canvasWrap {
+    overflow: visible;
+  }
+
+  .canvas {
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .overlay {
+    position: static;
+    inset: auto;
+    margin-top: 10px;
+    border-radius: 16px;
+    backdrop-filter: none;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    padding: 16px;
+    gap: 10px;
+  }
+
+  .hintText {
+    display: none;
+  }
+}
