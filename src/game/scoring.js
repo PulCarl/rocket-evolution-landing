@@ -60,7 +60,7 @@ export const GAME_CONFIG = {
   letterMaxGap: 7,
   slowDuration: 4,
   slowFactor: 0.5,
-  burstDuration: 3,
+  burstDuration: 12,
   burstMultiplier: 3,
 };
 

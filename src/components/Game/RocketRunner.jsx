@@ -439,7 +439,7 @@ export default function RocketRunner() {
               <div className={styles.bonusToast}>
                 {bonusToast === "goldBomb" && "🌟 Bombe dorée !"}
                 {bonusToast === "slow" && "🐌 Ralenti !"}
-                {bonusToast === "burst" && "⚡ x3 pendant 3s !"}
+                {bonusToast === "burst" && `⚡ x3 pendant ${GAME_CONFIG.burstDuration}s !`}
               </div>
             )}
 
