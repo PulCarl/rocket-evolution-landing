@@ -138,26 +138,7 @@ export function draw(ctx, state) {
     }
   }
 
-  // Player (little Fennec-orange car)
-  const p = state.player;
-  const carTop = p.y - p.h;
-  ctx.save();
-  ctx.translate(p.x, 0);
-  const bodyGrad = ctx.createLinearGradient(-p.w / 2, carTop, p.w / 2, p.y);
-  bodyGrad.addColorStop(0, "#ffffff");
-  bodyGrad.addColorStop(1, "#f4791c");
-  ctx.fillStyle = bodyGrad;
-  ctx.beginPath();
-  ctx.roundRect(-p.w / 2, carTop, p.w, p.h * 0.62, 6);
-  ctx.fill();
-  ctx.fillStyle = "#1d1d1d";
-  ctx.beginPath();
-  ctx.roundRect(-p.w / 2 + 6, carTop, p.w - 12, p.h * 0.34, 4);
-  ctx.fill();
-  ctx.fillStyle = "#1d1d1d";
-  ctx.beginPath();
-  ctx.arc(-p.w / 3, p.y - 3, 6, 0, Math.PI * 2);
-  ctx.arc(p.w / 3, p.y - 3, 6, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
+  // The player is rendered separately as the real 3D Fennec model, layered
+  // on top of this canvas by <GamePlayer3D> — see RocketRunner.jsx. Nothing
+  // to draw here for it.
 }

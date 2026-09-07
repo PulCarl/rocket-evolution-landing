@@ -91,6 +91,10 @@ Le premier stat du hero ("Membres Discord") vient de [`src/data/discordStats.jso
 
 Petit runner façon jeu du dinosaure de Chrome, à l'esthétique Rocket League (voiture, cônes, buts) — [`src/components/Game/`](./src/components/Game). Espace / clic pour sauter, la vitesse augmente avec le temps. Le score est purement basé sur le temps/vitesse (pas de bonus ad hoc), ce qui permet une vraie validation anti-triche côté serveur (voir plus bas).
 
+**Le joueur est la vraie voiture 3D** ([`GamePlayer3D.jsx`](./src/components/Game/GamePlayer3D.jsx)) : le même modèle Fennec que dans le hero (`src/assets/3d/fennec.glb`, déjà en cache navigateur à ce stade), posée à plat cette fois et rendue via un second `<Canvas>` react-three-fiber, calé en caméra orthographique pour correspondre pixel pour pixel aux coordonnées du canvas 2D (sol, obstacles, collisions) — la physique de saut reste entièrement gérée par `engine.js`, ce composant se contente de lire `gameRef.current.player` à chaque frame pour positionner/incliner la voiture.
+
+⚠️ **Piège de dev rencontré** : après des dizaines d'éditions à chaud successives sur ce fichier, le Canvas 3D du jeu restait bloqué à sa taille par défaut (300×150) — un état HMR corrompu par l'accumulation de hot-reloads, pas un vrai bug (un redémarrage propre du serveur de dev le résout instantanément, et un build de production n'y est jamais exposé puisqu'il ne passe jamais par le HMR). Le composant force quand même explicitement `gl.setSize()` dans `onCreated` par précaution — la mesure automatique du conteneur peut ponctuellement rater son coup si ce Canvas (chargé en lazy) monte pendant une transition de layout.
+
 ### Partage de score sur Discord
 
 Le bouton "Partager sur Discord" en fin de partie génère une image de score (carte brandée, `src/components/Game/shareCard.js`) et l'envoie à [`api/share-score.js`](./api/share-score.js), une fonction serverless Vercel — **jamais** directement à Discord depuis le navigateur.
