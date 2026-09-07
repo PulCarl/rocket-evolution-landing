@@ -35,10 +35,18 @@ export const GAME_CONFIG = {
   maxMultiplier: 3,
   // Bomb pickup: stores up a charge (capped at maxBombs); the player
   // activates one on demand to clear+suppress obstacles for bombDuration.
+  // Two tiers: the common one is weak but stacks; the gold one is rare,
+  // much stronger, and never stacks (picking up a 2nd is wasted while
+  // holding one). Activating uses a normal charge first if you have one,
+  // saving the gold one for when normal bombs run out.
   bombMinGap: 15,
   bombMaxGap: 25,
-  maxBombs: 2,
-  bombDuration: 4,
+  maxBombs: 3,
+  bombDuration: 2.5,
+  goldBombMinGap: 45,
+  goldBombMaxGap: 75,
+  maxGoldBombs: 1,
+  goldBombDuration: 8,
 };
 
 export function speedAt(elapsedSeconds) {

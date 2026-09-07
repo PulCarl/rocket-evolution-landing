@@ -18,6 +18,10 @@ const {
   bombMaxGap: BOMB_MAX_GAP,
   maxBombs: MAX_BOMBS,
   bombDuration: BOMB_DURATION,
+  goldBombMinGap: GOLD_BOMB_MIN_GAP,
+  goldBombMaxGap: GOLD_BOMB_MAX_GAP,
+  maxGoldBombs: MAX_GOLD_BOMBS,
+  goldBombDuration: GOLD_BOMB_DURATION,
 } = GAME_CONFIG;
 
 const OBSTACLE_KINDS = [
@@ -37,6 +41,8 @@ const COIN_Y_LOW = GROUND - 70;
 const COIN_Y_HIGH = GROUND - 150;
 const BOMB_SIZE = 24;
 const BOMB_Y = GROUND - 90;
+const GOLD_BOMB_SIZE = 26;
+const GOLD_BOMB_Y = GROUND - 90;
 
 export function createGame() {
   return {
@@ -45,8 +51,10 @@ export function createGame() {
     multiplier: 1, // score multiplier, only ever goes up, capped at MAX_MULTIPLIER
     coinCount: 0, // every COINS_PER_STEP-th coin bumps the multiplier
     shielded: false,
-    bombs: 0, // stored charges, capped at MAX_BOMBS — spent via useBomb()
+    bombs: 0, // common bomb charges, stacks up to MAX_BOMBS
+    goldBombs: 0, // rare bomb charges, never stacks past MAX_GOLD_BOMBS (1)
     bombTimer: 0, // >0 while a bomb's "no obstacles" window is active
+    bombTimerMax: 0, // duration of the bomb currently active, for UI/fade math
     player: { x: 90, y: GROUND, vy: 0, jumps: 0, w: 34, h: 30, spin: 0 },
     obstacles: [],
     pickups: [],
@@ -54,6 +62,7 @@ export function createGame() {
     nextShieldAt: 4 + Math.random() * 4,
     nextCoinAt: 1.5 + Math.random() * 2,
     nextBombAt: BOMB_MIN_GAP + Math.random() * (BOMB_MAX_GAP - BOMB_MIN_GAP),
+    nextGoldBombAt: GOLD_BOMB_MIN_GAP + Math.random() * (GOLD_BOMB_MAX_GAP - GOLD_BOMB_MIN_GAP),
     particles: [],
     over: false,
   };
@@ -73,16 +82,27 @@ export function jump(state) {
 }
 
 // Spends one stored bomb charge (if any, and none already active): instantly
-// clears every obstacle on screen and suppresses new spawns for
-// BOMB_DURATION. Returns true if a charge was actually spent.
+// clears every obstacle on screen and suppresses new spawns for that bomb's
+// duration. Spends a common charge first (saving the rare gold one for when
+// common ones run out) — returns true if a charge was actually spent.
 export function useBomb(state) {
-  if (state.over || state.bombs <= 0 || state.bombTimer > 0) return false;
-  state.bombs -= 1;
-  state.bombTimer = BOMB_DURATION;
+  if (state.over || state.bombTimer > 0) return false;
+  let duration;
+  if (state.bombs > 0) {
+    state.bombs -= 1;
+    duration = BOMB_DURATION;
+  } else if (state.goldBombs > 0) {
+    state.goldBombs -= 1;
+    duration = GOLD_BOMB_DURATION;
+  } else {
+    return false;
+  }
+  state.bombTimer = duration;
+  state.bombTimerMax = duration;
   state.obstacles = [];
   // Push the next spawn out past the bomb window (plus a small grace gap)
   // so obstacles don't pile up waiting right at the moment it ends.
-  state.nextSpawnAt = state.t + BOMB_DURATION + 0.6;
+  state.nextSpawnAt = state.t + duration + 0.6;
   return true;
 }
 
@@ -114,6 +134,12 @@ function spawnCoin(state) {
 function spawnBomb(state) {
   state.pickups.push({ x: W + 20, y: BOMB_Y, w: BOMB_SIZE, h: BOMB_SIZE, kind: "bomb" });
   state.nextBombAt = state.t + BOMB_MIN_GAP + Math.random() * (BOMB_MAX_GAP - BOMB_MIN_GAP);
+}
+
+function spawnGoldBomb(state) {
+  state.pickups.push({ x: W + 20, y: GOLD_BOMB_Y, w: GOLD_BOMB_SIZE, h: GOLD_BOMB_SIZE, kind: "goldBomb" });
+  state.nextGoldBombAt =
+    state.t + GOLD_BOMB_MIN_GAP + Math.random() * (GOLD_BOMB_MAX_GAP - GOLD_BOMB_MIN_GAP);
 }
 
 function aabbHit(p, o) {
@@ -183,6 +209,8 @@ export function step(state, dt) {
         }
       } else if (pk.kind === "bomb") {
         state.bombs = Math.min(MAX_BOMBS, state.bombs + 1);
+      } else if (pk.kind === "goldBomb") {
+        state.goldBombs = Math.min(MAX_GOLD_BOMBS, state.goldBombs + 1);
       } else {
         state.shielded = true;
       }
@@ -194,6 +222,7 @@ export function step(state, dt) {
   if (state.t >= state.nextShieldAt) spawnShield(state);
   if (state.t >= state.nextCoinAt) spawnCoin(state);
   if (state.t >= state.nextBombAt) spawnBomb(state);
+  if (state.t >= state.nextGoldBombAt) spawnGoldBomb(state);
 
   // A shield absorbs exactly one hit (removing that obstacle so it can't
   // immediately re-trigger next frame) before it's used up.
@@ -285,21 +314,31 @@ export function draw(ctx, state, logoImg) {
       ctx.strokeStyle = "rgba(255,255,255,0.6)";
       ctx.lineWidth = 1.5;
       ctx.stroke();
-    } else if (pk.kind === "bomb") {
-      ctx.fillStyle = "#2b2b2b";
+    } else if (pk.kind === "bomb" || pk.kind === "goldBomb") {
+      const gold = pk.kind === "goldBomb";
+      ctx.fillStyle = gold ? "#7a5b00" : "#2b2b2b";
       ctx.beginPath();
       ctx.arc(0, 1, pk.w / 2, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = "rgba(255,255,255,0.25)";
+      if (gold) {
+        const grad = ctx.createRadialGradient(-4, -4, 1, 0, 0, pk.w / 2);
+        grad.addColorStop(0, "#fff3c4");
+        grad.addColorStop(1, "rgba(255,210,63,0)");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(0, 1, pk.w / 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.strokeStyle = gold ? "rgba(255,210,63,0.7)" : "rgba(255,255,255,0.25)";
       ctx.lineWidth = 1.5;
       ctx.stroke();
-      ctx.strokeStyle = "#fe980c";
+      ctx.strokeStyle = gold ? "#ffd23f" : "#fe980c";
       ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.moveTo(3, -pk.h / 2 + 2);
       ctx.lineTo(7, -pk.h / 2 - 4);
       ctx.stroke();
-      ctx.fillStyle = "#fe980c";
+      ctx.fillStyle = gold ? "#ffd23f" : "#fe980c";
       ctx.beginPath();
       ctx.arc(7, -pk.h / 2 - 4, 2, 0, Math.PI * 2);
       ctx.fill();
@@ -340,10 +379,12 @@ export function draw(ctx, state, logoImg) {
     ctx.restore();
   }
 
-  // Bomb-active screen tint, fading out as the window winds down.
-  if (state.bombTimer > 0) {
-    const alpha = Math.min(0.14, (state.bombTimer / BOMB_DURATION) * 0.14);
-    ctx.fillStyle = `rgba(254, 152, 12, ${alpha})`;
+  // Bomb-active screen tint, fading out as the window winds down. Gold if
+  // the gold bomb is the one currently active, orange for the common one.
+  if (state.bombTimer > 0 && state.bombTimerMax > 0) {
+    const isGold = state.bombTimerMax === GOLD_BOMB_DURATION;
+    const alpha = Math.min(0.16, (state.bombTimer / state.bombTimerMax) * 0.16);
+    ctx.fillStyle = isGold ? `rgba(255, 210, 63, ${alpha})` : `rgba(254, 152, 12, ${alpha})`;
     ctx.fillRect(0, 0, W, H);
   }
 }

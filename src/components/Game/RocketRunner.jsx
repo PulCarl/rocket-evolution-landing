@@ -52,6 +52,7 @@ export default function RocketRunner() {
   const [multiplier, setMultiplier] = useState(1);
   const [coinProgress, setCoinProgress] = useState(0); // 0..coinsPerStep-1, coins toward the next step
   const [bombs, setBombs] = useState(0);
+  const [goldBombs, setGoldBombs] = useState(0);
   const [bombActive, setBombActive] = useState(false);
   const [best, setBest] = useState(0);
   const [playerName, setPlayerName] = useState("");
@@ -144,6 +145,7 @@ export default function RocketRunner() {
     setMultiplier(1);
     setCoinProgress(0);
     setBombs(0);
+    setGoldBombs(0);
     setBombActive(false);
     setShareState("idle");
     setJustRanked(false);
@@ -184,6 +186,7 @@ export default function RocketRunner() {
       setMultiplier(gameRef.current.multiplier);
       setCoinProgress(gameRef.current.coinCount % GAME_CONFIG.coinsPerStep);
       setBombs(gameRef.current.bombs);
+      setGoldBombs(gameRef.current.goldBombs);
       setBombActive(gameRef.current.bombTimer > 0);
 
       if (crashed) {
@@ -307,8 +310,9 @@ export default function RocketRunner() {
             Saute (<kbd>Espace</kbd> / clic, double saut possible) par-dessus les obstacles. Ça accélère avec le
             temps — ramasse les <strong>pièces</strong> pour augmenter ton multiplicateur de points (certaines
             demandent un double saut), le <strong>bouclier</strong> pour encaisser un crash gratuit, et la{" "}
-            <strong>bombe</strong> pour faire disparaître les obstacles quelques secondes (<kbd>B</kbd> ou le bouton
-            à l'écran). Copie une image de ton score et colle-la dans notre salon Discord.
+            <strong>bombe</strong> (noire, empilable, effet court) et la <strong>bombe dorée</strong> (rare, un seul
+            exemplaire, effet long) pour faire disparaître les obstacles quelques secondes (<kbd>B</kbd> ou le
+            bouton à l'écran). Copie une image de ton score et colle-la dans notre salon Discord.
           </p>
         </Reveal>
 
@@ -354,15 +358,16 @@ export default function RocketRunner() {
               onPointerDown={onCanvasPress}
             />
 
-            {phase === "playing" && bombs > 0 && (
+            {phase === "playing" && (bombs > 0 || goldBombs > 0) && (
               <button
                 type="button"
                 className={styles.bombBtn}
                 onClick={onBombPress}
                 disabled={bombActive}
-                title="Faire disparaître les obstacles quelques secondes (touche B)"
+                title="Faire disparaître les obstacles quelques secondes (touche B) — la bombe dorée est gardée pour la fin"
               >
-                💣 x{bombs}
+                {bombs > 0 && <>💣 x{bombs}</>}
+                {goldBombs > 0 && <span className={styles.goldBombTag}>🌟</span>}
               </button>
             )}
 

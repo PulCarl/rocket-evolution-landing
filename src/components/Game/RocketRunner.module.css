@@ -233,6 +233,11 @@
   cursor: default;
 }
 
+.goldBombTag {
+  color: #ffd23f;
+  filter: drop-shadow(0 0 3px rgba(255, 210, 63, 0.7));
+}
+
 .canvas {
   width: 100%;
   height: 100%;
