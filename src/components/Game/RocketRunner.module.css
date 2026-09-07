@@ -200,11 +200,12 @@
   color: #fff;
 }
 
-.primaryBtn:hover,
+.primaryBtn:hover:not(:disabled),
 .secondaryBtn:hover:not(:disabled) {
   transform: translateY(-2px);
 }
 
+.primaryBtn:disabled,
 .secondaryBtn:disabled {
   opacity: 0.6;
   cursor: default;
@@ -381,9 +382,5 @@
     border: 1px solid rgba(255, 255, 255, 0.14);
     padding: 16px;
     gap: 10px;
-  }
-
-  .hintText {
-    display: none;
   }
 }

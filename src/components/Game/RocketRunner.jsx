@@ -160,11 +160,12 @@ export default function RocketRunner() {
       if (document.activeElement?.tagName === "INPUT") return;
       e.preventDefault();
       if (phase === "playing") jump(gameRef.current);
-      else if (phase === "idle" || phase === "over") startGame();
+      else if (phase === "over") startGame();
+      else if (phase === "idle" && playerName.trim()) startGame();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [phase, startGame]);
+  }, [phase, startGame, playerName]);
 
   // Only on the canvas itself (not the overlay/buttons layered on top of it),
   // so clicking "Rejouer" / "Copier" doesn't also bubble into a jump/restart.
@@ -245,15 +246,23 @@ export default function RocketRunner() {
                 <input
                   type="text"
                   className={styles.nameInput}
-                  placeholder="Ton pseudo (optionnel)"
+                  placeholder="Ton pseudo Discord"
                   value={playerName}
                   onChange={onNameChange}
                   maxLength={20}
+                  required
                 />
-                <button type="button" className={styles.primaryBtn} onClick={startGame}>
+                <button
+                  type="button"
+                  className={styles.primaryBtn}
+                  onClick={startGame}
+                  disabled={!playerName.trim()}
+                >
                   Jouer
                 </button>
-                <p className={styles.hintText}>ou appuie sur Espace</p>
+                <p className={styles.hintText}>
+                  {playerName.trim() ? "ou appuie sur Espace" : "Entre ton pseudo pour jouer"}
+                </p>
               </div>
             )}
 
