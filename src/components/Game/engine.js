@@ -28,12 +28,14 @@ const SHIELD_SIZE = 26;
 const SHIELD_Y = GROUND - 90;
 const COIN_SIZE = 18;
 const COIN_Y = GROUND - 70;
+const COINS_PER_STEP = 3; // every 3rd coin bumps the multiplier, not each one
 
 export function createGame() {
   return {
     t: 0,
     distance: 0,
-    multiplier: 1, // score multiplier, only ever goes up (coins), capped at MAX_MULTIPLIER
+    multiplier: 1, // score multiplier, only ever goes up, capped at MAX_MULTIPLIER
+    coinCount: 0, // every COINS_PER_STEP-th coin bumps the multiplier
     shielded: false,
     player: { x: 90, y: GROUND, vy: 0, jumps: 0, w: 34, h: 30, spin: 0 },
     obstacles: [],
@@ -135,7 +137,10 @@ export function step(state, dt) {
     if (pk.x + pk.w < -20) continue; // scrolled off, drop
     if (aabbHitPickup(p, pk)) {
       if (pk.kind === "coin") {
-        state.multiplier = Math.min(MAX_MULTIPLIER, state.multiplier + COIN_MULTIPLIER_STEP);
+        state.coinCount += 1;
+        if (state.coinCount % COINS_PER_STEP === 0) {
+          state.multiplier = Math.min(MAX_MULTIPLIER, state.multiplier + COIN_MULTIPLIER_STEP);
+        }
       } else {
         state.shielded = true;
       }

@@ -25,7 +25,8 @@ export const GAME_CONFIG = {
   // Shield pickup: absorbs the next crash instead of ending the run.
   shieldMinGap: 6,
   shieldMaxGap: 14,
-  // Coin pickup: +coinMultiplierStep to the score multiplier, capped.
+  // Coin pickup: every 3rd coin (see COINS_PER_STEP in engine.js) adds
+  // coinMultiplierStep to the score multiplier, capped.
   coinMinGap: 2.5,
   coinMaxGap: 4.5,
   coinMultiplierStep: 0.1,
