@@ -2,6 +2,9 @@
 // the site can stay a static deploy — this is the only bit that needs a
 // server. GET returns the current top 10; POST submits a run.
 //
+// Monthly, not all-time: entries from a past month don't count once a new
+// one starts (see currentPeriod()) — "1 month to get the best score".
+//
 // Requires two env vars in the Vercel project settings:
 //   GIST_ID    — id of the gist holding leaderboard.json
 //   GIST_TOKEN — a GitHub personal access token, "gist" scope only
@@ -18,6 +21,13 @@ const MAX_ENTRIES = 10;
 const BASE_SPEED = 220;
 const RAMP_RATE = 4.2;
 const MAX_SPEED = 620;
+
+// The leaderboard is monthly, not all-time — "1 month to get the best
+// score". UTC-based, which is plenty precise for a community leaderboard
+// (worst case the reset lands an hour or two off midnight in France).
+function currentPeriod() {
+  return new Date().toISOString().slice(0, 7); // "YYYY-MM"
+}
 
 // Score is purely time-based (distance = integral of speed over time, no
 // per-obstacle bonuses), so for a given elapsed time there's exactly one
@@ -42,6 +52,10 @@ function verifySessionToken(token) {
   return ts;
 }
 
+// Returns { period, entries } as stored in the gist. `period` may be a
+// past month (nobody's submitted since it rolled over yet) — callers decide
+// whether stale entries still count, readLeaderboard doesn't reset anything
+// itself (keeps GETs read-only, no gist write on every page view).
 async function readLeaderboard() {
   const r = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
     headers: { Authorization: `Bearer ${GIST_TOKEN}`, Accept: "application/vnd.github+json" },
@@ -49,16 +63,24 @@ async function readLeaderboard() {
   if (!r.ok) throw new Error(`gist read failed: ${r.status}`);
   const data = await r.json();
   const content = data.files?.[FILE_NAME]?.content;
-  if (!content) return [];
+  if (!content) return { period: currentPeriod(), entries: [] };
   try {
-    const list = JSON.parse(content);
-    return Array.isArray(list) ? list : [];
+    const parsed = JSON.parse(content);
+    // Legacy shape (before the monthly reset existed) was a bare array —
+    // grandfather it in as belonging to the current period rather than
+    // silently wiping it the moment this ships.
+    if (Array.isArray(parsed)) return { period: currentPeriod(), entries: parsed };
+    if (parsed && Array.isArray(parsed.entries)) {
+      return { period: parsed.period || currentPeriod(), entries: parsed.entries };
+    }
+    return { period: currentPeriod(), entries: [] };
   } catch {
-    return [];
+    return { period: currentPeriod(), entries: [] };
   }
 }
 
-async function writeLeaderboard(list) {
+async function writeLeaderboard(period, entries) {
+  const content = JSON.stringify({ period, entries }, null, 2);
   const r = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
     method: "PATCH",
     headers: {
@@ -66,7 +88,7 @@ async function writeLeaderboard(list) {
       Accept: "application/vnd.github+json",
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ files: { [FILE_NAME]: { content: JSON.stringify(list, null, 2) } } }),
+    body: JSON.stringify({ files: { [FILE_NAME]: { content } } }),
   });
   if (!r.ok) throw new Error(`gist write failed: ${r.status}`);
 }
@@ -79,7 +101,9 @@ export default async function handler(req, res) {
 
   if (req.method === "GET") {
     try {
-      res.status(200).json({ leaderboard: await readLeaderboard() });
+      const stored = await readLeaderboard();
+      const entries = stored.period === currentPeriod() ? stored.entries : [];
+      res.status(200).json({ leaderboard: entries, period: currentPeriod() });
     } catch (err) {
       res.status(502).json({ error: String(err) });
     }
@@ -125,7 +149,10 @@ export default async function handler(req, res) {
     const isRealName = normalize(cleanName) !== "joueur anonyme";
 
     try {
-      let list = await readLeaderboard();
+      const stored = await readLeaderboard();
+      // A new month started since the last submission -> previous entries
+      // no longer count, this run starts the new leaderboard.
+      let list = stored.period === currentPeriod() ? stored.entries : [];
 
       if (isRealName) {
         // Same pseudo already on the board (possibly more than once, from
@@ -150,8 +177,8 @@ export default async function handler(req, res) {
       list.push({ name: cleanName, score: Math.floor(score), date: new Date().toISOString() });
       list.sort((a, b) => b.score - a.score);
       const top = list.slice(0, MAX_ENTRIES);
-      await writeLeaderboard(top);
-      res.status(200).json({ leaderboard: top, qualified: true });
+      await writeLeaderboard(currentPeriod(), top);
+      res.status(200).json({ leaderboard: top, qualified: true, period: currentPeriod() });
     } catch (err) {
       res.status(502).json({ error: String(err) });
     }

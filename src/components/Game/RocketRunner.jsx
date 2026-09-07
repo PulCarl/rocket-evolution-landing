@@ -259,7 +259,10 @@ export default function RocketRunner() {
 
           {leaderboard !== null && (
             <div className={styles.leaderboard}>
-              <h3 className={styles.leaderboardTitle}>🏆 Top 10</h3>
+              <div className={styles.leaderboardHead}>
+                <h3 className={styles.leaderboardTitle}>🏆 Top 10 du mois</h3>
+                <span className={styles.leaderboardSub}>Remis à zéro chaque mois</span>
+              </div>
               {leaderboard.length === 0 ? (
                 <p className={styles.leaderboardEmpty}>Sois le premier à marquer un point !</p>
               ) : (
