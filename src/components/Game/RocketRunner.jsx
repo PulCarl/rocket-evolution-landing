@@ -85,22 +85,26 @@ export default function RocketRunner() {
     else startGame();
   };
 
-  const share = async () => {
-    setShareState("sending");
+  const copyImage = async () => {
+    setShareState("copying");
     try {
       const isRecord = score >= best && score > 0;
-      const image = renderShareCard({ score, best: Math.max(score, best), isRecord });
-      const res = await fetch("/api/share-score", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          score,
-          elapsedSeconds: gameRef.current.t,
-          image,
-        }),
-      });
-      if (!res.ok) throw new Error("rejected");
-      setShareState("done");
+      const dataUrl = renderShareCard({ score, best: Math.max(score, best), isRecord });
+      const blob = await (await fetch(dataUrl)).blob();
+
+      if (navigator.clipboard?.write && typeof ClipboardItem !== "undefined") {
+        await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+        setShareState("copied");
+      } else {
+        // Clipboard image writes aren't supported everywhere (older Safari) —
+        // fall back to a plain download so there's still a file to attach.
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `rocket-evolution-score-${score}.png`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        setShareState("downloaded");
+      }
     } catch {
       setShareState("error");
     }
@@ -113,8 +117,8 @@ export default function RocketRunner() {
           <div className={styles.eyebrow}>Mini-jeu</div>
           <h2 className={styles.title}>Combien de points tu tiens ?</h2>
           <p className={styles.intro}>
-            Saute par-dessus les obstacles avec <kbd>Espace</kbd> / clic. Ça accélère avec le temps — partage ton
-            meilleur score dans notre salon Discord.
+            Saute par-dessus les obstacles avec <kbd>Espace</kbd> / clic. Ça accélère avec le temps — copie une image
+            de ton score et colle-la dans notre salon Discord.
           </p>
         </Reveal>
 
@@ -153,15 +157,23 @@ export default function RocketRunner() {
                   <button
                     type="button"
                     className={styles.secondaryBtn}
-                    onClick={share}
-                    disabled={shareState === "sending" || shareState === "done"}
+                    onClick={copyImage}
+                    disabled={shareState === "copying"}
                   >
-                    {shareState === "sending" && "Envoi…"}
-                    {shareState === "done" && "Partagé ✓"}
+                    {shareState === "copying" && "Copie…"}
+                    {shareState === "copied" && "Copié ✓"}
+                    {shareState === "downloaded" && "Téléchargée ✓"}
                     {shareState === "error" && "Erreur, réessaie"}
-                    {shareState === "idle" && "Partager sur Discord"}
+                    {shareState === "idle" && "Copier l'image du score"}
                   </button>
                 </div>
+                {(shareState === "copied" || shareState === "downloaded") && (
+                  <p className={styles.shareHint}>
+                    {shareState === "copied"
+                      ? "Colle-la (Ctrl+V) dans un salon Discord !"
+                      : "Envoie le fichier téléchargé dans un salon Discord !"}
+                  </p>
+                )}
               </div>
             )}
           </div>

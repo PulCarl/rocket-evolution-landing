@@ -131,6 +131,12 @@
   color: var(--orange) !important;
 }
 
+.shareHint {
+  margin: 4px 0 0 !important;
+  font-size: 12px !important;
+  color: rgba(255, 255, 255, 0.55) !important;
+}
+
 .overActions {
   display: flex;
   flex-wrap: wrap;
