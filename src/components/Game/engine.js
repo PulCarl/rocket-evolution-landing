@@ -29,6 +29,12 @@ const {
   burstDuration: BURST_DURATION,
   burstMultiplier: BURST_MULTIPLIER,
   scoreTierStep: SCORE_TIER_STEP,
+  jetpackMinGap: JETPACK_MIN_GAP,
+  jetpackMaxGap: JETPACK_MAX_GAP,
+  jetpackDuration: JETPACK_DURATION,
+  magnetMinGap: MAGNET_MIN_GAP,
+  magnetMaxGap: MAGNET_MAX_GAP,
+  magnetDuration: MAGNET_DURATION,
 } = GAME_CONFIG;
 
 // Obstacle color palette shifts every SCORE_TIER_STEP points — purely
@@ -62,6 +68,12 @@ const GOLD_BOMB_SIZE = 26;
 const GOLD_BOMB_Y = GROUND - 90;
 const LETTER_SIZE = 20;
 const LETTER_Y = GROUND - 70;
+const JETPACK_SIZE = 24;
+const JETPACK_Y = GROUND - 90;
+const JETPACK_FLY_HEIGHT = GROUND - 100; // held here (ignoring gravity) while flying
+const MAGNET_SIZE = 24;
+const MAGNET_Y = GROUND - 70;
+const MAGNETABLE_KINDS = new Set(["coin", "bomb", "goldBomb", "letter"]);
 
 export function createGame() {
   return {
@@ -80,6 +92,8 @@ export function createGame() {
     bonusAnnounceTimer: 0, // >0 while that toast should be shown
     colorTier: 0, // floor(distance / SCORE_TIER_STEP), cycles through COLOR_TIERS
     tierAnnounceTimer: 0, // >0 right after reaching a new color tier
+    jetpackTimer: 0, // >0 while flying (invincible); grants a shield the instant it lands
+    magnetTimer: 0, // >0: coins/bombs/gold bombs/letters are auto-collected on screen
     player: { x: 90, y: GROUND, vy: 0, jumps: 0, w: 34, h: 30, spin: 0 },
     obstacles: [],
     pickups: [],
@@ -89,6 +103,8 @@ export function createGame() {
     nextBombAt: BOMB_MIN_GAP + Math.random() * (BOMB_MAX_GAP - BOMB_MIN_GAP),
     nextGoldBombAt: GOLD_BOMB_MIN_GAP + Math.random() * (GOLD_BOMB_MAX_GAP - GOLD_BOMB_MIN_GAP),
     nextLetterAt: 2 + Math.random() * 2,
+    nextJetpackAt: JETPACK_MIN_GAP + Math.random() * (JETPACK_MAX_GAP - JETPACK_MIN_GAP),
+    nextMagnetAt: MAGNET_MIN_GAP + Math.random() * (MAGNET_MAX_GAP - MAGNET_MIN_GAP),
     particles: [],
     over: false,
   };
@@ -180,6 +196,17 @@ function spawnLetter(state) {
   state.nextLetterAt = state.t + LETTER_MIN_GAP + Math.random() * (LETTER_MAX_GAP - LETTER_MIN_GAP);
 }
 
+function spawnJetpack(state) {
+  state.pickups.push({ x: W + 20, y: JETPACK_Y, w: JETPACK_SIZE, h: JETPACK_SIZE, kind: "jetpack" });
+  state.nextJetpackAt =
+    state.t + JETPACK_MIN_GAP + Math.random() * (JETPACK_MAX_GAP - JETPACK_MIN_GAP);
+}
+
+function spawnMagnet(state) {
+  state.pickups.push({ x: W + 20, y: MAGNET_Y, w: MAGNET_SIZE, h: MAGNET_SIZE, kind: "magnet" });
+  state.nextMagnetAt = state.t + MAGNET_MIN_GAP + Math.random() * (MAGNET_MAX_GAP - MAGNET_MIN_GAP);
+}
+
 function hexToRgb(hex) {
   const n = parseInt(hex.slice(1), 16);
   return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
@@ -232,17 +259,30 @@ export function step(state, dt) {
   if (state.burstTimer > 0) state.burstTimer = Math.max(0, state.burstTimer - dt);
   if (state.bonusAnnounceTimer > 0) state.bonusAnnounceTimer = Math.max(0, state.bonusAnnounceTimer - dt);
   if (state.tierAnnounceTimer > 0) state.tierAnnounceTimer = Math.max(0, state.tierAnnounceTimer - dt);
+  if (state.magnetTimer > 0) state.magnetTimer = Math.max(0, state.magnetTimer - dt);
 
   const p = state.player;
-  p.vy += GRAVITY * dt;
-  p.y += p.vy * dt;
-  if (p.y > GROUND) {
-    p.y = GROUND;
+  if (state.jetpackTimer > 0) {
+    state.jetpackTimer = Math.max(0, state.jetpackTimer - dt);
+    p.y = JETPACK_FLY_HEIGHT;
     p.vy = 0;
-    p.jumps = 0;
-    p.spin = 0;
+    p.spin += dt * 10; // fast spin while flying, purely visual
+    if (state.jetpackTimer <= 0) {
+      // "Quand on retombe on a un shield" — landing back into danger with
+      // one hit already covered.
+      state.shielded = true;
+    }
   } else {
-    p.spin += dt * 6; // little flip while airborne, purely visual
+    p.vy += GRAVITY * dt;
+    p.y += p.vy * dt;
+    if (p.y > GROUND) {
+      p.y = GROUND;
+      p.vy = 0;
+      p.jumps = 0;
+      p.spin = 0;
+    } else {
+      p.spin += dt * 6; // little flip while airborne, purely visual
+    }
   }
 
   for (const o of state.obstacles) o.x -= speed * dt;
@@ -255,7 +295,10 @@ export function step(state, dt) {
   const keptPickups = [];
   for (const pk of state.pickups) {
     if (pk.x + pk.w < -20) continue; // scrolled off, drop
-    if (aabbHitPickup(p, pk)) {
+    // While a magnet is active, coins/bombs/gold bombs/letters are collected
+    // the instant they're on screen — no need to fly/jump over to them.
+    const autoCollected = state.magnetTimer > 0 && MAGNETABLE_KINDS.has(pk.kind);
+    if (autoCollected || aabbHitPickup(p, pk)) {
       if (pk.kind === "coin") {
         state.coinCount += 1;
         if (state.coinCount % COINS_PER_STEP === 0) {
@@ -265,6 +308,10 @@ export function step(state, dt) {
         state.bombs = Math.min(MAX_BOMBS, state.bombs + 1);
       } else if (pk.kind === "goldBomb") {
         state.goldBombs = Math.min(MAX_GOLD_BOMBS, state.goldBombs + 1);
+      } else if (pk.kind === "jetpack") {
+        state.jetpackTimer = JETPACK_DURATION;
+      } else if (pk.kind === "magnet") {
+        state.magnetTimer = MAGNET_DURATION;
       } else if (pk.kind === "letter") {
         state.letterIndex += 1;
         if (state.letterIndex >= WORD.length) {
@@ -295,13 +342,17 @@ export function step(state, dt) {
   if (state.t >= state.nextBombAt) spawnBomb(state);
   if (state.t >= state.nextGoldBombAt) spawnGoldBomb(state);
   if (state.t >= state.nextLetterAt) spawnLetter(state);
+  if (state.t >= state.nextJetpackAt) spawnJetpack(state);
+  if (state.t >= state.nextMagnetAt) spawnMagnet(state);
 
   // A shield absorbs exactly one hit (removing that obstacle so it can't
-  // immediately re-trigger next frame) before it's used up.
+  // immediately re-trigger next frame) before it's used up. Flying (jetpack)
+  // skips collision entirely — obstacles keep spawning normally underneath,
+  // the player just isn't there to hit them.
   let crashed = false;
   const keptObstacles = [];
   for (const o of state.obstacles) {
-    if (!crashed && aabbHit(p, o)) {
+    if (!crashed && state.jetpackTimer <= 0 && aabbHit(p, o)) {
       if (state.shielded) {
         state.shielded = false;
         continue; // absorbed, this obstacle is cleared
@@ -429,6 +480,31 @@ export function draw(ctx, state, logoImg) {
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(pk.letter, 0, 1);
+    } else if (pk.kind === "jetpack") {
+      ctx.fillStyle = "#3a3a3a";
+      ctx.beginPath();
+      ctx.roundRect(-pk.w / 2 + 4, -pk.h / 2, pk.w - 8, pk.h - 6, 4);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.3)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      const flame = ctx.createLinearGradient(0, pk.h / 2 - 6, 0, pk.h / 2 + 6);
+      flame.addColorStop(0, "#ffd23f");
+      flame.addColorStop(1, "#fe980c");
+      ctx.fillStyle = flame;
+      ctx.beginPath();
+      ctx.ellipse(-4, pk.h / 2 - 4, 3, 6, 0, 0, Math.PI * 2);
+      ctx.ellipse(4, pk.h / 2 - 4, 3, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (pk.kind === "magnet") {
+      ctx.strokeStyle = "#d8224e";
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.arc(0, 2, pk.w / 2 - 3, Math.PI, Math.PI * 2, false);
+      ctx.stroke();
+      ctx.fillStyle = "#d8d8d8";
+      ctx.fillRect(-pk.w / 2, 2, 5, 8);
+      ctx.fillRect(pk.w / 2 - 5, 2, 5, 8);
     } else {
       ctx.strokeStyle = "rgba(120,190,255,0.9)";
       ctx.lineWidth = 3;
@@ -455,6 +531,19 @@ export function draw(ctx, state, logoImg) {
     ctx.beginPath();
     ctx.arc(p.x, p.y - logoH / 2, logoW * 0.75, 0, Math.PI * 2);
     ctx.stroke();
+    ctx.restore();
+  }
+
+  if (state.jetpackTimer > 0) {
+    ctx.save();
+    const flicker = 0.7 + Math.sin(state.t * 30) * 0.3;
+    const grad = ctx.createLinearGradient(p.x, p.y - logoH / 2, p.x, p.y + 18);
+    grad.addColorStop(0, `rgba(255,210,63,${0.7 * flicker})`);
+    grad.addColorStop(1, "rgba(254,152,12,0)");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.ellipse(p.x, p.y - logoH / 4 + 12, 8, 16, 0, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
   }
 

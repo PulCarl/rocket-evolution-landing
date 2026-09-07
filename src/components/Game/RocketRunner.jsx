@@ -56,6 +56,8 @@ export default function RocketRunner() {
   const [bombActive, setBombActive] = useState(false);
   const [letterIndex, setLetterIndex] = useState(0);
   const [burstActive, setBurstActive] = useState(false);
+  const [jetpackActive, setJetpackActive] = useState(false);
+  const [magnetActive, setMagnetActive] = useState(false);
   const [bonusToast, setBonusToast] = useState(null); // "goldBomb" | "points" | "burst" | null
   const [colorTier, setColorTier] = useState(0);
   const [tierToast, setTierToast] = useState(false);
@@ -161,6 +163,8 @@ export default function RocketRunner() {
     setBombActive(false);
     setLetterIndex(0);
     setBurstActive(false);
+    setJetpackActive(false);
+    setMagnetActive(false);
     setBonusToast(null);
     setColorTier(0);
     setTierToast(false);
@@ -210,6 +214,8 @@ export default function RocketRunner() {
       setBombActive(gameRef.current.bombTimer > 0);
       setLetterIndex(gameRef.current.letterIndex);
       setBurstActive(gameRef.current.burstTimer > 0);
+      setJetpackActive(gameRef.current.jetpackTimer > 0);
+      setMagnetActive(gameRef.current.magnetTimer > 0);
       setBonusToast(gameRef.current.bonusAnnounceTimer > 0 ? gameRef.current.bonusAnnounce : null);
       setColorTier(gameRef.current.colorTier);
       setTierToast(gameRef.current.tierAnnounceTimer > 0);
@@ -341,6 +347,8 @@ export default function RocketRunner() {
               💣 Bombe → efface les obstacles (<kbd>B</kbd>)
             </li>
             <li>🔤 Complète ROCKET → bonus surprise</li>
+            <li>🚀 Jetpack → vol invincible, bouclier à l'atterrissage</li>
+            <li>🧲 Aimant → ramasse tout automatiquement</li>
           </ul>
           {totalGames !== null && (
             <p className={styles.totalGames}>
@@ -421,6 +429,8 @@ export default function RocketRunner() {
                   <span className={styles.multiplierTag}>x{multiplier.toFixed(1)}</span>
                 )}
                 {burstActive && <span className={styles.burstTag}>⚡ x3</span>}
+                {jetpackActive && <span className={styles.jetpackTag}>🚀 Vol</span>}
+                {magnetActive && <span className={styles.magnetTag}>🧲</span>}
               </div>
             )}
 

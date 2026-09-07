@@ -65,6 +65,17 @@ export const GAME_CONFIG = {
   // Obstacle color palette shifts every scoreTierStep points (see
   // COLOR_TIERS in engine.js) — a visual milestone, doesn't affect scoring.
   scoreTierStep: 50000,
+  // Jetpack pickup: flies (invincible, ignores every obstacle) for
+  // jetpackDuration, then grants a free shield the moment it lands.
+  jetpackMinGap: 40,
+  jetpackMaxGap: 70,
+  jetpackDuration: 10,
+  // Magnet pickup: auto-collects every coin/bomb/gold bomb/letter on screen
+  // for magnetDuration, no need to fly over them. Rare, same rarity as the
+  // jetpack — not meant to be common.
+  magnetMinGap: 40,
+  magnetMaxGap: 70,
+  magnetDuration: 5,
 };
 
 export function speedAt(elapsedSeconds) {

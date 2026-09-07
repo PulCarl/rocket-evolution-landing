@@ -131,7 +131,9 @@
   text-transform: none;
 }
 
-.burstTag {
+.burstTag,
+.jetpackTag,
+.magnetTag {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 12px;
@@ -140,7 +142,20 @@
   border-radius: 999px;
   padding: 2px 9px;
   color: #fff;
+}
+
+.burstTag {
   background: var(--grad-brand);
+}
+
+.jetpackTag {
+  background: rgba(254, 152, 12, 0.25);
+  border: 1px solid rgba(254, 152, 12, 0.5);
+}
+
+.magnetTag {
+  background: rgba(216, 34, 78, 0.25);
+  border: 1px solid rgba(216, 34, 78, 0.5);
 }
 
 .wordTracker {
