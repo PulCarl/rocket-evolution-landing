@@ -1,11 +1,10 @@
-import { useEffect, useRef, useState, useCallback, lazy, Suspense } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Reveal from "../Reveal.jsx";
 import { createGame, jump, step, draw } from "./engine.js";
 import { renderShareCard } from "./shareCard.js";
 import { GAME_CONFIG } from "../../game/scoring.js";
+import logoUrl from "../../assets/logo-rocket-evolution.svg";
 import styles from "./RocketRunner.module.css";
-
-const GamePlayer3D = lazy(() => import("./GamePlayer3D.jsx"));
 
 const BEST_KEY = "re-runner-best";
 
@@ -14,6 +13,13 @@ export default function RocketRunner() {
   const gameRef = useRef(createGame());
   const rafRef = useRef(null);
   const lastRef = useRef(0);
+  const logoRef = useRef(null);
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = logoUrl;
+    logoRef.current = img;
+  }, []);
 
   const [phase, setPhase] = useState("idle"); // idle | playing | over
   const [score, setScore] = useState(0);
@@ -42,7 +48,7 @@ export default function RocketRunner() {
       lastRef.current = now;
       const { crashed } = step(gameRef.current, dt);
       const ctx = canvasRef.current?.getContext("2d");
-      if (ctx) draw(ctx, gameRef.current);
+      if (ctx) draw(ctx, gameRef.current, logoRef.current);
       const currentScore = Math.floor(gameRef.current.distance);
       setScore(currentScore);
 
@@ -129,10 +135,6 @@ export default function RocketRunner() {
               height={GAME_CONFIG.height}
               className={styles.canvas}
             />
-
-            <Suspense fallback={null}>
-              <GamePlayer3D gameRef={gameRef} />
-            </Suspense>
 
             {phase === "idle" && (
               <div className={styles.overlay}>

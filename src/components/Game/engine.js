@@ -13,7 +13,7 @@ export function createGame() {
   return {
     t: 0,
     distance: 0,
-    player: { x: 90, y: GROUND, vy: 0, jumps: 0, w: 34, h: 30 },
+    player: { x: 90, y: GROUND, vy: 0, jumps: 0, w: 34, h: 30, spin: 0 },
     obstacles: [],
     nextSpawnAt: 0.9,
     particles: [],
@@ -70,6 +70,9 @@ export function step(state, dt) {
     p.y = GROUND;
     p.vy = 0;
     p.jumps = 0;
+    p.spin = 0;
+  } else {
+    p.spin += dt * 6; // little flip while airborne, purely visual
   }
 
   for (const o of state.obstacles) o.x -= speed * dt;
@@ -87,7 +90,7 @@ export function step(state, dt) {
   return { crashed: false };
 }
 
-export function draw(ctx, state) {
+export function draw(ctx, state, logoImg) {
   ctx.clearRect(0, 0, W, H);
 
   // Ground
@@ -138,7 +141,15 @@ export function draw(ctx, state) {
     }
   }
 
-  // The player is rendered separately as the real 3D Fennec model, layered
-  // on top of this canvas by <GamePlayer3D> — see RocketRunner.jsx. Nothing
-  // to draw here for it.
+  // Player: the brand logo, flipping while airborne.
+  const p = state.player;
+  if (logoImg && logoImg.complete && logoImg.naturalWidth > 0) {
+    const logoW = p.w + 10;
+    const logoH = logoW * (logoImg.naturalHeight / logoImg.naturalWidth);
+    ctx.save();
+    ctx.translate(p.x, p.y - logoH / 2);
+    ctx.rotate(p.spin);
+    ctx.drawImage(logoImg, -logoW / 2, -logoH / 2, logoW, logoH);
+    ctx.restore();
+  }
 }
