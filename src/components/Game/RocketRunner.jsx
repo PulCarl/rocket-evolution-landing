@@ -4,10 +4,12 @@ import { createGame, jump, step, draw } from "./engine.js";
 import { renderShareCardBlob, renderShareCard } from "./shareCard.js";
 import { GAME_CONFIG } from "../../game/scoring.js";
 import logoUrl from "../../assets/logo-rocket-evolution.svg";
+import gameMusicUrl from "../../assets/audio/game-music.mp3";
 import styles from "./RocketRunner.module.css";
 
 const BEST_KEY = "re-runner-best";
 const NAME_KEY = "re-runner-name";
+const MUTED_KEY = "re-runner-muted";
 
 const MONTH_NAMES_FR = [
   "janvier", "février", "mars", "avril", "mai", "juin",
@@ -55,7 +57,11 @@ export default function RocketRunner() {
   const [previous, setPrevious] = useState(null); // { period, top3 } | null
   const [justRanked, setJustRanked] = useState(false);
   const [countdown, setCountdown] = useState(getCountdown);
+  const [muted, setMuted] = useState(false);
   const sessionTokenRef = useRef(null);
+  // Created lazily on the first "Jouer" click (see startGame) so the ~4Mo
+  // track is never fetched until someone actually plays, not on page load.
+  const musicRef = useRef(null);
 
   useEffect(() => {
     const id = setInterval(() => setCountdown(getCountdown()), 60000);
@@ -66,7 +72,20 @@ export default function RocketRunner() {
     const stored = Number(localStorage.getItem(BEST_KEY) || 0);
     if (Number.isFinite(stored)) setBest(stored);
     setPlayerName(localStorage.getItem(NAME_KEY) || "");
+    setMuted(localStorage.getItem(MUTED_KEY) === "1");
   }, []);
+
+  // Stop the music if the section unmounts mid-game (navigating away, etc).
+  useEffect(() => () => musicRef.current?.pause(), []);
+
+  const toggleMute = () => {
+    setMuted((prev) => {
+      const next = !prev;
+      localStorage.setItem(MUTED_KEY, next ? "1" : "0");
+      if (musicRef.current) musicRef.current.muted = next;
+      return next;
+    });
+  };
 
   useEffect(() => {
     fetch("/api/leaderboard")
@@ -98,6 +117,18 @@ export default function RocketRunner() {
     setPhase("playing");
     lastRef.current = performance.now();
 
+    if (!musicRef.current) {
+      musicRef.current = new Audio(gameMusicUrl);
+      musicRef.current.loop = true;
+      musicRef.current.volume = 0.35;
+    }
+    musicRef.current.muted = muted;
+    musicRef.current.currentTime = 0;
+    // Called from a click/keydown handler, so this counts as a user
+    // gesture — browsers won't block it. Still catch: a slow first load of
+    // the file shouldn't ever throw and interrupt the game starting.
+    musicRef.current.play().catch(() => {});
+
     // Ask the server for a signed "run started now" token — checked against
     // the elapsed time claimed when the score is submitted at game over.
     sessionTokenRef.current = null;
@@ -117,6 +148,7 @@ export default function RocketRunner() {
 
       if (crashed) {
         setPhase("over");
+        musicRef.current?.pause();
         setBest((prevBest) => {
           const newBest = Math.max(prevBest, currentScore);
           localStorage.setItem(BEST_KEY, String(newBest));
@@ -150,7 +182,7 @@ export default function RocketRunner() {
       rafRef.current = requestAnimationFrame(loop);
     };
     rafRef.current = requestAnimationFrame(loop);
-  }, [stopLoop, playerName]);
+  }, [stopLoop, playerName, muted]);
 
   useEffect(() => stopLoop, [stopLoop]);
 
@@ -225,12 +257,23 @@ export default function RocketRunner() {
 
         <Reveal delay={90} className={styles.stage}>
           <div className={styles.hud}>
-            <span>
-              Score <strong>{score}</strong>
-            </span>
-            <span>
-              Record <strong>{best}</strong>
-            </span>
+            <div className={styles.hudScores}>
+              <span>
+                Score <strong>{score}</strong>
+              </span>
+              <span>
+                Record <strong>{best}</strong>
+              </span>
+            </div>
+            <button
+              type="button"
+              className={styles.muteBtn}
+              onClick={toggleMute}
+              aria-label={muted ? "Activer le son" : "Couper le son"}
+              title={muted ? "Activer le son" : "Couper le son"}
+            >
+              {muted ? "🔇" : "🔊"}
+            </button>
           </div>
 
           <div className={styles.canvasWrap}>

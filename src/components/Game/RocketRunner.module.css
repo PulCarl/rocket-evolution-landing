@@ -61,12 +61,39 @@
 
 .hud {
   display: flex;
+  align-items: center;
   justify-content: space-between;
+  gap: 12px;
   font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.55);
   margin-bottom: 12px;
+}
+
+.hudScores {
+  display: flex;
+  gap: 24px;
+}
+
+.muteBtn {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.muteBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .hud strong {
