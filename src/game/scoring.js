@@ -6,11 +6,12 @@
 // mid-run, capped at maxMultiplier — "plus t'avances, plus tu ramasses,
 // plus tu fais un gros score". The multiplier only scales *points*, not the
 // world's scroll speed, so collecting coins doesn't also make the game
-// harder. A temporary burst (see below) on top of that multiplier is the
-// only other thing that scales score. api/leaderboard.js duplicates
-// maxMultiplier and burstMultiplier to bound how high a claimed score could
-// legitimately be for a given elapsed time (see that file for why it's a
-// bound, not an exact match, now that these exist).
+// harder. A temporary burst multiplies that further, and completing the
+// ROCKET word can also grant a flat instant points bonus — both are the
+// only other things that add to score. api/leaderboard.js duplicates
+// maxMultiplier, burstMultiplier and pointsBonusAmount to bound how high a
+// claimed score could legitimately be for a given elapsed time (see that
+// file for why it's a bound, not an exact match, now that these exist).
 
 export const GAME_CONFIG = {
   width: 800,
@@ -53,13 +54,12 @@ export const GAME_CONFIG = {
   // order); completing the word picks one random bonus and resets the word
   // so it can be spelled again:
   //   - a free gold bomb charge
-  //   - a temporary slowdown of the world's scroll (easier to dodge)
+  //   - an instant flat points bonus (pointsBonusAmount)
   //   - a temporary burst: burstMultiplier on top of the coin multiplier
   word: "ROCKET",
   letterMinGap: 4,
   letterMaxGap: 7,
-  slowDuration: 4,
-  slowFactor: 0.5,
+  pointsBonusAmount: 10000,
   burstDuration: 12,
   burstMultiplier: 3,
 };

@@ -22,11 +22,18 @@ const BASE_SPEED = 220;
 const RAMP_RATE = 4.2;
 const MAX_SPEED = 620;
 // Coins raise a score multiplier (capped) that's applied to the time-based
-// distance; completing the ROCKET word can also grant a temporary burst
-// multiplier on top of that. Neither the shield nor the slow-mo/gold-bomb
-// bonuses add points. Duplicated from src/game/scoring.js; keep in sync.
+// distance; completing the ROCKET word grants one of three random bonuses —
+// a temporary burst multiplier on top of that, a flat instant points bonus,
+// or a free gold bomb charge (that last one doesn't add points). Duplicated
+// from src/game/scoring.js; keep in sync.
 const MAX_MULTIPLIER = 3;
 const BURST_MULTIPLIER = 3;
+const POINTS_BONUS_AMOUNT = 10000;
+// One full word needs WORD_LENGTH letters, each taking at least
+// LETTER_MIN_GAP seconds after the previous one is collected — the fastest
+// any run could complete it (grabbing every letter instantly on spawn).
+const WORD_LENGTH = 6; // "ROCKET"
+const LETTER_MIN_GAP = 4;
 
 // The leaderboard is monthly, not all-time — "1 month to get the best
 // score". UTC-based, which is plenty precise for a community leaderboard
@@ -44,15 +51,24 @@ function maxDistance(t) {
   return atRamp + MAX_SPEED * (t - rampTime);
 }
 
+// The most points-bonus completions physically possible by time t — one
+// every WORD_LENGTH * LETTER_MIN_GAP seconds at the absolute fastest.
+function maxPointsBonus(t) {
+  const fastestWordTime = WORD_LENGTH * LETTER_MIN_GAP;
+  return Math.floor(t / fastestWordTime) * POINTS_BONUS_AMOUNT;
+}
+
 // The coin multiplier only ever increases and is capped, and a burst (from
 // spelling ROCKET) multiplies that further, also capped — so at every
 // instant score is earned at somewhere between 1x and
-// MAX_MULTIPLIER * BURST_MULTIPLIER times the base rate. This upper bound
-// (implausibly maxed the whole run) is intentionally loose, not an exact
-// match — the server can't replay which random pickups a run actually
-// crossed, only cap what's physically achievable.
+// MAX_MULTIPLIER * BURST_MULTIPLIER times the base rate. Add the points
+// bonus's own bound on top. This upper bound (implausibly maxed the whole
+// run, every single word completion rolling the points bonus) is
+// intentionally loose, not an exact match — the server can't replay which
+// random pickups a run actually crossed, only cap what's physically
+// achievable.
 function maxPossibleScore(t) {
-  return MAX_MULTIPLIER * BURST_MULTIPLIER * maxDistance(t);
+  return MAX_MULTIPLIER * BURST_MULTIPLIER * maxDistance(t) + maxPointsBonus(t);
 }
 
 function verifySessionToken(token) {

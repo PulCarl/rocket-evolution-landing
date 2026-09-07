@@ -25,8 +25,7 @@ const {
   word: WORD,
   letterMinGap: LETTER_MIN_GAP,
   letterMaxGap: LETTER_MAX_GAP,
-  slowDuration: SLOW_DURATION,
-  slowFactor: SLOW_FACTOR,
+  pointsBonusAmount: POINTS_BONUS_AMOUNT,
   burstDuration: BURST_DURATION,
   burstMultiplier: BURST_MULTIPLIER,
 } = GAME_CONFIG;
@@ -65,9 +64,8 @@ export function createGame() {
     bombTimer: 0, // >0 while a bomb's "no obstacles" window is active
     bombTimerMax: 0, // duration of the bomb currently active, for UI/fade math
     letterIndex: 0, // progress spelling WORD; wraps to 0 + a random bonus on completion
-    slowTimer: 0, // >0: world scroll (not score) runs at SLOW_FACTOR
     burstTimer: 0, // >0: score multiplier is temporarily x BURST_MULTIPLIER
-    bonusAnnounce: null, // "goldBomb" | "slow" | "burst" — last bonus won, for a UI toast
+    bonusAnnounce: null, // "goldBomb" | "points" | "burst" — last bonus won, for a UI toast
     bonusAnnounceTimer: 0, // >0 while that toast should be shown
     player: { x: 90, y: GROUND, vy: 0, jumps: 0, w: 34, h: 30, spin: 0 },
     obstacles: [],
@@ -198,18 +196,14 @@ export function step(state, dt) {
   if (state.over) return { crashed: false };
   state.t += dt;
 
-  // `speed` is the "real" time-based speed used for scoring and the
-  // difficulty ramp — always unaffected by pickups, so nothing can slow
-  // down how fast the run gets harder or how score accrues. `scrollSpeed` is
-  // only how fast obstacles/pickups actually move on screen; a slow-mo bonus
-  // drops just that, making things easier to dodge without touching score.
+  // `speed` drives both the world's scroll and scoring — the coin multiplier
+  // and burst only scale how many *points* that distance is worth, never
+  // the scroll itself, so neither makes the game easier or harder.
   const speed = speedAt(state.t);
-  const scrollSpeed = speed * (state.slowTimer > 0 ? SLOW_FACTOR : 1);
   const scoreMultiplier = state.multiplier * (state.burstTimer > 0 ? BURST_MULTIPLIER : 1);
   state.distance += speed * dt * scoreMultiplier;
 
   if (state.bombTimer > 0) state.bombTimer = Math.max(0, state.bombTimer - dt);
-  if (state.slowTimer > 0) state.slowTimer = Math.max(0, state.slowTimer - dt);
   if (state.burstTimer > 0) state.burstTimer = Math.max(0, state.burstTimer - dt);
   if (state.bonusAnnounceTimer > 0) state.bonusAnnounceTimer = Math.max(0, state.bonusAnnounceTimer - dt);
 
@@ -225,13 +219,13 @@ export function step(state, dt) {
     p.spin += dt * 6; // little flip while airborne, purely visual
   }
 
-  for (const o of state.obstacles) o.x -= scrollSpeed * dt;
+  for (const o of state.obstacles) o.x -= speed * dt;
   state.obstacles = state.obstacles.filter((o) => o.x + o.w > -20);
   // Suppressed while a bomb is active — useBomb() already pushed nextSpawnAt
   // past the bomb window, this just double-guards against spawning early.
   if (state.bombTimer <= 0 && state.t >= state.nextSpawnAt) spawnObstacle(state);
 
-  for (const pk of state.pickups) pk.x -= scrollSpeed * dt;
+  for (const pk of state.pickups) pk.x -= speed * dt;
   const keptPickups = [];
   for (const pk of state.pickups) {
     if (pk.x + pk.w < -20) continue; // scrolled off, drop
@@ -254,8 +248,8 @@ export function step(state, dt) {
             state.goldBombs = Math.min(MAX_GOLD_BOMBS, state.goldBombs + 1);
             state.bonusAnnounce = "goldBomb";
           } else if (roll === 1) {
-            state.slowTimer = SLOW_DURATION;
-            state.bonusAnnounce = "slow";
+            state.distance += POINTS_BONUS_AMOUNT;
+            state.bonusAnnounce = "points";
           } else {
             state.burstTimer = BURST_DURATION;
             state.bonusAnnounce = "burst";

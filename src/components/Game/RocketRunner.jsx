@@ -55,9 +55,8 @@ export default function RocketRunner() {
   const [goldBombs, setGoldBombs] = useState(0);
   const [bombActive, setBombActive] = useState(false);
   const [letterIndex, setLetterIndex] = useState(0);
-  const [slowActive, setSlowActive] = useState(false);
   const [burstActive, setBurstActive] = useState(false);
-  const [bonusToast, setBonusToast] = useState(null); // "goldBomb" | "slow" | "burst" | null
+  const [bonusToast, setBonusToast] = useState(null); // "goldBomb" | "points" | "burst" | null
   const [best, setBest] = useState(0);
   const [playerName, setPlayerName] = useState("");
   const [shareState, setShareState] = useState("idle"); // idle | copying | copied | downloaded | error
@@ -159,7 +158,6 @@ export default function RocketRunner() {
     setGoldBombs(0);
     setBombActive(false);
     setLetterIndex(0);
-    setSlowActive(false);
     setBurstActive(false);
     setBonusToast(null);
     setShareState("idle");
@@ -207,7 +205,6 @@ export default function RocketRunner() {
       setGoldBombs(gameRef.current.goldBombs);
       setBombActive(gameRef.current.bombTimer > 0);
       setLetterIndex(gameRef.current.letterIndex);
-      setSlowActive(gameRef.current.slowTimer > 0);
       setBurstActive(gameRef.current.burstTimer > 0);
       setBonusToast(gameRef.current.bonusAnnounceTimer > 0 ? gameRef.current.bonusAnnounce : null);
 
@@ -418,7 +415,6 @@ export default function RocketRunner() {
                   <span className={styles.multiplierTag}>x{multiplier.toFixed(1)}</span>
                 )}
                 {burstActive && <span className={styles.burstTag}>⚡ x3</span>}
-                {slowActive && <span className={styles.slowTag}>🐌</span>}
               </div>
             )}
 
@@ -438,7 +434,8 @@ export default function RocketRunner() {
             {bonusToast && (
               <div className={styles.bonusToast}>
                 {bonusToast === "goldBomb" && "🌟 Bombe dorée !"}
-                {bonusToast === "slow" && "🐌 Ralenti !"}
+                {bonusToast === "points" &&
+                  `💰 +${GAME_CONFIG.pointsBonusAmount.toLocaleString("fr-FR")} points !`}
                 {bonusToast === "burst" && `⚡ x3 pendant ${GAME_CONFIG.burstDuration}s !`}
               </div>
             )}

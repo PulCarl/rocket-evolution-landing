@@ -131,8 +131,7 @@
   text-transform: none;
 }
 
-.burstTag,
-.slowTag {
+.burstTag {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 12px;
@@ -140,17 +139,8 @@
   text-transform: none;
   border-radius: 999px;
   padding: 2px 9px;
-}
-
-.burstTag {
   color: #fff;
   background: var(--grad-brand);
-}
-
-.slowTag {
-  color: #a8d8ff;
-  background: rgba(120, 190, 255, 0.16);
-  border: 1px solid rgba(120, 190, 255, 0.4);
 }
 
 .wordTracker {
