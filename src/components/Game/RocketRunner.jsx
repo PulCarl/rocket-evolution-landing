@@ -67,6 +67,7 @@ export default function RocketRunner() {
   const [countdown, setCountdown] = useState(getCountdown);
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(DEFAULT_VOLUME);
+  const [totalGames, setTotalGames] = useState(null); // site-wide count; null = not loaded yet
   const sessionTokenRef = useRef(null);
   // Created lazily on the first "Jouer" click (see startGame) so the ~4Mo
   // track is never fetched until someone actually plays, not on page load.
@@ -126,6 +127,12 @@ export default function RocketRunner() {
         setPrevious(data.previous ?? null);
       })
       .catch(() => {});
+    fetch("/api/game-session")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (typeof data?.totalGames === "number") setTotalGames(data.totalGames);
+      })
+      .catch(() => {});
   }, []);
 
   const onNameChange = (e) => {
@@ -172,7 +179,10 @@ export default function RocketRunner() {
     sessionTokenRef.current = null;
     fetch("/api/game-session", { method: "POST" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((data) => data?.token && (sessionTokenRef.current = data.token))
+      .then((data) => {
+        if (data?.token) sessionTokenRef.current = data.token;
+        if (typeof data?.totalGames === "number") setTotalGames(data.totalGames);
+      })
       .catch(() => {});
 
     const loop = (now) => {
@@ -307,13 +317,20 @@ export default function RocketRunner() {
           <div className={styles.eyebrow}>Mini-jeu</div>
           <h2 className={styles.title}>Combien de points tu tiens ?</h2>
           <p className={styles.intro}>
-            Saute (<kbd>Espace</kbd> / clic, double saut possible) par-dessus les obstacles. Ça accélère avec le
-            temps — ramasse les <strong>pièces</strong> pour augmenter ton multiplicateur de points (certaines
-            demandent un double saut), le <strong>bouclier</strong> pour encaisser un crash gratuit, et la{" "}
-            <strong>bombe</strong> (noire, empilable, effet court) et la <strong>bombe dorée</strong> (rare, un seul
-            exemplaire, effet long) pour faire disparaître les obstacles quelques secondes (<kbd>B</kbd> ou le
-            bouton à l'écran). Copie une image de ton score et colle-la dans notre salon Discord.
+            Saute par-dessus les obstacles (<kbd>Espace</kbd> / clic) — le score augmente avec le temps.
           </p>
+          <ul className={styles.legend}>
+            <li>🪙 Pièce → multiplicateur de points</li>
+            <li>🛡️ Bouclier → 1 crash gratuit</li>
+            <li>
+              💣 Bombe → efface les obstacles (<kbd>B</kbd>)
+            </li>
+          </ul>
+          {totalGames !== null && (
+            <p className={styles.totalGames}>
+              🎮 <strong>{totalGames.toLocaleString("fr-FR")}</strong> parties jouées par la communauté
+            </p>
+          )}
         </Reveal>
 
         <Reveal delay={90} className={styles.stage}>
