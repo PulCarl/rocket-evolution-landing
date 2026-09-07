@@ -28,10 +28,24 @@ export default function RocketRunner() {
   const [playerName, setPlayerName] = useState("");
   const [shareState, setShareState] = useState("idle"); // idle | copying | copied | downloaded | error
 
+  // Shared top-10 leaderboard (see api/leaderboard.js). null = not loaded /
+  // unavailable (e.g. the gist env vars aren't configured yet) — hidden in
+  // that case rather than showing a broken-looking empty panel.
+  const [leaderboard, setLeaderboard] = useState(null);
+  const [justRanked, setJustRanked] = useState(false);
+  const sessionTokenRef = useRef(null);
+
   useEffect(() => {
     const stored = Number(localStorage.getItem(BEST_KEY) || 0);
     if (Number.isFinite(stored)) setBest(stored);
     setPlayerName(localStorage.getItem(NAME_KEY) || "");
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/leaderboard")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => data?.leaderboard && setLeaderboard(data.leaderboard))
+      .catch(() => {});
   }, []);
 
   const onNameChange = (e) => {
@@ -49,8 +63,17 @@ export default function RocketRunner() {
     gameRef.current = createGame();
     setScore(0);
     setShareState("idle");
+    setJustRanked(false);
     setPhase("playing");
     lastRef.current = performance.now();
+
+    // Ask the server for a signed "run started now" token — checked against
+    // the elapsed time claimed when the score is submitted at game over.
+    sessionTokenRef.current = null;
+    fetch("/api/game-session", { method: "POST" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => data?.token && (sessionTokenRef.current = data.token))
+      .catch(() => {});
 
     const loop = (now) => {
       const dt = Math.min((now - lastRef.current) / 1000, 0.05);
@@ -69,12 +92,32 @@ export default function RocketRunner() {
           return newBest;
         });
         stopLoop();
+
+        const token = sessionTokenRef.current;
+        if (token && currentScore > 0) {
+          fetch("/api/leaderboard", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: playerName,
+              score: currentScore,
+              elapsedSeconds: gameRef.current.t,
+              token,
+            }),
+          })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((data) => {
+              if (data?.leaderboard) setLeaderboard(data.leaderboard);
+              if (data?.qualified) setJustRanked(true);
+            })
+            .catch(() => {});
+        }
         return;
       }
       rafRef.current = requestAnimationFrame(loop);
     };
     rafRef.current = requestAnimationFrame(loop);
-  }, [stopLoop]);
+  }, [stopLoop, playerName]);
 
   useEffect(() => stopLoop, [stopLoop]);
 
@@ -185,6 +228,7 @@ export default function RocketRunner() {
               <div className={styles.overlay}>
                 <p className={styles.overScore}>{score}</p>
                 {score >= best && score > 0 && <p className={styles.record}>Nouveau record !</p>}
+                {justRanked && <p className={styles.record}>🏆 Top 10 du classement !</p>}
                 <div className={styles.overActions}>
                   <button type="button" className={styles.primaryBtn} onClick={startGame}>
                     Rejouer
@@ -212,6 +256,25 @@ export default function RocketRunner() {
               </div>
             )}
           </div>
+
+          {leaderboard !== null && (
+            <div className={styles.leaderboard}>
+              <h3 className={styles.leaderboardTitle}>🏆 Top 10</h3>
+              {leaderboard.length === 0 ? (
+                <p className={styles.leaderboardEmpty}>Sois le premier à marquer un point !</p>
+              ) : (
+                <ol className={styles.leaderboardList}>
+                  {leaderboard.map((entry, i) => (
+                    <li key={i} className={styles.leaderboardRow}>
+                      <span className={styles.leaderboardRank}>{i + 1}</span>
+                      <span className={styles.leaderboardName}>{entry.name}</span>
+                      <span className={styles.leaderboardScore}>{entry.score}</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
+          )}
         </Reveal>
       </div>
     </section>

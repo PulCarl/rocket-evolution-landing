@@ -16,3 +16,133 @@ En quelques mots, sans jargon technique :
 
 Rien n'est fait à la main au quotidien : les membres, les avis et les vidéos se mettent à jour tout seuls — la seule chose qui reste manuelle, c'est la validation des avis par un coach.
 
+Le reste de ce README (ci-dessous) est plus technique : stack utilisée, comment lancer le projet en local, comment fonctionnent les automatisations, etc.
+
+## Stack
+
+- [Vite](https://vite.dev) + React 19
+- CSS Modules (pas de framework CSS) — tokens de design dans [`src/index.css`](./src/index.css)
+- Aucune dépendance backend : contenu statique dans [`src/data/content.js`](./src/data/content.js)
+- [react-three-fiber](https://r3f.docs.pmnd.rs) + [drei](https://github.com/pmndrs/drei) pour la voiture 3D du hero (voir ci-dessous)
+
+## Voiture 3D dans le hero
+
+Le visuel du hero ([`FennecCar3D.jsx`](./src/components/FennecCar3D.jsx)) charge un modèle Blender (`src/assets/3d/fennec.glb`) et le fait tourner automatiquement.
+
+- **Poids** : le fichier original exporté par Blender faisait 27 Mo (textures 2048×2048 non compressées). Optimisé avec [`@gltf-transform/cli`](https://gltf-transform.dev) (`optimize --texture-size 1024 --texture-compress webp --compress draco`) → 1,14 Mo. Pour ré-optimiser un nouveau fichier :
+  ```bash
+  npx @gltf-transform/cli optimize source.glb src/assets/3d/fennec.glb --texture-size 1024 --texture-compress webp --compress draco
+  ```
+- **Chargement** : le composant est lazy-loadé (`React.lazy` + `Suspense`) — three.js/drei (~275 Ko gzippés) et le modèle ne se chargent que si nécessaire.
+- **Mobile** : au-dessous de 780px, le composant n'est même pas monté ([`useMediaQuery`](./src/hooks/useMediaQuery.js)) — pas de coût réseau/CPU inutile là où le visuel est de toute façon masqué (`.visual { display: none }` dans `Hero.module.css`).
+- **Accessibilité** : la rotation est désactivée si `prefers-reduced-motion: reduce`.
+
+## Démarrer en local
+
+```bash
+npm install
+npm run dev
+```
+
+Ouvre http://localhost:5173.
+
+## Build de production
+
+```bash
+npm run build
+npm run preview   # pour tester le build localement
+```
+
+## Déploiement Vercel
+
+1. Pousser ce dépôt sur GitHub (ou GitLab/Bitbucket).
+2. Sur [vercel.com](https://vercel.com), "Add New Project" → importer le repo.
+3. Vercel détecte automatiquement Vite (`npm run build`, dossier de sortie `dist`) — aucune configuration supplémentaire n'est nécessaire.
+
+Ou via la CLI :
+
+```bash
+npm i -g vercel
+vercel        # preview
+vercel --prod # production
+```
+
+## Témoignages (sync automatique depuis Discord — actuellement en pause)
+
+⚠️ Le déclenchement automatique (toutes les 30 min) est **désactivé** dans [`sync-testimonials.yml`](./.github/workflows/sync-testimonials.yml) tant que les secrets Discord ci-dessous ne sont pas configurés — sinon chaque run échoue et spamme des emails de notification GitHub. Pour l'instant les avis sont ajoutés à la main dans [`testimonials.json`](./src/data/testimonials.json).
+
+Une fois prêt à l'activer : configure les secrets (étape 2 ci-dessous), puis décommente le bloc `schedule` dans le fichier de workflow.
+
+Les avis affichés dans la section Résultats viennent de [`src/data/testimonials.json`](./src/data/testimonials.json). Une fois le schedule réactivé, ce fichier sera mis à jour automatiquement par le workflow (déclenchable manuellement dès maintenant depuis l'onglet Actions de GitHub, même sans schedule).
+
+**Flux** : un membre poste son avis dans un salon Discord dédié → un coach réagit avec ✅ sur les messages à publier → le workflow les récupère, les ajoute au JSON, commit → Vercel redéploie automatiquement.
+
+**Format attendu du message Discord** (sinon il est ignoré) :
+```
+Rang avant -> Rang après : le texte de l'avis
+```
+Exemple : `Or 3 -> Platine 2 : Le serveur est ce qui m'a fait rester...`
+
+**Mise en place requise** (une seule fois) :
+1. Créer une application + bot sur [discord.com/developers/applications](https://discord.com/developers/applications), l'inviter sur le serveur avec la permission *Read Message History* sur le salon des avis.
+2. Dans les Settings du repo GitHub → *Secrets and variables → Actions*, ajouter :
+   - `DISCORD_BOT_TOKEN` — le token du bot
+   - `DISCORD_CHANNEL_ID` — l'id du salon où sont postés les avis
+   - `DISCORD_APPROVER_IDS` — les ids Discord des coachs autorisés à approuver (séparés par des virgules)
+3. Le workflow tourne automatiquement ensuite (au plus 3 témoignages affichés, les plus récents approuvés).
+
+## Dernières vidéos (sync automatique depuis YouTube)
+
+Les 3 vignettes de la section "Les dernières vidéos" viennent de [`src/data/videos.json`](./src/data/videos.json), mis à jour automatiquement par [`.github/workflows/sync-videos.yml`](./.github/workflows/sync-videos.yml) (toutes les 6h, ou déclenchable manuellement depuis l'onglet Actions de GitHub). Aucune clé API ni secret requis — il interroge simplement le flux RSS public de la chaîne (`youtube.com/feeds/videos.xml?channel_id=UCBiuzf9xGJXJflCjHWUwqZg`), prend les 3 dernières vidéos et commit le résultat s'il a changé.
+
+## Membres Discord (sync automatique)
+
+Le premier stat du hero ("Membres Discord") vient de [`src/data/discordStats.json`](./src/data/discordStats.json), mis à jour automatiquement par [`.github/workflows/sync-discord-stats.yml`](./.github/workflows/sync-discord-stats.yml) (toutes les 6h, ou déclenchable manuellement depuis l'onglet Actions de GitHub). Aucune clé API ni secret requis — il interroge l'API publique des invitations Discord (`approximate_member_count` sur l'invite `6dbDnF3JCy`).
+
+**TikTok et YouTube n'ont pas d'équivalent ici** : TikTok n'a pas d'API publique gratuite pour le nombre de followers (scraping fragile/hors ToS sinon), et l'abonnement YouTube en direct nécessiterait une clé API Data v3 (Google Cloud Console) — non mis en place pour l'instant, décision du client.
+
+## Mini-jeu ("Jeu" dans la nav, `#jeu`)
+
+Petit runner façon jeu du dinosaure de Chrome, à l'esthétique Rocket League (cônes, plots de boost, buts) — [`src/components/Game/`](./src/components/Game). Espace / clic pour sauter, la vitesse augmente avec le temps.
+
+**Le joueur est le logo de la marque** (`src/assets/logo-rocket-evolution.svg`, dessiné sur le canvas 2D via `drawImage` dans `engine.js`), qui fait un petit flip tant qu'il est en l'air. Une première version utilisait le modèle 3D de la voiture du hero en overlay (`react-three-fiber`) ; simplifié depuis en un simple sprite 2D — plus léger, et ça se voit mieux à la taille du jeu.
+
+### Partage de score
+
+En fin de partie, le bouton "Copier l'image du score" génère une carte brandée (`src/components/Game/shareCard.js` — score, record, logo) et la copie directement dans le presse-papier via l'API Clipboard du navigateur, prête à coller (Ctrl+V) dans un salon Discord. Aucun serveur, webhook ni configuration : c'est le joueur qui choisit où la partager.
+
+Si l'API Clipboard n'est pas disponible (ex. anciennes versions de Safari), l'image est téléchargée à la place, pour être envoyée en pièce jointe manuellement.
+
+### Classement (top 10 partagé)
+
+En plus du partage manuel ci-dessus, il y a un vrai classement top 10, visible par tous les joueurs, sous le jeu. Contrairement au reste du site, ça a besoin d'un tout petit bout de serveur (le site n'est plus 100% statique pour cette seule fonctionnalité) :
+
+- **Stockage** : un [Gist GitHub](https://gist.github.com) contenant un seul fichier `leaderboard.json` — pas de vraie base de données à gérer.
+- **Lecture/écriture** : [`api/leaderboard.js`](./api/leaderboard.js) (fonction serverless Vercel) lit/écrit ce Gist via l'API GitHub. `GET` renvoie le top 10, `POST` soumet un score.
+- **Anti-triche** : le score du jeu est entièrement déterminé par le temps de survie (pas de bonus au hasard), donc [`api/leaderboard.js`](./api/leaderboard.js) recalcule le score attendu à partir du temps écoulé annoncé et rejette toute incohérence. En plus, [`api/game-session.js`](./api/game-session.js) délivre un jeton signé au lancement de la partie, et la soumission vérifie que le temps annoncé correspond à peu près au temps réel écoulé depuis ce jeton — donc éditer juste le score affiché dans la console du navigateur ne suffit plus à apparaître dans le classement. Ce n'est pas infranchissable pour quelqu'un de très motivé (rien ne prouve que la partie a vraiment été jouée obstacle par obstacle), mais ça bloque la triche "au clic".
+
+**Mise en place requise** (une seule fois) :
+1. Créer un [Gist](https://gist.github.com/) (peut être secret) avec un fichier nommé exactement `leaderboard.json` contenant `[]`. Noter son id (dans l'URL du gist).
+2. Créer un [token GitHub](https://github.com/settings/tokens) (classic), avec **uniquement** la case `gist` cochée (aucun autre accès).
+3. Dans les réglages du projet sur Vercel → *Settings → Environment Variables*, ajouter :
+   - `GIST_ID` — l'id du gist créé à l'étape 1
+   - `GIST_TOKEN` — le token créé à l'étape 2
+4. Redéployer (un push suffit) — le classement se met en route automatiquement, sans autre changement de code.
+
+Tant que ces variables ne sont pas configurées, le panneau "Top 10" reste simplement masqué sur le site (pas d'erreur visible pour les visiteurs).
+
+## À faire avant mise en ligne (voir README du handoff design)
+
+- Reconfirmer les chiffres (+1 rang, 50+ replays, 4 500h, depuis 2026) — "Membres" est maintenant live depuis Discord, plus besoin de le reconfirmer manuellement.
+- Vérifier les droits d'utilisation de la photo de Coach Francky (watermark visible — probablement une photo de presse/agence).
+- Ajouter mentions légales / politique de confidentialité si la page collecte des données.
+
+## Structure
+
+```
+src/
+  components/    # un composant + son .module.css par section
+  hooks/         # useInView (scroll reveal), useScrolled (nav), useRailTheme (barre sociale)
+  data/          # contenu éditorial centralisé
+  assets/        # logo + images décoratives (fennec)
+```
