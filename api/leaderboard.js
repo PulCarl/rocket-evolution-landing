@@ -21,12 +21,6 @@ const MAX_ENTRIES = 10;
 const BASE_SPEED = 220;
 const RAMP_RATE = 4.2;
 const MAX_SPEED = 620;
-// Boost pickups add a flat bonus on top of the time-based distance — a
-// player can grab at most one every PICKUP_MIN_GAP seconds (the real client
-// randomizes gaps up to PICKUP_MAX_GAP, but only the minimum matters here:
-// it's the most any run could physically have collected by a given time).
-const BOOST_BONUS = 3000;
-const PICKUP_MIN_GAP = 6;
 
 // The leaderboard is monthly, not all-time — "1 month to get the best
 // score". UTC-based, which is plenty precise for a community leaderboard
@@ -35,25 +29,15 @@ function currentPeriod() {
   return new Date().toISOString().slice(0, 7); // "YYYY-MM"
 }
 
-// The time-based part of the score (distance = integral of speed over
-// time) — closed-form of that integral.
-function maxDistance(t) {
+// Score is purely time-based (distance = integral of speed over time; the
+// shield pickup doesn't add points, it just lets a run survive longer), so
+// for a given elapsed time there's exactly one legitimate score — this is
+// the closed-form of that integral.
+function maxPossibleScore(t) {
   const rampTime = (MAX_SPEED - BASE_SPEED) / RAMP_RATE;
   if (t <= rampTime) return BASE_SPEED * t + 0.5 * RAMP_RATE * t * t;
   const atRamp = BASE_SPEED * rampTime + 0.5 * RAMP_RATE * rampTime * rampTime;
   return atRamp + MAX_SPEED * (t - rampTime);
-}
-
-// Upper bound on total score for a claimed elapsed time: the distance is
-// deterministic (checked as a tight bound below), but the boost bonus isn't
-// — the server can't replay which random pickups a run actually crossed, so
-// it can only cap how many it could possibly have collected by then. This
-// is intentionally looser than a pure distance check (an exact match was
-// possible before pickups existed); it still catches wildly tampered scores
-// while allowing legitimate boosted ones through.
-function maxPossibleScore(t) {
-  const maxPickups = Math.floor(t / PICKUP_MIN_GAP);
-  return maxDistance(t) + maxPickups * BOOST_BONUS;
 }
 
 function verifySessionToken(token) {
@@ -168,14 +152,9 @@ export default async function handler(req, res) {
       return;
     }
 
-    // The score can't exceed what's achievable in the claimed time — pure
-    // survival distance, plus at most one boost bonus per PICKUP_MIN_GAP
-    // seconds. It also can't be far *below* pure survival distance (that'd
-    // mean less time passed than claimed, which the timing check below
-    // would likely also catch, but this is a cheap extra sanity bound).
-    const upperBound = maxPossibleScore(claimedT);
-    const lowerBound = maxDistance(claimedT) * 0.98 - 3;
-    if (score > upperBound + 3 || score < lowerBound) {
+    // The score must match the deterministic time->distance formula...
+    const expectedScore = maxPossibleScore(claimedT);
+    if (Math.abs(score - expectedScore) > Math.max(3, expectedScore * 0.01)) {
       res.status(400).json({ error: "implausible score" });
       return;
     }

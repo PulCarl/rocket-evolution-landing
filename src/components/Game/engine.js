@@ -7,10 +7,8 @@ const {
   gravity: GRAVITY,
   jumpVelocity: JUMP_V,
   doubleJumpVelocity: JUMP2_V,
-  boostBonus: BOOST_BONUS,
   pickupMinGap: PICKUP_MIN_GAP,
   pickupMaxGap: PICKUP_MAX_GAP,
-  boostDuration: BOOST_DURATION,
 } = GAME_CONFIG;
 
 const OBSTACLE_KINDS = [
@@ -19,8 +17,8 @@ const OBSTACLE_KINDS = [
   { w: 24, h: 46, kind: "post" },
 ];
 
-// Pickups float above the ground (unlike obstacles, which sit on it) — you
-// have to jump into them on purpose, they're never in the way of a normal
+// The shield floats above the ground (unlike obstacles, which sit on it) —
+// you have to jump into it on purpose, it's never in the way of a normal
 // dodge. Sized/placed to sit comfortably inside a single jump's arc.
 const PICKUP_SIZE = 26;
 const PICKUP_Y = GROUND - 90;
@@ -29,9 +27,8 @@ export function createGame() {
   return {
     t: 0,
     distance: 0,
-    bonusScore: 0, // flat points from boost pickups, on top of the time-based distance
     shielded: false,
-    player: { x: 90, y: GROUND, vy: 0, jumps: 0, w: 34, h: 30, spin: 0, boostTimer: 0 },
+    player: { x: 90, y: GROUND, vy: 0, jumps: 0, w: 34, h: 30, spin: 0 },
     obstacles: [],
     pickups: [],
     nextSpawnAt: 0.9,
@@ -64,8 +61,7 @@ function spawnObstacle(state) {
 }
 
 function spawnPickup(state) {
-  const kind = Math.random() < 0.5 ? "boost" : "shield";
-  state.pickups.push({ x: W + 20, y: PICKUP_Y, w: PICKUP_SIZE, h: PICKUP_SIZE, kind, spin: 0 });
+  state.pickups.push({ x: W + 20, y: PICKUP_Y, w: PICKUP_SIZE, h: PICKUP_SIZE, kind: "shield" });
   state.nextPickupAt = state.t + PICKUP_MIN_GAP + Math.random() * (PICKUP_MAX_GAP - PICKUP_MIN_GAP);
 }
 
@@ -102,25 +98,15 @@ export function step(state, dt) {
   state.distance += speed * dt;
 
   const p = state.player;
-  const boosting = p.boostTimer > 0;
-  if (boosting) {
-    // Stationary and invincible for the duration (Jetpack Joyride's Lil'
-    // Stomper, not a jetpack) — frozen in place, no gravity, just a fast
-    // spin as a "powered up" visual cue. Physics resume where they left off
-    // once the timer runs out.
-    p.boostTimer = Math.max(0, p.boostTimer - dt);
-    p.spin += dt * 14;
+  p.vy += GRAVITY * dt;
+  p.y += p.vy * dt;
+  if (p.y > GROUND) {
+    p.y = GROUND;
+    p.vy = 0;
+    p.jumps = 0;
+    p.spin = 0;
   } else {
-    p.vy += GRAVITY * dt;
-    p.y += p.vy * dt;
-    if (p.y > GROUND) {
-      p.y = GROUND;
-      p.vy = 0;
-      p.jumps = 0;
-      p.spin = 0;
-    } else {
-      p.spin += dt * 6; // little flip while airborne, purely visual
-    }
+    p.spin += dt * 6; // little flip while airborne, purely visual
   }
 
   for (const o of state.obstacles) o.x -= speed * dt;
@@ -132,17 +118,7 @@ export function step(state, dt) {
   for (const pk of state.pickups) {
     if (pk.x + pk.w < -20) continue; // scrolled off, drop
     if (aabbHitPickup(p, pk)) {
-      if (pk.kind === "boost") {
-        state.bonusScore += BOOST_BONUS;
-        p.boostTimer = BOOST_DURATION;
-        // Stomp back down to the ground immediately (even if grabbed
-        // mid-jump) so the invincible window is spent planted in place,
-        // not floating wherever the jump happened to be.
-        p.y = GROUND;
-        p.vy = 0;
-      } else {
-        state.shielded = true;
-      }
+      state.shielded = true;
       continue; // collected, remove
     }
     keptPickups.push(pk);
@@ -150,13 +126,12 @@ export function step(state, dt) {
   state.pickups = keptPickups;
   if (state.t >= state.nextPickupAt) spawnPickup(state);
 
-  // Boosting (stationary + invincible) clears every obstacle; a shield
-  // absorbs exactly one hit (removing that obstacle so it can't immediately
-  // re-trigger next frame) before it's used up.
+  // A shield absorbs exactly one hit (removing that obstacle so it can't
+  // immediately re-trigger next frame) before it's used up.
   let crashed = false;
   const keptObstacles = [];
   for (const o of state.obstacles) {
-    if (!crashed && !boosting && aabbHit(p, o)) {
+    if (!crashed && aabbHit(p, o)) {
       if (state.shielded) {
         state.shielded = false;
         continue; // absorbed, this obstacle is cleared
@@ -222,39 +197,21 @@ export function draw(ctx, state, logoImg) {
     }
   }
 
-  // Pickups: a boost chevron (speed/lightning feel) or a shield ring.
+  // Shield pickup: a small floating ring.
   const pulse = 0.85 + Math.sin(state.t * 6) * 0.15;
   for (const pk of state.pickups) {
-    const cx = pk.x + pk.w / 2;
-    const cy = pk.y;
     ctx.save();
-    ctx.translate(cx, cy);
+    ctx.translate(pk.x + pk.w / 2, pk.y);
     ctx.scale(pulse, pulse);
-    if (pk.kind === "boost") {
-      const grad = ctx.createLinearGradient(0, -pk.h / 2, 0, pk.h / 2);
-      grad.addColorStop(0, "#fe980c");
-      grad.addColorStop(1, "#d8224e");
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.moveTo(-6, -pk.h / 2);
-      ctx.lineTo(4, -3);
-      ctx.lineTo(-2, -3);
-      ctx.lineTo(6, pk.h / 2);
-      ctx.lineTo(-4, 3);
-      ctx.lineTo(2, 3);
-      ctx.closePath();
-      ctx.fill();
-    } else {
-      ctx.strokeStyle = "rgba(120,190,255,0.9)";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(0, 0, pk.w / 2, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.fillStyle = "rgba(120,190,255,0.18)";
-      ctx.beginPath();
-      ctx.arc(0, 0, pk.w / 2 - 2, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    ctx.strokeStyle = "rgba(120,190,255,0.9)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, pk.w / 2, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = "rgba(120,190,255,0.18)";
+    ctx.beginPath();
+    ctx.arc(0, 0, pk.w / 2 - 2, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
   }
 
@@ -270,17 +227,6 @@ export function draw(ctx, state, logoImg) {
     ctx.beginPath();
     ctx.arc(p.x, p.y - logoH / 2, logoW * 0.75, 0, Math.PI * 2);
     ctx.stroke();
-    ctx.restore();
-  }
-  if (p.boostTimer > 0) {
-    ctx.save();
-    const grad = ctx.createRadialGradient(p.x, p.y - logoH / 2, 2, p.x, p.y - logoH / 2, logoW);
-    grad.addColorStop(0, "rgba(254,152,12,0.5)");
-    grad.addColorStop(1, "rgba(254,152,12,0)");
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y - logoH / 2, logoW, 0, Math.PI * 2);
-    ctx.fill();
     ctx.restore();
   }
 

@@ -112,7 +112,7 @@ export default function RocketRunner() {
       const { crashed } = step(gameRef.current, dt);
       const ctx = canvasRef.current?.getContext("2d");
       if (ctx) draw(ctx, gameRef.current, logoRef.current);
-      const currentScore = Math.floor(gameRef.current.distance) + gameRef.current.bonusScore;
+      const currentScore = Math.floor(gameRef.current.distance);
       setScore(currentScore);
 
       if (crashed) {
@@ -218,8 +218,8 @@ export default function RocketRunner() {
           <h2 className={styles.title}>Combien de points tu tiens ?</h2>
           <p className={styles.intro}>
             Saute par-dessus les obstacles avec <kbd>Espace</kbd> / clic. Ça accélère avec le temps — attrape le
-            <strong> boost</strong> (+3000 et tu deviens invincible un instant) et le <strong>bouclier</strong> (encaisse un
-            crash gratuit) en sautant dedans. Copie une image de ton score et colle-la dans notre salon Discord.
+            <strong> bouclier</strong> en sautant dedans pour encaisser un crash gratuit. Copie une image de ton
+            score et colle-la dans notre salon Discord.
           </p>
         </Reveal>
 
