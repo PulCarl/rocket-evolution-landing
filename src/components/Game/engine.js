@@ -28,7 +28,18 @@ const {
   pointsBonusAmount: POINTS_BONUS_AMOUNT,
   burstDuration: BURST_DURATION,
   burstMultiplier: BURST_MULTIPLIER,
+  scoreTierStep: SCORE_TIER_STEP,
 } = GAME_CONFIG;
+
+// Obstacle color palette shifts every SCORE_TIER_STEP points — purely
+// cosmetic (score/difficulty are unaffected), cycles once every tier's used.
+const COLOR_TIERS = [
+  { a: "#fe980c", b: "#d8224e" }, // brand orange/pink (default, 0-49 999)
+  { a: "#00d4ff", b: "#7b2ff7" }, // cyan/purple
+  { a: "#00e09d", b: "#00b894" }, // green/teal
+  { a: "#ffd23f", b: "#ff4757" }, // gold/red
+  { a: "#ff6b6b", b: "#4834d4" }, // coral/indigo
+];
 
 const OBSTACLE_KINDS = [
   { w: 20, h: 34, kind: "cone" },
@@ -67,6 +78,8 @@ export function createGame() {
     burstTimer: 0, // >0: score multiplier is temporarily x BURST_MULTIPLIER
     bonusAnnounce: null, // "goldBomb" | "points" | "burst" — last bonus won, for a UI toast
     bonusAnnounceTimer: 0, // >0 while that toast should be shown
+    colorTier: 0, // floor(distance / SCORE_TIER_STEP), cycles through COLOR_TIERS
+    tierAnnounceTimer: 0, // >0 right after reaching a new color tier
     player: { x: 90, y: GROUND, vy: 0, jumps: 0, w: 34, h: 30, spin: 0 },
     obstacles: [],
     pickups: [],
@@ -167,6 +180,11 @@ function spawnLetter(state) {
   state.nextLetterAt = state.t + LETTER_MIN_GAP + Math.random() * (LETTER_MAX_GAP - LETTER_MIN_GAP);
 }
 
+function hexToRgb(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+
 function aabbHit(p, o) {
   const px1 = p.x - p.w / 2;
   const px2 = p.x + p.w / 2;
@@ -203,9 +221,17 @@ export function step(state, dt) {
   const scoreMultiplier = state.multiplier * (state.burstTimer > 0 ? BURST_MULTIPLIER : 1);
   state.distance += speed * dt * scoreMultiplier;
 
+  // Purely cosmetic palette milestone — every SCORE_TIER_STEP points.
+  const newTier = Math.floor(state.distance / SCORE_TIER_STEP);
+  if (newTier > state.colorTier) {
+    state.colorTier = newTier;
+    state.tierAnnounceTimer = 2;
+  }
+
   if (state.bombTimer > 0) state.bombTimer = Math.max(0, state.bombTimer - dt);
   if (state.burstTimer > 0) state.burstTimer = Math.max(0, state.burstTimer - dt);
   if (state.bonusAnnounceTimer > 0) state.bonusAnnounceTimer = Math.max(0, state.bonusAnnounceTimer - dt);
+  if (state.tierAnnounceTimer > 0) state.tierAnnounceTimer = Math.max(0, state.tierAnnounceTimer - dt);
 
   const p = state.player;
   p.vy += GRAVITY * dt;
@@ -309,13 +335,15 @@ export function draw(ctx, state, logoImg) {
     ctx.fillRect(x, GROUND + 6, 22, 2);
   }
 
-  // Obstacles
+  // Obstacles — recolored to the current score-tier palette (cosmetic only).
+  const palette = COLOR_TIERS[state.colorTier % COLOR_TIERS.length];
+  const { r: pbR, g: pbG, b: pbB } = hexToRgb(palette.b);
   for (const o of state.obstacles) {
     const top = GROUND - o.h;
     if (o.kind === "cone") {
       const grad = ctx.createLinearGradient(o.x, top, o.x, GROUND);
-      grad.addColorStop(0, "#fe980c");
-      grad.addColorStop(1, "#d8224e");
+      grad.addColorStop(0, palette.a);
+      grad.addColorStop(1, palette.b);
       ctx.fillStyle = grad;
       ctx.beginPath();
       ctx.moveTo(o.x + o.w / 2, top);
@@ -325,16 +353,16 @@ export function draw(ctx, state, logoImg) {
       ctx.fill();
     } else if (o.kind === "pad") {
       const grad = ctx.createLinearGradient(o.x, top, o.x + o.w, GROUND);
-      grad.addColorStop(0, "#fe980c");
-      grad.addColorStop(1, "#f4791c");
+      grad.addColorStop(0, palette.a);
+      grad.addColorStop(1, palette.b);
       ctx.fillStyle = grad;
       ctx.beginPath();
       ctx.roundRect(o.x, top, o.w, o.h, 5);
       ctx.fill();
     } else {
-      ctx.fillStyle = "#d8224e";
+      ctx.fillStyle = palette.b;
       ctx.fillRect(o.x + o.w / 2 - 3, top, 6, o.h);
-      ctx.fillStyle = "rgba(216,34,78,.35)";
+      ctx.fillStyle = `rgba(${pbR},${pbG},${pbB},.35)`;
       ctx.beginPath();
       ctx.ellipse(o.x + o.w / 2, top, 11, 7, 0, 0, Math.PI * 2);
       ctx.fill();

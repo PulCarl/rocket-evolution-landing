@@ -57,6 +57,8 @@ export default function RocketRunner() {
   const [letterIndex, setLetterIndex] = useState(0);
   const [burstActive, setBurstActive] = useState(false);
   const [bonusToast, setBonusToast] = useState(null); // "goldBomb" | "points" | "burst" | null
+  const [colorTier, setColorTier] = useState(0);
+  const [tierToast, setTierToast] = useState(false);
   const [best, setBest] = useState(0);
   const [playerName, setPlayerName] = useState("");
   const [shareState, setShareState] = useState("idle"); // idle | copying | copied | downloaded | error
@@ -160,6 +162,8 @@ export default function RocketRunner() {
     setLetterIndex(0);
     setBurstActive(false);
     setBonusToast(null);
+    setColorTier(0);
+    setTierToast(false);
     setShareState("idle");
     setJustRanked(false);
     setPhase("playing");
@@ -207,6 +211,8 @@ export default function RocketRunner() {
       setLetterIndex(gameRef.current.letterIndex);
       setBurstActive(gameRef.current.burstTimer > 0);
       setBonusToast(gameRef.current.bonusAnnounceTimer > 0 ? gameRef.current.bonusAnnounce : null);
+      setColorTier(gameRef.current.colorTier);
+      setTierToast(gameRef.current.tierAnnounceTimer > 0);
 
       if (crashed) {
         setPhase("over");
@@ -437,6 +443,12 @@ export default function RocketRunner() {
                 {bonusToast === "points" &&
                   `💰 +${GAME_CONFIG.pointsBonusAmount.toLocaleString("fr-FR")} points !`}
                 {bonusToast === "burst" && `⚡ x3 pendant ${GAME_CONFIG.burstDuration}s !`}
+              </div>
+            )}
+
+            {tierToast && (
+              <div className={styles.tierToast}>
+                🎨 {(colorTier * GAME_CONFIG.scoreTierStep).toLocaleString("fr-FR")} !
               </div>
             )}
 

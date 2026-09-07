@@ -192,6 +192,21 @@
   animation: bonusPop 2s ease forwards;
 }
 
+.tierToast {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(14px, 2.5vw, 18px);
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+  pointer-events: none;
+  animation: bonusPop 2s ease forwards;
+}
+
 @keyframes bonusPop {
   0% {
     opacity: 0;

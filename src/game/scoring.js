@@ -62,6 +62,9 @@ export const GAME_CONFIG = {
   pointsBonusAmount: 10000,
   burstDuration: 12,
   burstMultiplier: 3,
+  // Obstacle color palette shifts every scoreTierStep points (see
+  // COLOR_TIERS in engine.js) — a visual milestone, doesn't affect scoring.
+  scoreTierStep: 50000,
 };
 
 export function speedAt(elapsedSeconds) {
