@@ -34,22 +34,22 @@ export default function CustomCursor() {
       pointer.x = e.clientX;
       pointer.y = e.clientY;
       dot.style.transform = `translate3d(${pointer.x}px, ${pointer.y}px, 0) translate(-50%, -50%)`;
+
+      // Recomputed from scratch every move (instead of toggled by
+      // mouseover/mouseout) so it self-corrects when the hovered element is
+      // removed from under the cursor by React — e.g. the mini-game's
+      // "Jouer"/"Rejouer" buttons unmount immediately on click, which never
+      // fires a mouseout and used to leave the ring stuck enlarged.
+      const hovered = document.elementFromPoint(pointer.x, pointer.y)?.closest?.(INTERACTIVE_SELECTOR);
+      ring.classList.toggle(styles.ringHover, Boolean(hovered));
     };
 
-    const onOver = (e) => {
-      if (e.target.closest?.(INTERACTIVE_SELECTOR)) ring.classList.add(styles.ringHover);
-    };
-    const onOut = (e) => {
-      if (e.target.closest?.(INTERACTIVE_SELECTOR)) ring.classList.remove(styles.ringHover);
-    };
     const onDown = () => ring.classList.add(styles.ringDown);
     const onUp = () => ring.classList.remove(styles.ringDown);
     const onLeaveWindow = () => document.body.classList.add(styles.cursorHidden);
     const onEnterWindow = () => document.body.classList.remove(styles.cursorHidden);
 
     window.addEventListener("mousemove", onMove);
-    document.addEventListener("mouseover", onOver);
-    document.addEventListener("mouseout", onOut);
     window.addEventListener("mousedown", onDown);
     window.addEventListener("mouseup", onUp);
     document.addEventListener("mouseleave", onLeaveWindow);
@@ -68,8 +68,6 @@ export default function CustomCursor() {
     return () => {
       document.body.classList.remove(styles.cursorHidden);
       window.removeEventListener("mousemove", onMove);
-      document.removeEventListener("mouseover", onOver);
-      document.removeEventListener("mouseout", onOut);
       window.removeEventListener("mousedown", onDown);
       window.removeEventListener("mouseup", onUp);
       document.removeEventListener("mouseleave", onLeaveWindow);

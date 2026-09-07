@@ -80,7 +80,11 @@
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 40%);
-  cursor: pointer;
+  /* No explicit `cursor: pointer` here on purpose — the custom cursor
+     (CustomCursor.jsx) hides the native one via an inherited `cursor: none`
+     on <body>, and an explicit value here would override that inherited
+     none, showing the real OS pointer on top of the custom one while
+     playing. */
   touch-action: manipulation;
 }
 
