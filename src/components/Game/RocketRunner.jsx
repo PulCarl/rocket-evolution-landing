@@ -5,6 +5,7 @@ import { renderShareCardBlob, renderShareCard } from "./shareCard.js";
 import { GAME_CONFIG } from "../../game/scoring.js";
 import logoUrl from "../../assets/logo-rocket-evolution.svg";
 import gameMusicUrl from "../../assets/audio/game-music.mp3";
+import loseSoundUrl from "../../assets/audio/lose-sound.mp3";
 import styles from "./RocketRunner.module.css";
 
 const BEST_KEY = "re-runner-best";
@@ -67,6 +68,7 @@ export default function RocketRunner() {
   // Created lazily on the first "Jouer" click (see startGame) so the ~4Mo
   // track is never fetched until someone actually plays, not on page load.
   const musicRef = useRef(null);
+  const loseSoundRef = useRef(null);
 
   useEffect(() => {
     const id = setInterval(() => setCountdown(getCountdown()), 60000);
@@ -91,7 +93,10 @@ export default function RocketRunner() {
   }, []);
 
   // Stop the music if the section unmounts mid-game (navigating away, etc).
-  useEffect(() => () => musicRef.current?.pause(), []);
+  useEffect(() => () => {
+    musicRef.current?.pause();
+    loseSoundRef.current?.pause();
+  }, []);
 
   const toggleMute = () => {
     setMuted((prev) => {
@@ -145,6 +150,9 @@ export default function RocketRunner() {
       musicRef.current = new Audio(gameMusicUrl);
       musicRef.current.loop = true;
     }
+    if (!loseSoundRef.current) {
+      loseSoundRef.current = new Audio(loseSoundUrl);
+    }
     musicRef.current.volume = volume;
     musicRef.current.muted = muted;
     musicRef.current.currentTime = 0;
@@ -175,6 +183,12 @@ export default function RocketRunner() {
       if (crashed) {
         setPhase("over");
         musicRef.current?.pause();
+        if (loseSoundRef.current) {
+          loseSoundRef.current.volume = volume;
+          loseSoundRef.current.muted = muted;
+          loseSoundRef.current.currentTime = 0;
+          loseSoundRef.current.play().catch(() => {});
+        }
         setBest((prevBest) => {
           const newBest = Math.max(prevBest, currentScore);
           localStorage.setItem(BEST_KEY, String(newBest));
@@ -287,20 +301,6 @@ export default function RocketRunner() {
               <span>
                 Score <strong>{score}</strong>
               </span>
-              {phase === "playing" && multiplier < GAME_CONFIG.maxMultiplier && (
-                <div
-                  className={styles.coinGauge}
-                  title={`${coinProgress}/${GAME_CONFIG.coinsPerStep} pièces avant le prochain bonus`}
-                >
-                  <div
-                    className={styles.coinGaugeFill}
-                    style={{ width: `${(coinProgress / GAME_CONFIG.coinsPerStep) * 100}%` }}
-                  />
-                </div>
-              )}
-              {multiplier > 1 && (
-                <span className={styles.multiplierTag}>x{multiplier.toFixed(1)}</span>
-              )}
               <span>
                 Record <strong>{best}</strong>
               </span>
@@ -336,6 +336,25 @@ export default function RocketRunner() {
               className={styles.canvas}
               onPointerDown={onCanvasPress}
             />
+
+            {phase === "playing" && (
+              <div className={styles.multiplierHud}>
+                {multiplier < GAME_CONFIG.maxMultiplier && (
+                  <div
+                    className={styles.coinGauge}
+                    title={`${coinProgress}/${GAME_CONFIG.coinsPerStep} pièces avant le prochain bonus`}
+                  >
+                    <div
+                      className={styles.coinGaugeFill}
+                      style={{ width: `${(coinProgress / GAME_CONFIG.coinsPerStep) * 100}%` }}
+                    />
+                  </div>
+                )}
+                {multiplier > 1 && (
+                  <span className={styles.multiplierTag}>x{multiplier.toFixed(1)}</span>
+                )}
+              </div>
+            )}
 
             {phase === "idle" && (
               <div className={styles.overlay}>
