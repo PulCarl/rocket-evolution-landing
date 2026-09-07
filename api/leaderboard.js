@@ -119,9 +119,29 @@ export default async function handler(req, res) {
     }
 
     const cleanName = String(name || "").trim().slice(0, 20) || "Joueur anonyme";
+    // "Joueur anonyme" is a shared fallback, not a real identity — never
+    // dedupe on it, or unrelated anonymous players would overwrite each other.
+    const normalize = (n) => String(n || "").trim().toLowerCase();
+    const isRealName = normalize(cleanName) !== "joueur anonyme";
 
     try {
-      const list = await readLeaderboard();
+      let list = await readLeaderboard();
+
+      if (isRealName) {
+        // Same pseudo already on the board (possibly more than once, from
+        // before this dedup existed) — only keep it if this run beats their
+        // best, and collapse every one of their older entries into this one.
+        const own = list.filter((e) => normalize(e.name) === normalize(cleanName));
+        if (own.length > 0) {
+          const bestOwn = Math.max(...own.map((e) => e.score));
+          if (score <= bestOwn) {
+            res.status(200).json({ leaderboard: list, qualified: false });
+            return;
+          }
+          list = list.filter((e) => normalize(e.name) !== normalize(cleanName));
+        }
+      }
+
       const qualifies = list.length < MAX_ENTRIES || score > list[list.length - 1]?.score;
       if (!qualifies) {
         res.status(200).json({ leaderboard: list, qualified: false });
