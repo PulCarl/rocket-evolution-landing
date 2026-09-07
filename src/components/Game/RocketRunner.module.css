@@ -206,6 +206,50 @@
   cursor: default;
 }
 
+.previousBoard {
+  margin-top: 22px;
+  border-radius: 16px;
+  border: 1px solid rgba(254, 152, 12, 0.25);
+  background: linear-gradient(90deg, rgba(254, 152, 12, 0.08), rgba(216, 34, 78, 0.05));
+  padding: 14px 20px;
+}
+
+.previousTitle {
+  margin: 0 0 10px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.previousList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+}
+
+.previousList li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.previousName {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.previousScore {
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: #fff;
+}
+
 .leaderboard {
   margin-top: 22px;
   border-radius: 16px;

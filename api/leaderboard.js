@@ -52,10 +52,12 @@ function verifySessionToken(token) {
   return ts;
 }
 
-// Returns { period, entries } as stored in the gist. `period` may be a
-// past month (nobody's submitted since it rolled over yet) — callers decide
-// whether stale entries still count, readLeaderboard doesn't reset anything
-// itself (keeps GETs read-only, no gist write on every page view).
+// Returns { period, entries, previous } as stored in the gist. `period` may
+// be a past month (nobody's submitted since it rolled over yet) — callers
+// use derive() below to decide what that means, readLeaderboard doesn't
+// reset or archive anything itself (keeps GETs read-only, no gist write on
+// every page view). `previous` is `{ period, top3 }` for the last month that
+// had a submission, or null if there isn't one yet.
 async function readLeaderboard() {
   const r = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
     headers: { Authorization: `Bearer ${GIST_TOKEN}`, Accept: "application/vnd.github+json" },
@@ -63,24 +65,28 @@ async function readLeaderboard() {
   if (!r.ok) throw new Error(`gist read failed: ${r.status}`);
   const data = await r.json();
   const content = data.files?.[FILE_NAME]?.content;
-  if (!content) return { period: currentPeriod(), entries: [] };
+  if (!content) return { period: currentPeriod(), entries: [], previous: null };
   try {
     const parsed = JSON.parse(content);
     // Legacy shape (before the monthly reset existed) was a bare array —
     // grandfather it in as belonging to the current period rather than
     // silently wiping it the moment this ships.
-    if (Array.isArray(parsed)) return { period: currentPeriod(), entries: parsed };
+    if (Array.isArray(parsed)) return { period: currentPeriod(), entries: parsed, previous: null };
     if (parsed && Array.isArray(parsed.entries)) {
-      return { period: parsed.period || currentPeriod(), entries: parsed.entries };
+      return {
+        period: parsed.period || currentPeriod(),
+        entries: parsed.entries,
+        previous: parsed.previous || null,
+      };
     }
-    return { period: currentPeriod(), entries: [] };
+    return { period: currentPeriod(), entries: [], previous: null };
   } catch {
-    return { period: currentPeriod(), entries: [] };
+    return { period: currentPeriod(), entries: [], previous: null };
   }
 }
 
-async function writeLeaderboard(period, entries) {
-  const content = JSON.stringify({ period, entries }, null, 2);
+async function writeLeaderboard(period, entries, previous) {
+  const content = JSON.stringify({ period, entries, previous }, null, 2);
   const r = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
     method: "PATCH",
     headers: {
@@ -93,6 +99,24 @@ async function writeLeaderboard(period, entries) {
   if (!r.ok) throw new Error(`gist write failed: ${r.status}`);
 }
 
+// Given what's actually stored, work out what "this period" and "last
+// period's top 3" mean right now. If the stored period is stale (a new
+// month started since the last write), its entries become the archived
+// "previous" and the current entries start empty — computed the same way
+// whether or not anyone has submitted yet this month, so GET can show the
+// right thing even before the first write of the new period happens.
+function derive(stored) {
+  const cp = currentPeriod();
+  if (stored.period === cp) {
+    return { period: cp, entries: stored.entries, previous: stored.previous };
+  }
+  return {
+    period: cp,
+    entries: [],
+    previous: { period: stored.period, top3: stored.entries.slice(0, 3) },
+  };
+}
+
 export default async function handler(req, res) {
   if (!GIST_ID || !GIST_TOKEN) {
     res.status(500).json({ error: "server not configured" });
@@ -101,9 +125,8 @@ export default async function handler(req, res) {
 
   if (req.method === "GET") {
     try {
-      const stored = await readLeaderboard();
-      const entries = stored.period === currentPeriod() ? stored.entries : [];
-      res.status(200).json({ leaderboard: entries, period: currentPeriod() });
+      const { period, entries, previous } = derive(await readLeaderboard());
+      res.status(200).json({ leaderboard: entries, period, previous });
     } catch (err) {
       res.status(502).json({ error: String(err) });
     }
@@ -149,10 +172,8 @@ export default async function handler(req, res) {
     const isRealName = normalize(cleanName) !== "joueur anonyme";
 
     try {
-      const stored = await readLeaderboard();
-      // A new month started since the last submission -> previous entries
-      // no longer count, this run starts the new leaderboard.
-      let list = stored.period === currentPeriod() ? stored.entries : [];
+      const { entries, previous } = derive(await readLeaderboard());
+      let list = entries;
 
       if (isRealName) {
         // Same pseudo already on the board (possibly more than once, from
@@ -162,7 +183,7 @@ export default async function handler(req, res) {
         if (own.length > 0) {
           const bestOwn = Math.max(...own.map((e) => e.score));
           if (score <= bestOwn) {
-            res.status(200).json({ leaderboard: list, qualified: false });
+            res.status(200).json({ leaderboard: list, qualified: false, previous });
             return;
           }
           list = list.filter((e) => normalize(e.name) !== normalize(cleanName));
@@ -171,14 +192,14 @@ export default async function handler(req, res) {
 
       const qualifies = list.length < MAX_ENTRIES || score > list[list.length - 1]?.score;
       if (!qualifies) {
-        res.status(200).json({ leaderboard: list, qualified: false });
+        res.status(200).json({ leaderboard: list, qualified: false, previous });
         return;
       }
       list.push({ name: cleanName, score: Math.floor(score), date: new Date().toISOString() });
       list.sort((a, b) => b.score - a.score);
       const top = list.slice(0, MAX_ENTRIES);
-      await writeLeaderboard(currentPeriod(), top);
-      res.status(200).json({ leaderboard: top, qualified: true, period: currentPeriod() });
+      await writeLeaderboard(currentPeriod(), top, previous);
+      res.status(200).json({ leaderboard: top, qualified: true, period: currentPeriod(), previous });
     } catch (err) {
       res.status(502).json({ error: String(err) });
     }
