@@ -31,12 +31,12 @@ export const GAME_CONFIG = {
   shieldMinGap: 3,
   shieldMaxGap: 14,
   // Coin pickup: every coinsPerStep-th coin adds coinMultiplierStep to the
-  // score multiplier, capped at maxMultiplier (90 coins to fully max out).
+  // score multiplier, capped at maxMultiplier (270 coins to fully max out).
   // Some spawn higher up, reachable only with the double jump.
   coinMinGap: 1,
   coinMaxGap: 2,
   coinsPerStep: 3,
-  coinMultiplierStep: 0.3,
+  coinMultiplierStep: 0.1,
   maxMultiplier: 10,
   // Bomb pickup: stores up a charge (capped at maxBombs); the player
   // activates one on demand to clear+suppress obstacles for bombDuration.
