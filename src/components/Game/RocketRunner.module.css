@@ -76,6 +76,13 @@
   gap: 24px;
 }
 
+.soundControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .muteBtn {
   flex-shrink: 0;
   width: 30px;
@@ -94,6 +101,42 @@
 
 .muteBtn:hover {
   background: rgba(255, 255, 255, 0.12);
+}
+
+.volumeSlider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 70px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+}
+
+.volumeSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--grad-brand);
+  cursor: pointer;
+  border: none;
+}
+
+.volumeSlider::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--orange);
+  cursor: pointer;
+  border: none;
+}
+
+.volumeSlider::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .hud strong {
@@ -344,15 +387,27 @@
   font-size: 13px;
 }
 
-.leaderboardRow:first-child {
-  background: linear-gradient(90deg, rgba(254, 152, 12, 0.16), rgba(216, 34, 78, 0.1));
+.leaderboardRow:nth-child(1) {
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.05));
+  border: 1px solid rgba(255, 215, 0, 0.35);
+}
+
+.leaderboardRow:nth-child(2) {
+  background: linear-gradient(90deg, rgba(210, 214, 222, 0.18), rgba(210, 214, 222, 0.04));
+  border: 1px solid rgba(210, 214, 222, 0.3);
+}
+
+.leaderboardRow:nth-child(3) {
+  background: linear-gradient(90deg, rgba(205, 127, 50, 0.18), rgba(205, 127, 50, 0.04));
+  border: 1px solid rgba(205, 127, 50, 0.32);
 }
 
 .leaderboardRank {
-  width: 20px;
+  width: 22px;
   flex-shrink: 0;
   font-family: var(--font-display);
   font-weight: 800;
+  font-size: 15px;
   color: rgba(255, 255, 255, 0.45);
 }
 

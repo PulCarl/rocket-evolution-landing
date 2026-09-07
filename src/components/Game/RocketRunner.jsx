@@ -10,6 +10,8 @@ import styles from "./RocketRunner.module.css";
 const BEST_KEY = "re-runner-best";
 const NAME_KEY = "re-runner-name";
 const MUTED_KEY = "re-runner-muted";
+const VOLUME_KEY = "re-runner-volume";
+const DEFAULT_VOLUME = 0.35;
 
 const MONTH_NAMES_FR = [
   "janvier", "février", "mars", "avril", "mai", "juin",
@@ -58,6 +60,7 @@ export default function RocketRunner() {
   const [justRanked, setJustRanked] = useState(false);
   const [countdown, setCountdown] = useState(getCountdown);
   const [muted, setMuted] = useState(false);
+  const [volume, setVolume] = useState(DEFAULT_VOLUME);
   const sessionTokenRef = useRef(null);
   // Created lazily on the first "Jouer" click (see startGame) so the ~4Mo
   // track is never fetched until someone actually plays, not on page load.
@@ -73,6 +76,16 @@ export default function RocketRunner() {
     if (Number.isFinite(stored)) setBest(stored);
     setPlayerName(localStorage.getItem(NAME_KEY) || "");
     setMuted(localStorage.getItem(MUTED_KEY) === "1");
+    // getItem returns null when nothing's stored yet, and Number(null) is 0
+    // (not NaN) -- checking Number.isFinite alone would silently zero the
+    // volume for every first-time visitor instead of keeping DEFAULT_VOLUME.
+    const storedVolumeRaw = localStorage.getItem(VOLUME_KEY);
+    if (storedVolumeRaw !== null) {
+      const storedVolume = Number(storedVolumeRaw);
+      if (Number.isFinite(storedVolume) && storedVolume >= 0 && storedVolume <= 1) {
+        setVolume(storedVolume);
+      }
+    }
   }, []);
 
   // Stop the music if the section unmounts mid-game (navigating away, etc).
@@ -85,6 +98,13 @@ export default function RocketRunner() {
       if (musicRef.current) musicRef.current.muted = next;
       return next;
     });
+  };
+
+  const onVolumeChange = (e) => {
+    const vol = Number(e.target.value) / 100;
+    setVolume(vol);
+    localStorage.setItem(VOLUME_KEY, String(vol));
+    if (musicRef.current) musicRef.current.volume = vol;
   };
 
   useEffect(() => {
@@ -120,8 +140,8 @@ export default function RocketRunner() {
     if (!musicRef.current) {
       musicRef.current = new Audio(gameMusicUrl);
       musicRef.current.loop = true;
-      musicRef.current.volume = 0.35;
     }
+    musicRef.current.volume = volume;
     musicRef.current.muted = muted;
     musicRef.current.currentTime = 0;
     // Called from a click/keydown handler, so this counts as a user
@@ -182,7 +202,7 @@ export default function RocketRunner() {
       rafRef.current = requestAnimationFrame(loop);
     };
     rafRef.current = requestAnimationFrame(loop);
-  }, [stopLoop, playerName, muted]);
+  }, [stopLoop, playerName, muted, volume]);
 
   useEffect(() => stopLoop, [stopLoop]);
 
@@ -265,15 +285,27 @@ export default function RocketRunner() {
                 Record <strong>{best}</strong>
               </span>
             </div>
-            <button
-              type="button"
-              className={styles.muteBtn}
-              onClick={toggleMute}
-              aria-label={muted ? "Activer le son" : "Couper le son"}
-              title={muted ? "Activer le son" : "Couper le son"}
-            >
-              {muted ? "🔇" : "🔊"}
-            </button>
+            <div className={styles.soundControls}>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={Math.round(volume * 100)}
+                onChange={onVolumeChange}
+                className={styles.volumeSlider}
+                aria-label="Volume de la musique"
+                title="Volume de la musique"
+              />
+              <button
+                type="button"
+                className={styles.muteBtn}
+                onClick={toggleMute}
+                aria-label={muted ? "Activer le son" : "Couper le son"}
+                title={muted ? "Activer le son" : "Couper le son"}
+              >
+                {muted ? "🔇" : "🔊"}
+              </button>
+            </div>
           </div>
 
           <div className={styles.canvasWrap}>
@@ -374,7 +406,9 @@ export default function RocketRunner() {
                 <ol className={styles.leaderboardList}>
                   {leaderboard.map((entry, i) => (
                     <li key={i} className={styles.leaderboardRow}>
-                      <span className={styles.leaderboardRank}>{i + 1}</span>
+                      <span className={styles.leaderboardRank}>
+                        {i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1}
+                      </span>
                       <span className={styles.leaderboardName}>{entry.name}</span>
                       <span className={styles.leaderboardScore}>{entry.score}</span>
                     </li>
