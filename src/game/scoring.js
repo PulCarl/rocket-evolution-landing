@@ -31,8 +31,8 @@ export const GAME_CONFIG = {
   // Coin pickup: every coinsPerStep-th coin adds coinMultiplierStep to the
   // score multiplier, capped at maxMultiplier. Some spawn higher up,
   // reachable only with the double jump.
-  coinMinGap: 2,
-  coinMaxGap: 3.5,
+  coinMinGap: 1,
+  coinMaxGap: 2,
   coinsPerStep: 3,
   coinMultiplierStep: 0.1,
   maxMultiplier: 3,
