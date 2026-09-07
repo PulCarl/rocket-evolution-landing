@@ -1,7 +1,17 @@
 import { GAME_CONFIG, speedAt } from "../../game/scoring.js";
 
-const { width: W, height: H, groundY: GROUND, gravity: GRAVITY, jumpVelocity: JUMP_V, doubleJumpVelocity: JUMP2_V } =
-  GAME_CONFIG;
+const {
+  width: W,
+  height: H,
+  groundY: GROUND,
+  gravity: GRAVITY,
+  jumpVelocity: JUMP_V,
+  doubleJumpVelocity: JUMP2_V,
+  boostBonus: BOOST_BONUS,
+  pickupMinGap: PICKUP_MIN_GAP,
+  pickupMaxGap: PICKUP_MAX_GAP,
+  boostFlightTime: BOOST_FLIGHT_TIME,
+} = GAME_CONFIG;
 
 const OBSTACLE_KINDS = [
   { w: 20, h: 34, kind: "cone" },
@@ -9,13 +19,25 @@ const OBSTACLE_KINDS = [
   { w: 24, h: 46, kind: "post" },
 ];
 
+// Pickups float above the ground (unlike obstacles, which sit on it) — you
+// have to jump into them on purpose, they're never in the way of a normal
+// dodge. Sized/placed to sit comfortably inside a single jump's arc.
+const PICKUP_SIZE = 26;
+const PICKUP_Y = GROUND - 90;
+const BOOST_UP_VELOCITY = -900;
+const BOOST_GRAVITY_SCALE = 0.25; // "floaty" while flying, instead of arcing straight back down
+
 export function createGame() {
   return {
     t: 0,
     distance: 0,
-    player: { x: 90, y: GROUND, vy: 0, jumps: 0, w: 34, h: 30, spin: 0 },
+    bonusScore: 0, // flat points from boost pickups, on top of the time-based distance
+    shielded: false,
+    player: { x: 90, y: GROUND, vy: 0, jumps: 0, w: 34, h: 30, spin: 0, boostTimer: 0 },
     obstacles: [],
+    pickups: [],
     nextSpawnAt: 0.9,
+    nextPickupAt: 4 + Math.random() * 4,
     particles: [],
     over: false,
   };
@@ -43,6 +65,12 @@ function spawnObstacle(state) {
   state.nextSpawnAt = state.t + gap * (0.75 + Math.random() * 0.5);
 }
 
+function spawnPickup(state) {
+  const kind = Math.random() < 0.5 ? "boost" : "shield";
+  state.pickups.push({ x: W + 20, y: PICKUP_Y, w: PICKUP_SIZE, h: PICKUP_SIZE, kind, spin: 0 });
+  state.nextPickupAt = state.t + PICKUP_MIN_GAP + Math.random() * (PICKUP_MAX_GAP - PICKUP_MIN_GAP);
+}
+
 function aabbHit(p, o) {
   const px1 = p.x - p.w / 2;
   const px2 = p.x + p.w / 2;
@@ -55,7 +83,19 @@ function aabbHit(p, o) {
   return px1 < ox2 && px2 > ox1 && py1 < oy2 && py2 > oy1;
 }
 
-// Advances the simulation by dt seconds. Returns { crashed, scoredPass }.
+function aabbHitPickup(p, pk) {
+  const px1 = p.x - p.w / 2;
+  const px2 = p.x + p.w / 2;
+  const py1 = p.y - p.h;
+  const py2 = p.y;
+  const ox1 = pk.x;
+  const ox2 = pk.x + pk.w;
+  const oy1 = pk.y - pk.h / 2;
+  const oy2 = pk.y + pk.h / 2;
+  return px1 < ox2 && px2 > ox1 && py1 < oy2 && py2 > oy1;
+}
+
+// Advances the simulation by dt seconds. Returns { crashed }.
 export function step(state, dt) {
   if (state.over) return { crashed: false };
   state.t += dt;
@@ -64,7 +104,9 @@ export function step(state, dt) {
   state.distance += speed * dt;
 
   const p = state.player;
-  p.vy += GRAVITY * dt;
+  const flying = p.boostTimer > 0;
+  if (flying) p.boostTimer = Math.max(0, p.boostTimer - dt);
+  p.vy += GRAVITY * (flying ? BOOST_GRAVITY_SCALE : 1) * dt;
   p.y += p.vy * dt;
   if (p.y > GROUND) {
     p.y = GROUND;
@@ -72,22 +114,51 @@ export function step(state, dt) {
     p.jumps = 0;
     p.spin = 0;
   } else {
-    p.spin += dt * 6; // little flip while airborne, purely visual
+    p.spin += dt * (flying ? 11 : 6); // faster flip while boosting, purely visual
   }
 
   for (const o of state.obstacles) o.x -= speed * dt;
   state.obstacles = state.obstacles.filter((o) => o.x + o.w > -20);
-
   if (state.t >= state.nextSpawnAt) spawnObstacle(state);
 
-  for (const o of state.obstacles) {
-    if (aabbHit(p, o)) {
-      state.over = true;
-      return { crashed: true };
+  for (const pk of state.pickups) pk.x -= speed * dt;
+  const keptPickups = [];
+  for (const pk of state.pickups) {
+    if (pk.x + pk.w < -20) continue; // scrolled off, drop
+    if (aabbHitPickup(p, pk)) {
+      if (pk.kind === "boost") {
+        state.bonusScore += BOOST_BONUS;
+        p.boostTimer = BOOST_FLIGHT_TIME;
+        p.vy = BOOST_UP_VELOCITY;
+      } else {
+        state.shielded = true;
+      }
+      continue; // collected, remove
     }
+    keptPickups.push(pk);
   }
+  state.pickups = keptPickups;
+  if (state.t >= state.nextPickupAt) spawnPickup(state);
 
-  return { crashed: false };
+  // Flying (mid-boost) clears every obstacle; a shield absorbs exactly one
+  // hit (removing that obstacle so it can't immediately re-trigger next
+  // frame) before it's used up.
+  let crashed = false;
+  const keptObstacles = [];
+  for (const o of state.obstacles) {
+    if (!crashed && !flying && aabbHit(p, o)) {
+      if (state.shielded) {
+        state.shielded = false;
+        continue; // absorbed, this obstacle is cleared
+      }
+      state.over = true;
+      crashed = true;
+    }
+    keptObstacles.push(o);
+  }
+  state.obstacles = keptObstacles;
+
+  return { crashed };
 }
 
 export function draw(ctx, state, logoImg) {
@@ -141,11 +212,69 @@ export function draw(ctx, state, logoImg) {
     }
   }
 
+  // Pickups: a boost chevron (speed/lightning feel) or a shield ring.
+  const pulse = 0.85 + Math.sin(state.t * 6) * 0.15;
+  for (const pk of state.pickups) {
+    const cx = pk.x + pk.w / 2;
+    const cy = pk.y;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(pulse, pulse);
+    if (pk.kind === "boost") {
+      const grad = ctx.createLinearGradient(0, -pk.h / 2, 0, pk.h / 2);
+      grad.addColorStop(0, "#fe980c");
+      grad.addColorStop(1, "#d8224e");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(-6, -pk.h / 2);
+      ctx.lineTo(4, -3);
+      ctx.lineTo(-2, -3);
+      ctx.lineTo(6, pk.h / 2);
+      ctx.lineTo(-4, 3);
+      ctx.lineTo(2, 3);
+      ctx.closePath();
+      ctx.fill();
+    } else {
+      ctx.strokeStyle = "rgba(120,190,255,0.9)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(0, 0, pk.w / 2, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = "rgba(120,190,255,0.18)";
+      ctx.beginPath();
+      ctx.arc(0, 0, pk.w / 2 - 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
   // Player: the brand logo, flipping while airborne.
   const p = state.player;
+  const logoW = p.w + 10;
+  const logoH = logoImg?.naturalWidth ? logoW * (logoImg.naturalHeight / logoImg.naturalWidth) : logoW;
+
+  if (state.shielded) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(120,190,255,0.8)";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y - logoH / 2, logoW * 0.75, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+  if (p.boostTimer > 0) {
+    ctx.save();
+    const grad = ctx.createRadialGradient(p.x, p.y - logoH / 2, 2, p.x, p.y - logoH / 2, logoW);
+    grad.addColorStop(0, "rgba(254,152,12,0.5)");
+    grad.addColorStop(1, "rgba(254,152,12,0)");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y - logoH / 2, logoW, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
   if (logoImg && logoImg.complete && logoImg.naturalWidth > 0) {
-    const logoW = p.w + 10;
-    const logoH = logoW * (logoImg.naturalHeight / logoImg.naturalWidth);
     ctx.save();
     ctx.translate(p.x, p.y - logoH / 2);
     ctx.rotate(p.spin);

@@ -40,6 +40,11 @@
   color: rgba(255, 255, 255, 0.62);
 }
 
+.intro strong {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 700;
+}
+
 .intro kbd {
   font-family: inherit;
   background: rgba(255, 255, 255, 0.12);
