@@ -11,6 +11,7 @@ const {
   shieldMaxGap: SHIELD_MAX_GAP,
   coinMinGap: COIN_MIN_GAP,
   coinMaxGap: COIN_MAX_GAP,
+  coinsPerStep: COINS_PER_STEP,
   coinMultiplierStep: COIN_MULTIPLIER_STEP,
   maxMultiplier: MAX_MULTIPLIER,
 } = GAME_CONFIG;
@@ -28,7 +29,6 @@ const SHIELD_SIZE = 26;
 const SHIELD_Y = GROUND - 90;
 const COIN_SIZE = 18;
 const COIN_Y = GROUND - 70;
-const COINS_PER_STEP = 3; // every 3rd coin bumps the multiplier, not each one
 
 export function createGame() {
   return {

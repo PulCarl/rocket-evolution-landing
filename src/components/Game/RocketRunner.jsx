@@ -49,6 +49,7 @@ export default function RocketRunner() {
   const [phase, setPhase] = useState("idle"); // idle | playing | over
   const [score, setScore] = useState(0);
   const [multiplier, setMultiplier] = useState(1);
+  const [coinProgress, setCoinProgress] = useState(0); // 0..coinsPerStep-1, coins toward the next step
   const [best, setBest] = useState(0);
   const [playerName, setPlayerName] = useState("");
   const [shareState, setShareState] = useState("idle"); // idle | copying | copied | downloaded | error
@@ -134,6 +135,7 @@ export default function RocketRunner() {
     gameRef.current = createGame();
     setScore(0);
     setMultiplier(1);
+    setCoinProgress(0);
     setShareState("idle");
     setJustRanked(false);
     setPhase("playing");
@@ -168,6 +170,7 @@ export default function RocketRunner() {
       const currentScore = Math.floor(gameRef.current.distance);
       setScore(currentScore);
       setMultiplier(gameRef.current.multiplier);
+      setCoinProgress(gameRef.current.coinCount % GAME_CONFIG.coinsPerStep);
 
       if (crashed) {
         setPhase("over");
@@ -284,6 +287,17 @@ export default function RocketRunner() {
               <span>
                 Score <strong>{score}</strong>
               </span>
+              {phase === "playing" && multiplier < GAME_CONFIG.maxMultiplier && (
+                <div
+                  className={styles.coinGauge}
+                  title={`${coinProgress}/${GAME_CONFIG.coinsPerStep} pièces avant le prochain bonus`}
+                >
+                  <div
+                    className={styles.coinGaugeFill}
+                    style={{ width: `${(coinProgress / GAME_CONFIG.coinsPerStep) * 100}%` }}
+                  />
+                </div>
+              )}
               {multiplier > 1 && (
                 <span className={styles.multiplierTag}>x{multiplier.toFixed(1)}</span>
               )}
