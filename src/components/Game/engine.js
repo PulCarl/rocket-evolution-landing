@@ -14,6 +14,10 @@ const {
   coinsPerStep: COINS_PER_STEP,
   coinMultiplierStep: COIN_MULTIPLIER_STEP,
   maxMultiplier: MAX_MULTIPLIER,
+  bombMinGap: BOMB_MIN_GAP,
+  bombMaxGap: BOMB_MAX_GAP,
+  maxBombs: MAX_BOMBS,
+  bombDuration: BOMB_DURATION,
 } = GAME_CONFIG;
 
 const OBSTACLE_KINDS = [
@@ -24,11 +28,15 @@ const OBSTACLE_KINDS = [
 
 // Pickups float above the ground (unlike obstacles, which sit on it) — you
 // have to jump into them on purpose, they're never in the way of a normal
-// dodge. Sized/placed to sit comfortably inside a single jump's arc.
+// dodge. Sized/placed to sit comfortably inside a single jump's arc, except
+// COIN_Y_HIGH which sits above single-jump reach and needs a double jump.
 const SHIELD_SIZE = 26;
 const SHIELD_Y = GROUND - 90;
 const COIN_SIZE = 18;
-const COIN_Y = GROUND - 70;
+const COIN_Y_LOW = GROUND - 70;
+const COIN_Y_HIGH = GROUND - 150;
+const BOMB_SIZE = 24;
+const BOMB_Y = GROUND - 90;
 
 export function createGame() {
   return {
@@ -37,12 +45,15 @@ export function createGame() {
     multiplier: 1, // score multiplier, only ever goes up, capped at MAX_MULTIPLIER
     coinCount: 0, // every COINS_PER_STEP-th coin bumps the multiplier
     shielded: false,
+    bombs: 0, // stored charges, capped at MAX_BOMBS — spent via useBomb()
+    bombTimer: 0, // >0 while a bomb's "no obstacles" window is active
     player: { x: 90, y: GROUND, vy: 0, jumps: 0, w: 34, h: 30, spin: 0 },
     obstacles: [],
     pickups: [],
     nextSpawnAt: 0.9,
     nextShieldAt: 4 + Math.random() * 4,
     nextCoinAt: 1.5 + Math.random() * 2,
+    nextBombAt: BOMB_MIN_GAP + Math.random() * (BOMB_MAX_GAP - BOMB_MIN_GAP),
     particles: [],
     over: false,
   };
@@ -61,6 +72,20 @@ export function jump(state) {
   }
 }
 
+// Spends one stored bomb charge (if any, and none already active): instantly
+// clears every obstacle on screen and suppresses new spawns for
+// BOMB_DURATION. Returns true if a charge was actually spent.
+export function useBomb(state) {
+  if (state.over || state.bombs <= 0 || state.bombTimer > 0) return false;
+  state.bombs -= 1;
+  state.bombTimer = BOMB_DURATION;
+  state.obstacles = [];
+  // Push the next spawn out past the bomb window (plus a small grace gap)
+  // so obstacles don't pile up waiting right at the moment it ends.
+  state.nextSpawnAt = state.t + BOMB_DURATION + 0.6;
+  return true;
+}
+
 function spawnObstacle(state) {
   const base = OBSTACLE_KINDS[Math.floor(Math.random() * OBSTACLE_KINDS.length)];
   state.obstacles.push({ x: W + 20, w: base.w, h: base.h, kind: base.kind, passed: false });
@@ -76,8 +101,15 @@ function spawnShield(state) {
 }
 
 function spawnCoin(state) {
-  state.pickups.push({ x: W + 20, y: COIN_Y, w: COIN_SIZE, h: COIN_SIZE, kind: "coin" });
+  // ~40% spawn high, reachable only with a well-timed double jump.
+  const y = Math.random() < 0.4 ? COIN_Y_HIGH : COIN_Y_LOW;
+  state.pickups.push({ x: W + 20, y, w: COIN_SIZE, h: COIN_SIZE, kind: "coin" });
   state.nextCoinAt = state.t + COIN_MIN_GAP + Math.random() * (COIN_MAX_GAP - COIN_MIN_GAP);
+}
+
+function spawnBomb(state) {
+  state.pickups.push({ x: W + 20, y: BOMB_Y, w: BOMB_SIZE, h: BOMB_SIZE, kind: "bomb" });
+  state.nextBombAt = state.t + BOMB_MIN_GAP + Math.random() * (BOMB_MAX_GAP - BOMB_MIN_GAP);
 }
 
 function aabbHit(p, o) {
@@ -115,6 +147,8 @@ export function step(state, dt) {
   const speed = speedAt(state.t);
   state.distance += speed * dt * state.multiplier;
 
+  if (state.bombTimer > 0) state.bombTimer = Math.max(0, state.bombTimer - dt);
+
   const p = state.player;
   p.vy += GRAVITY * dt;
   p.y += p.vy * dt;
@@ -129,7 +163,9 @@ export function step(state, dt) {
 
   for (const o of state.obstacles) o.x -= speed * dt;
   state.obstacles = state.obstacles.filter((o) => o.x + o.w > -20);
-  if (state.t >= state.nextSpawnAt) spawnObstacle(state);
+  // Suppressed while a bomb is active — useBomb() already pushed nextSpawnAt
+  // past the bomb window, this just double-guards against spawning early.
+  if (state.bombTimer <= 0 && state.t >= state.nextSpawnAt) spawnObstacle(state);
 
   for (const pk of state.pickups) pk.x -= speed * dt;
   const keptPickups = [];
@@ -141,6 +177,8 @@ export function step(state, dt) {
         if (state.coinCount % COINS_PER_STEP === 0) {
           state.multiplier = Math.min(MAX_MULTIPLIER, state.multiplier + COIN_MULTIPLIER_STEP);
         }
+      } else if (pk.kind === "bomb") {
+        state.bombs = Math.min(MAX_BOMBS, state.bombs + 1);
       } else {
         state.shielded = true;
       }
@@ -151,6 +189,7 @@ export function step(state, dt) {
   state.pickups = keptPickups;
   if (state.t >= state.nextShieldAt) spawnShield(state);
   if (state.t >= state.nextCoinAt) spawnCoin(state);
+  if (state.t >= state.nextBombAt) spawnBomb(state);
 
   // A shield absorbs exactly one hit (removing that obstacle so it can't
   // immediately re-trigger next frame) before it's used up.
@@ -223,7 +262,8 @@ export function draw(ctx, state, logoImg) {
     }
   }
 
-  // Pickups: a gold coin (score multiplier) or a shield ring (extra chance).
+  // Pickups: a gold coin (score multiplier), a shield ring (extra chance),
+  // or a bomb (stored charge, activated on demand to clear obstacles).
   const pulse = 0.85 + Math.sin(state.t * 6) * 0.15;
   for (const pk of state.pickups) {
     ctx.save();
@@ -241,6 +281,24 @@ export function draw(ctx, state, logoImg) {
       ctx.strokeStyle = "rgba(255,255,255,0.6)";
       ctx.lineWidth = 1.5;
       ctx.stroke();
+    } else if (pk.kind === "bomb") {
+      ctx.fillStyle = "#2b2b2b";
+      ctx.beginPath();
+      ctx.arc(0, 1, pk.w / 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.25)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.strokeStyle = "#fe980c";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(3, -pk.h / 2 + 2);
+      ctx.lineTo(7, -pk.h / 2 - 4);
+      ctx.stroke();
+      ctx.fillStyle = "#fe980c";
+      ctx.beginPath();
+      ctx.arc(7, -pk.h / 2 - 4, 2, 0, Math.PI * 2);
+      ctx.fill();
     } else {
       ctx.strokeStyle = "rgba(120,190,255,0.9)";
       ctx.lineWidth = 3;
@@ -276,5 +334,12 @@ export function draw(ctx, state, logoImg) {
     ctx.rotate(p.spin);
     ctx.drawImage(logoImg, -logoW / 2, -logoH / 2, logoW, logoH);
     ctx.restore();
+  }
+
+  // Bomb-active screen tint, fading out as the window winds down.
+  if (state.bombTimer > 0) {
+    const alpha = Math.min(0.14, (state.bombTimer / BOMB_DURATION) * 0.14);
+    ctx.fillStyle = `rgba(254, 152, 12, ${alpha})`;
+    ctx.fillRect(0, 0, W, H);
   }
 }

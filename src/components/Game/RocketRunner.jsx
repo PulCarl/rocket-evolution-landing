@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import Reveal from "../Reveal.jsx";
-import { createGame, jump, step, draw } from "./engine.js";
+import { createGame, jump, step, draw, useBomb } from "./engine.js";
 import { renderShareCardBlob, renderShareCard } from "./shareCard.js";
 import { GAME_CONFIG } from "../../game/scoring.js";
 import logoUrl from "../../assets/logo-rocket-evolution.svg";
@@ -51,6 +51,8 @@ export default function RocketRunner() {
   const [score, setScore] = useState(0);
   const [multiplier, setMultiplier] = useState(1);
   const [coinProgress, setCoinProgress] = useState(0); // 0..coinsPerStep-1, coins toward the next step
+  const [bombs, setBombs] = useState(0);
+  const [bombActive, setBombActive] = useState(false);
   const [best, setBest] = useState(0);
   const [playerName, setPlayerName] = useState("");
   const [shareState, setShareState] = useState("idle"); // idle | copying | copied | downloaded | error
@@ -141,6 +143,8 @@ export default function RocketRunner() {
     setScore(0);
     setMultiplier(1);
     setCoinProgress(0);
+    setBombs(0);
+    setBombActive(false);
     setShareState("idle");
     setJustRanked(false);
     setPhase("playing");
@@ -179,6 +183,8 @@ export default function RocketRunner() {
       setScore(currentScore);
       setMultiplier(gameRef.current.multiplier);
       setCoinProgress(gameRef.current.coinCount % GAME_CONFIG.coinsPerStep);
+      setBombs(gameRef.current.bombs);
+      setBombActive(gameRef.current.bombTimer > 0);
 
       if (crashed) {
         setPhase("over");
@@ -228,6 +234,13 @@ export default function RocketRunner() {
 
   useEffect(() => {
     const onKey = (e) => {
+      if (e.code === "KeyB") {
+        if (phase === "playing" && document.activeElement?.tagName !== "INPUT") {
+          e.preventDefault();
+          useBomb(gameRef.current);
+        }
+        return;
+      }
       if (e.code !== "Space" && e.code !== "ArrowUp") return;
       if (document.activeElement?.tagName === "INPUT") return;
       e.preventDefault();
@@ -245,6 +258,8 @@ export default function RocketRunner() {
     if (phase === "playing") jump(gameRef.current);
     else if (phase === "over") startGame();
   };
+
+  const onBombPress = () => useBomb(gameRef.current);
 
   const copyImage = async () => {
     setShareState("copying");
@@ -289,9 +304,11 @@ export default function RocketRunner() {
           <div className={styles.eyebrow}>Mini-jeu</div>
           <h2 className={styles.title}>Combien de points tu tiens ?</h2>
           <p className={styles.intro}>
-            Saute par-dessus les obstacles avec <kbd>Espace</kbd> / clic. Ça accélère avec le temps — ramasse les
-            <strong> pièces</strong> pour augmenter ton multiplicateur de points, et le <strong>bouclier</strong>{" "}
-            pour encaisser un crash gratuit. Copie une image de ton score et colle-la dans notre salon Discord.
+            Saute (<kbd>Espace</kbd> / clic, double saut possible) par-dessus les obstacles. Ça accélère avec le
+            temps — ramasse les <strong>pièces</strong> pour augmenter ton multiplicateur de points (certaines
+            demandent un double saut), le <strong>bouclier</strong> pour encaisser un crash gratuit, et la{" "}
+            <strong>bombe</strong> pour faire disparaître les obstacles quelques secondes (<kbd>B</kbd> ou le bouton
+            à l'écran). Copie une image de ton score et colle-la dans notre salon Discord.
           </p>
         </Reveal>
 
@@ -336,6 +353,18 @@ export default function RocketRunner() {
               className={styles.canvas}
               onPointerDown={onCanvasPress}
             />
+
+            {phase === "playing" && bombs > 0 && (
+              <button
+                type="button"
+                className={styles.bombBtn}
+                onClick={onBombPress}
+                disabled={bombActive}
+                title="Faire disparaître les obstacles quelques secondes (touche B)"
+              >
+                💣 x{bombs}
+              </button>
+            )}
 
             {phase === "playing" && (
               <div className={styles.multiplierHud}>
