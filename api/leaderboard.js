@@ -21,6 +21,10 @@ const MAX_ENTRIES = 10;
 const BASE_SPEED = 220;
 const RAMP_RATE = 4.2;
 const MAX_SPEED = 620;
+// Coins raise a score multiplier (capped) that's applied to the time-based
+// distance — the shield doesn't add points, it just lets a run survive
+// longer. Duplicated from src/game/scoring.js; keep in sync.
+const MAX_MULTIPLIER = 3;
 
 // The leaderboard is monthly, not all-time — "1 month to get the best
 // score". UTC-based, which is plenty precise for a community leaderboard
@@ -29,15 +33,24 @@ function currentPeriod() {
   return new Date().toISOString().slice(0, 7); // "YYYY-MM"
 }
 
-// Score is purely time-based (distance = integral of speed over time; the
-// shield pickup doesn't add points, it just lets a run survive longer), so
-// for a given elapsed time there's exactly one legitimate score — this is
-// the closed-form of that integral.
-function maxPossibleScore(t) {
+// The time-based part of the score (distance = integral of speed over
+// time) at multiplier 1 — closed-form of that integral.
+function maxDistance(t) {
   const rampTime = (MAX_SPEED - BASE_SPEED) / RAMP_RATE;
   if (t <= rampTime) return BASE_SPEED * t + 0.5 * RAMP_RATE * t * t;
   const atRamp = BASE_SPEED * rampTime + 0.5 * RAMP_RATE * rampTime * rampTime;
   return atRamp + MAX_SPEED * (t - rampTime);
+}
+
+// The multiplier only ever increases and is capped, so at every instant the
+// score is being earned at somewhere between 1x and MAX_MULTIPLIER times the
+// base rate — bounding the total between maxDistance(t) (never collected a
+// coin) and MAX_MULTIPLIER * maxDistance(t) (implausibly maxed from t=0).
+// The server can't replay which random coins a run actually crossed, so this
+// is intentionally a bound, not an exact match (that was only possible
+// before any bonus mechanic existed).
+function maxPossibleScore(t) {
+  return MAX_MULTIPLIER * maxDistance(t);
 }
 
 function verifySessionToken(token) {
@@ -152,9 +165,13 @@ export default async function handler(req, res) {
       return;
     }
 
-    // The score must match the deterministic time->distance formula...
-    const expectedScore = maxPossibleScore(claimedT);
-    if (Math.abs(score - expectedScore) > Math.max(3, expectedScore * 0.01)) {
+    // The score can't exceed what's achievable in the claimed time (pure
+    // survival distance times the max possible multiplier), and can't be
+    // meaningfully *below* pure survival distance either (the multiplier is
+    // never less than 1x) — a cheap sanity bound in both directions.
+    const upperBound = maxPossibleScore(claimedT);
+    const lowerBound = maxDistance(claimedT) * 0.98 - 3;
+    if (score > upperBound + 3 || score < lowerBound) {
       res.status(400).json({ error: "implausible score" });
       return;
     }

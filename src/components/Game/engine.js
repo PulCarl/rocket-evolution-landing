@@ -7,8 +7,12 @@ const {
   gravity: GRAVITY,
   jumpVelocity: JUMP_V,
   doubleJumpVelocity: JUMP2_V,
-  pickupMinGap: PICKUP_MIN_GAP,
-  pickupMaxGap: PICKUP_MAX_GAP,
+  shieldMinGap: SHIELD_MIN_GAP,
+  shieldMaxGap: SHIELD_MAX_GAP,
+  coinMinGap: COIN_MIN_GAP,
+  coinMaxGap: COIN_MAX_GAP,
+  coinMultiplierStep: COIN_MULTIPLIER_STEP,
+  maxMultiplier: MAX_MULTIPLIER,
 } = GAME_CONFIG;
 
 const OBSTACLE_KINDS = [
@@ -17,22 +21,26 @@ const OBSTACLE_KINDS = [
   { w: 24, h: 46, kind: "post" },
 ];
 
-// The shield floats above the ground (unlike obstacles, which sit on it) —
-// you have to jump into it on purpose, it's never in the way of a normal
+// Pickups float above the ground (unlike obstacles, which sit on it) — you
+// have to jump into them on purpose, they're never in the way of a normal
 // dodge. Sized/placed to sit comfortably inside a single jump's arc.
-const PICKUP_SIZE = 26;
-const PICKUP_Y = GROUND - 90;
+const SHIELD_SIZE = 26;
+const SHIELD_Y = GROUND - 90;
+const COIN_SIZE = 18;
+const COIN_Y = GROUND - 70;
 
 export function createGame() {
   return {
     t: 0,
     distance: 0,
+    multiplier: 1, // score multiplier, only ever goes up (coins), capped at MAX_MULTIPLIER
     shielded: false,
     player: { x: 90, y: GROUND, vy: 0, jumps: 0, w: 34, h: 30, spin: 0 },
     obstacles: [],
     pickups: [],
     nextSpawnAt: 0.9,
-    nextPickupAt: 4 + Math.random() * 4,
+    nextShieldAt: 4 + Math.random() * 4,
+    nextCoinAt: 1.5 + Math.random() * 2,
     particles: [],
     over: false,
   };
@@ -60,9 +68,14 @@ function spawnObstacle(state) {
   state.nextSpawnAt = state.t + gap * (0.75 + Math.random() * 0.5);
 }
 
-function spawnPickup(state) {
-  state.pickups.push({ x: W + 20, y: PICKUP_Y, w: PICKUP_SIZE, h: PICKUP_SIZE, kind: "shield" });
-  state.nextPickupAt = state.t + PICKUP_MIN_GAP + Math.random() * (PICKUP_MAX_GAP - PICKUP_MIN_GAP);
+function spawnShield(state) {
+  state.pickups.push({ x: W + 20, y: SHIELD_Y, w: SHIELD_SIZE, h: SHIELD_SIZE, kind: "shield" });
+  state.nextShieldAt = state.t + SHIELD_MIN_GAP + Math.random() * (SHIELD_MAX_GAP - SHIELD_MIN_GAP);
+}
+
+function spawnCoin(state) {
+  state.pickups.push({ x: W + 20, y: COIN_Y, w: COIN_SIZE, h: COIN_SIZE, kind: "coin" });
+  state.nextCoinAt = state.t + COIN_MIN_GAP + Math.random() * (COIN_MAX_GAP - COIN_MIN_GAP);
 }
 
 function aabbHit(p, o) {
@@ -94,8 +107,11 @@ export function step(state, dt) {
   if (state.over) return { crashed: false };
   state.t += dt;
 
+  // `speed` drives the world's scroll (and difficulty) — unaffected by the
+  // multiplier, so collecting coins never makes the game itself harder.
+  // The multiplier only scales how many *points* that same distance is worth.
   const speed = speedAt(state.t);
-  state.distance += speed * dt;
+  state.distance += speed * dt * state.multiplier;
 
   const p = state.player;
   p.vy += GRAVITY * dt;
@@ -118,13 +134,18 @@ export function step(state, dt) {
   for (const pk of state.pickups) {
     if (pk.x + pk.w < -20) continue; // scrolled off, drop
     if (aabbHitPickup(p, pk)) {
-      state.shielded = true;
+      if (pk.kind === "coin") {
+        state.multiplier = Math.min(MAX_MULTIPLIER, state.multiplier + COIN_MULTIPLIER_STEP);
+      } else {
+        state.shielded = true;
+      }
       continue; // collected, remove
     }
     keptPickups.push(pk);
   }
   state.pickups = keptPickups;
-  if (state.t >= state.nextPickupAt) spawnPickup(state);
+  if (state.t >= state.nextShieldAt) spawnShield(state);
+  if (state.t >= state.nextCoinAt) spawnCoin(state);
 
   // A shield absorbs exactly one hit (removing that obstacle so it can't
   // immediately re-trigger next frame) before it's used up.
@@ -197,21 +218,35 @@ export function draw(ctx, state, logoImg) {
     }
   }
 
-  // Shield pickup: a small floating ring.
+  // Pickups: a gold coin (score multiplier) or a shield ring (extra chance).
   const pulse = 0.85 + Math.sin(state.t * 6) * 0.15;
   for (const pk of state.pickups) {
     ctx.save();
     ctx.translate(pk.x + pk.w / 2, pk.y);
     ctx.scale(pulse, pulse);
-    ctx.strokeStyle = "rgba(120,190,255,0.9)";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(0, 0, pk.w / 2, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.fillStyle = "rgba(120,190,255,0.18)";
-    ctx.beginPath();
-    ctx.arc(0, 0, pk.w / 2 - 2, 0, Math.PI * 2);
-    ctx.fill();
+    if (pk.kind === "coin") {
+      const grad = ctx.createRadialGradient(-3, -3, 1, 0, 0, pk.w / 2);
+      grad.addColorStop(0, "#fff3c4");
+      grad.addColorStop(0.5, "#ffd23f");
+      grad.addColorStop(1, "#e0a400");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(0, 0, pk.w / 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.6)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    } else {
+      ctx.strokeStyle = "rgba(120,190,255,0.9)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(0, 0, pk.w / 2, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = "rgba(120,190,255,0.18)";
+      ctx.beginPath();
+      ctx.arc(0, 0, pk.w / 2 - 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.restore();
   }
 

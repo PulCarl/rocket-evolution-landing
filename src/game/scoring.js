@@ -1,10 +1,14 @@
 // Score/difficulty physics for the mini-game — shared so engine.js's speed
 // ramp and its score-per-second are always computed from the same source.
 //
-// Score is purely time/speed based (not "+10 per obstacle" or similar ad
-// hoc bonuses): distance accumulates as speedAt(t) each frame. The shield
-// pickup doesn't add points directly — it just lets a run survive a hit and
-// keep accumulating distance, so this stays true.
+// Score is time/speed based (distance accumulates as speedAt(t) each frame)
+// times a score multiplier that only ever goes up as you collect coins
+// mid-run, capped at maxMultiplier — "plus t'avances, plus tu ramasses,
+// plus tu fais un gros score". The multiplier only scales *points*, not the
+// world's scroll speed, so collecting coins doesn't also make the game
+// harder. api/leaderboard.js duplicates maxMultiplier to bound how high a
+// claimed score could legitimately be for a given elapsed time (see that
+// file for why it's a bound, not an exact match, now that this exists).
 
 export const GAME_CONFIG = {
   width: 800,
@@ -19,8 +23,13 @@ export const GAME_CONFIG = {
   minSpawnGap: 0.5,
   maxSpawnGap: 1.35,
   // Shield pickup: absorbs the next crash instead of ending the run.
-  pickupMinGap: 6,
-  pickupMaxGap: 14,
+  shieldMinGap: 6,
+  shieldMaxGap: 14,
+  // Coin pickup: +coinMultiplierStep to the score multiplier, capped.
+  coinMinGap: 2.5,
+  coinMaxGap: 4.5,
+  coinMultiplierStep: 0.1,
+  maxMultiplier: 3,
 };
 
 export function speedAt(elapsedSeconds) {

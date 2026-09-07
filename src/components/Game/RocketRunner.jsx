@@ -48,6 +48,7 @@ export default function RocketRunner() {
 
   const [phase, setPhase] = useState("idle"); // idle | playing | over
   const [score, setScore] = useState(0);
+  const [multiplier, setMultiplier] = useState(1);
   const [best, setBest] = useState(0);
   const [playerName, setPlayerName] = useState("");
   const [shareState, setShareState] = useState("idle"); // idle | copying | copied | downloaded | error
@@ -132,6 +133,7 @@ export default function RocketRunner() {
   const startGame = useCallback(() => {
     gameRef.current = createGame();
     setScore(0);
+    setMultiplier(1);
     setShareState("idle");
     setJustRanked(false);
     setPhase("playing");
@@ -165,6 +167,7 @@ export default function RocketRunner() {
       if (ctx) draw(ctx, gameRef.current, logoRef.current);
       const currentScore = Math.floor(gameRef.current.distance);
       setScore(currentScore);
+      setMultiplier(gameRef.current.multiplier);
 
       if (crashed) {
         setPhase("over");
@@ -269,9 +272,9 @@ export default function RocketRunner() {
           <div className={styles.eyebrow}>Mini-jeu</div>
           <h2 className={styles.title}>Combien de points tu tiens ?</h2>
           <p className={styles.intro}>
-            Saute par-dessus les obstacles avec <kbd>Espace</kbd> / clic. Ça accélère avec le temps — attrape le
-            <strong> bouclier</strong> en sautant dedans pour encaisser un crash gratuit. Copie une image de ton
-            score et colle-la dans notre salon Discord.
+            Saute par-dessus les obstacles avec <kbd>Espace</kbd> / clic. Ça accélère avec le temps — ramasse les
+            <strong> pièces</strong> pour augmenter ton multiplicateur de points, et le <strong>bouclier</strong>{" "}
+            pour encaisser un crash gratuit. Copie une image de ton score et colle-la dans notre salon Discord.
           </p>
         </Reveal>
 
@@ -281,6 +284,9 @@ export default function RocketRunner() {
               <span>
                 Score <strong>{score}</strong>
               </span>
+              {multiplier > 1 && (
+                <span className={styles.multiplierTag}>x{multiplier.toFixed(1)}</span>
+              )}
               <span>
                 Record <strong>{best}</strong>
               </span>
