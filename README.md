@@ -87,6 +87,27 @@ Le premier stat du hero ("Membres Discord") vient de [`src/data/discordStats.jso
 
 **TikTok et YouTube n'ont pas d'équivalent ici** : TikTok n'a pas d'API publique gratuite pour le nombre de followers (scraping fragile/hors ToS sinon), et l'abonnement YouTube en direct nécessiterait une clé API Data v3 (Google Cloud Console) — non mis en place pour l'instant, décision du client.
 
+## Mini-jeu ("Jeu" dans la nav, `#jeu`)
+
+Petit runner façon jeu du dinosaure de Chrome, à l'esthétique Rocket League (voiture, cônes, buts) — [`src/components/Game/`](./src/components/Game). Espace / clic pour sauter, la vitesse augmente avec le temps. Le score est purement basé sur le temps/vitesse (pas de bonus ad hoc), ce qui permet une vraie validation anti-triche côté serveur (voir plus bas).
+
+### Partage de score sur Discord
+
+Le bouton "Partager sur Discord" en fin de partie génère une image de score (carte brandée, `src/components/Game/shareCard.js`) et l'envoie à [`api/share-score.js`](./api/share-score.js), une fonction serverless Vercel — **jamais** directement à Discord depuis le navigateur.
+
+**Pourquoi passer par un serveur plutôt qu'un webhook appelé depuis le client :**
+- Un webhook appelé en direct depuis le JS du navigateur expose son URL dans les requêtes réseau — n'importe qui pourrait la récupérer et spammer le salon directement, sans même passer par le jeu.
+- Le score envoyé par le client n'est **jamais fait confiance tel quel**. `src/game/scoring.js` définit la formule exacte de vitesse/score du jeu ; `api/share-score.js` recalcule le score maximum théoriquement atteignable pour la durée de partie annoncée (`maxPossibleScore(elapsedSeconds)`, + une tolérance de ~8% pour les variations de framerate) et **rejette** toute soumission qui le dépasse. Un score tapé à la main dans la console (`score = 99999`) est immédiatement détecté comme impossible et n'est jamais transmis à Discord.
+- ⚠️ **Limite honnête** : rien ne rend un jeu 100% côté navigateur infalsifiable face à quelqu'un de vraiment déterminé (qui simulerait une partie entière plausible). Cette validation bloque la triche "facile" (modifier une variable), pas une attaque sophistiquée construite spécifiquement contre elle.
+- Un anti-spam basique par IP (15s entre deux envois) est aussi en place, mais reste best-effort : les fonctions Vercel sont sans état persistant garanti entre les invocations.
+
+**Mise en place requise** (une seule fois) :
+1. Dans Discord : *Paramètres du salon → Intégrations → Webhooks → Nouveau webhook*, choisir le salon dédié aux scores, copier l'URL du webhook.
+2. Sur Vercel : *Project Settings → Environment Variables*, ajouter `DISCORD_SCORE_WEBHOOK_URL` avec cette URL (Production + Preview). ⚠️ C'est une variable d'environnement **Vercel**, pas un secret GitHub — les autres intégrations de ce projet (témoignages, vidéos, stats Discord) tournent dans GitHub Actions, celle-ci tourne dans une fonction Vercel, donc l'emplacement diffère.
+3. Redéployer (ou attendre le prochain déploiement) pour que la variable soit prise en compte.
+
+Tant que `DISCORD_SCORE_WEBHOOK_URL` n'est pas configurée, le bouton "Partager" échoue proprement (message "Erreur, réessaie") sans casser le jeu.
+
 ## À faire avant mise en ligne (voir README du handoff design)
 
 - Reconfirmer les chiffres (+1 rang, 50+ replays, 4 500h, depuis 2026) — "Membres" est maintenant live depuis Discord, plus besoin de le reconfirmer manuellement.

@@ -8,6 +8,7 @@ import Marquee from "./components/Marquee.jsx";
 import Method from "./components/Method.jsx";
 import Coaches from "./components/Coaches.jsx";
 import Results from "./components/Results.jsx";
+import RocketRunner from "./components/Game/RocketRunner.jsx";
 import Videos from "./components/Videos.jsx";
 import CtaBlock from "./components/CtaBlock.jsx";
 import Footer from "./components/Footer.jsx";
@@ -27,6 +28,7 @@ export default function App() {
         <Method />
         <Coaches />
         <Results />
+        <RocketRunner />
         <Videos />
         <CtaBlock />
       </main>

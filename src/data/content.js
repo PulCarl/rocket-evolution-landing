@@ -15,6 +15,7 @@ export const navLinks = [
   { label: "Méthode", href: "#methode" },
   { label: "Coachs", href: "#coachs" },
   { label: "Résultats", href: "#resultats" },
+  { label: "Jeu", href: "#jeu" },
 ];
 
 // Le premier stat (Membres) n'est plus ici : il vient de discordStats.json,
