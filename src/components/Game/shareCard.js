@@ -1,6 +1,6 @@
-// Renders a branded "game over" share card to an offscreen canvas and
-// returns it as a PNG data URL, for posting to Discord.
-export function renderShareCard({ score, best, isRecord }) {
+// Renders a branded "game over" share card (player name + score) to an
+// offscreen canvas.
+function drawCard({ score, best, isRecord, playerName }) {
   const W = 900;
   const H = 500;
   const canvas = document.createElement("canvas");
@@ -26,12 +26,18 @@ export function renderShareCard({ score, best, isRecord }) {
   ctx.fillStyle = "rgba(255,255,255,.55)";
   ctx.font = "700 20px Arial";
   ctx.letterSpacing = "4px";
-  ctx.fillText("ROCKET EVOLUTION · MINI-JEU", W / 2, 80);
+  ctx.fillText("ROCKET EVOLUTION · MINI-JEU", W / 2, 74);
+
+  const name = (playerName || "").trim();
+  ctx.fillStyle = "rgba(255,255,255,.85)";
+  ctx.font = "700 24px Arial";
+  ctx.letterSpacing = "1px";
+  ctx.fillText(name ? name.toUpperCase() : "JOUEUR ANONYME", W / 2, 116);
 
   ctx.fillStyle = isRecord ? "#fe980c" : "rgba(255,255,255,.85)";
   ctx.font = "800 34px Arial";
   ctx.letterSpacing = "2px";
-  ctx.fillText(isRecord ? "NOUVEAU RECORD !" : "GAME OVER", W / 2, 150);
+  ctx.fillText(isRecord ? "NOUVEAU RECORD !" : "GAME OVER", W / 2, 172);
 
   const grad = ctx.createLinearGradient(W / 2 - 200, 0, W / 2 + 200, 0);
   grad.addColorStop(0, "#fe980c");
@@ -40,15 +46,30 @@ export function renderShareCard({ score, best, isRecord }) {
   ctx.fillStyle = grad;
   ctx.font = "800 150px Arial";
   ctx.letterSpacing = "0px";
-  ctx.fillText(String(score), W / 2, 330);
+  ctx.fillText(String(score), W / 2, 340);
 
   ctx.fillStyle = "rgba(255,255,255,.5)";
   ctx.font = "600 22px Arial";
-  ctx.fillText(`Meilleur score : ${best}`, W / 2, 400);
+  ctx.fillText(`Meilleur score : ${best}`, W / 2, 405);
 
   ctx.fillStyle = "rgba(255,255,255,.35)";
   ctx.font = "500 16px Arial";
   ctx.fillText("rocketevolution.fr", W / 2, 450);
 
-  return canvas.toDataURL("image/png");
+  return canvas;
+}
+
+// Preferred: resolves to a Blob via canvas.toBlob (no base64 round-trip).
+export function renderShareCardBlob(opts) {
+  return new Promise((resolve, reject) => {
+    drawCard(opts).toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error("toBlob failed"));
+    }, "image/png");
+  });
+}
+
+// Fallback for environments without canvas.toBlob.
+export function renderShareCard(opts) {
+  return drawCard(opts).toDataURL("image/png");
 }

@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import Reveal from "../Reveal.jsx";
 import { createGame, jump, step, draw } from "./engine.js";
-import { renderShareCard } from "./shareCard.js";
+import { renderShareCardBlob, renderShareCard } from "./shareCard.js";
 import { GAME_CONFIG } from "../../game/scoring.js";
 import logoUrl from "../../assets/logo-rocket-evolution.svg";
 import styles from "./RocketRunner.module.css";
 
 const BEST_KEY = "re-runner-best";
+const NAME_KEY = "re-runner-name";
 
 export default function RocketRunner() {
   const canvasRef = useRef(null);
@@ -24,12 +25,20 @@ export default function RocketRunner() {
   const [phase, setPhase] = useState("idle"); // idle | playing | over
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
-  const [shareState, setShareState] = useState("idle"); // idle | sending | done | error
+  const [playerName, setPlayerName] = useState("");
+  const [shareState, setShareState] = useState("idle"); // idle | copying | copied | downloaded | error
 
   useEffect(() => {
     const stored = Number(localStorage.getItem(BEST_KEY) || 0);
     if (Number.isFinite(stored)) setBest(stored);
+    setPlayerName(localStorage.getItem(NAME_KEY) || "");
   }, []);
+
+  const onNameChange = (e) => {
+    const value = e.target.value.slice(0, 20);
+    setPlayerName(value);
+    localStorage.setItem(NAME_KEY, value);
+  };
 
   const stopLoop = useCallback(() => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -72,6 +81,7 @@ export default function RocketRunner() {
   useEffect(() => {
     const onKey = (e) => {
       if (e.code !== "Space" && e.code !== "ArrowUp") return;
+      if (document.activeElement?.tagName === "INPUT") return;
       e.preventDefault();
       if (phase === "playing") jump(gameRef.current);
       else if (phase === "idle" || phase === "over") startGame();
@@ -80,33 +90,46 @@ export default function RocketRunner() {
     return () => window.removeEventListener("keydown", onKey);
   }, [phase, startGame]);
 
-  const onPress = () => {
+  // Only on the canvas itself (not the overlay/buttons layered on top of it),
+  // so clicking "Rejouer" / "Copier" doesn't also bubble into a jump/restart.
+  const onCanvasPress = () => {
     if (phase === "playing") jump(gameRef.current);
-    else startGame();
+    else if (phase === "over") startGame();
   };
 
   const copyImage = async () => {
     setShareState("copying");
-    try {
-      const isRecord = score >= best && score > 0;
-      const dataUrl = renderShareCard({ score, best: Math.max(score, best), isRecord });
-      const blob = await (await fetch(dataUrl)).blob();
+    const isRecord = score >= best && score > 0;
+    const cardOpts = { score, best: Math.max(score, best), isRecord, playerName };
 
+    try {
       if (navigator.clipboard?.write && typeof ClipboardItem !== "undefined") {
-        await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+        // Pass the ClipboardItem a *pending* promise and call write()
+        // synchronously (no await before it) — some browsers (notably
+        // Safari) revoke the clipboard-write permission if there's an
+        // await in between the click and the call, since that can look
+        // like the user gesture has "expired".
+        await navigator.clipboard.write([
+          new ClipboardItem({ "image/png": renderShareCardBlob(cardOpts) }),
+        ]);
         setShareState("copied");
       } else {
-        // Clipboard image writes aren't supported everywhere (older Safari) —
-        // fall back to a plain download so there's still a file to attach.
+        throw new Error("clipboard-unavailable");
+      }
+    } catch (err) {
+      console.warn("Clipboard copy failed, falling back to download:", err);
+      try {
+        const blob = await renderShareCardBlob(cardOpts).catch(() => null);
+        const url = blob ? URL.createObjectURL(blob) : renderShareCard(cardOpts);
         const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
+        a.href = url;
         a.download = `rocket-evolution-score-${score}.png`;
         a.click();
-        URL.revokeObjectURL(a.href);
+        if (blob) URL.revokeObjectURL(url);
         setShareState("downloaded");
+      } catch {
+        setShareState("error");
       }
-    } catch {
-      setShareState("error");
     }
   };
 
@@ -132,17 +155,29 @@ export default function RocketRunner() {
             </span>
           </div>
 
-          <div className={styles.canvasWrap} onPointerDown={onPress}>
+          <div className={styles.canvasWrap}>
             <canvas
               ref={canvasRef}
               width={GAME_CONFIG.width}
               height={GAME_CONFIG.height}
               className={styles.canvas}
+              onPointerDown={onCanvasPress}
             />
 
             {phase === "idle" && (
               <div className={styles.overlay}>
-                <p>Espace / clic pour démarrer</p>
+                <input
+                  type="text"
+                  className={styles.nameInput}
+                  placeholder="Ton pseudo (optionnel)"
+                  value={playerName}
+                  onChange={onNameChange}
+                  maxLength={20}
+                />
+                <button type="button" className={styles.primaryBtn} onClick={startGame}>
+                  Jouer
+                </button>
+                <p className={styles.hintText}>ou appuie sur Espace</p>
               </div>
             )}
 
