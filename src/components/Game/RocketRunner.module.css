@@ -227,6 +227,11 @@
 @media (max-width: 780px) {
   .canvasWrap {
     overflow: visible;
+    /* Taller than the desktop 800:280 (2.86:1) so the game itself reads
+       better on a narrow phone screen instead of a thin letterbox strip.
+       The canvas stretches to fill it (width/height:100%) — a mild
+       vertical stretch of simple flat shapes, unnoticeable in motion. */
+    aspect-ratio: 800 / 380;
   }
 
   .canvas {
