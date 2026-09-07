@@ -42,9 +42,9 @@ export const GAME_CONFIG = {
   bombMinGap: 15,
   bombMaxGap: 25,
   maxBombs: 3,
-  bombDuration: 2.5,
-  goldBombMinGap: 45,
-  goldBombMaxGap: 75,
+  bombDuration: 1.2,
+  goldBombMinGap: 90,
+  goldBombMaxGap: 150,
   maxGoldBombs: 1,
   goldBombDuration: 8,
 };
