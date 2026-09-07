@@ -20,12 +20,13 @@ export const GAME_CONFIG = {
   minSpawnGap: 0.5,
   maxSpawnGap: 1.35,
   // Pickups: a "boost" gives an instant score bonus and a brief invincible
-  // flight over obstacles; a "shield" absorbs the next crash instead of
-  // ending the run.
+  // stationary window (like Jetpack Joyride's Lil' Stomper — grounded and
+  // immune to crashes, not flying); a "shield" absorbs the next crash
+  // instead of ending the run.
   boostBonus: 3000,
   pickupMinGap: 6,
   pickupMaxGap: 14,
-  boostFlightTime: 1.3,
+  boostDuration: 1.3,
 };
 
 export function speedAt(elapsedSeconds) {

@@ -10,7 +10,7 @@ const {
   boostBonus: BOOST_BONUS,
   pickupMinGap: PICKUP_MIN_GAP,
   pickupMaxGap: PICKUP_MAX_GAP,
-  boostFlightTime: BOOST_FLIGHT_TIME,
+  boostDuration: BOOST_DURATION,
 } = GAME_CONFIG;
 
 const OBSTACLE_KINDS = [
@@ -24,8 +24,6 @@ const OBSTACLE_KINDS = [
 // dodge. Sized/placed to sit comfortably inside a single jump's arc.
 const PICKUP_SIZE = 26;
 const PICKUP_Y = GROUND - 90;
-const BOOST_UP_VELOCITY = -900;
-const BOOST_GRAVITY_SCALE = 0.25; // "floaty" while flying, instead of arcing straight back down
 
 export function createGame() {
   return {
@@ -104,17 +102,25 @@ export function step(state, dt) {
   state.distance += speed * dt;
 
   const p = state.player;
-  const flying = p.boostTimer > 0;
-  if (flying) p.boostTimer = Math.max(0, p.boostTimer - dt);
-  p.vy += GRAVITY * (flying ? BOOST_GRAVITY_SCALE : 1) * dt;
-  p.y += p.vy * dt;
-  if (p.y > GROUND) {
-    p.y = GROUND;
-    p.vy = 0;
-    p.jumps = 0;
-    p.spin = 0;
+  const boosting = p.boostTimer > 0;
+  if (boosting) {
+    // Stationary and invincible for the duration (Jetpack Joyride's Lil'
+    // Stomper, not a jetpack) — frozen in place, no gravity, just a fast
+    // spin as a "powered up" visual cue. Physics resume where they left off
+    // once the timer runs out.
+    p.boostTimer = Math.max(0, p.boostTimer - dt);
+    p.spin += dt * 14;
   } else {
-    p.spin += dt * (flying ? 11 : 6); // faster flip while boosting, purely visual
+    p.vy += GRAVITY * dt;
+    p.y += p.vy * dt;
+    if (p.y > GROUND) {
+      p.y = GROUND;
+      p.vy = 0;
+      p.jumps = 0;
+      p.spin = 0;
+    } else {
+      p.spin += dt * 6; // little flip while airborne, purely visual
+    }
   }
 
   for (const o of state.obstacles) o.x -= speed * dt;
@@ -128,8 +134,12 @@ export function step(state, dt) {
     if (aabbHitPickup(p, pk)) {
       if (pk.kind === "boost") {
         state.bonusScore += BOOST_BONUS;
-        p.boostTimer = BOOST_FLIGHT_TIME;
-        p.vy = BOOST_UP_VELOCITY;
+        p.boostTimer = BOOST_DURATION;
+        // Stomp back down to the ground immediately (even if grabbed
+        // mid-jump) so the invincible window is spent planted in place,
+        // not floating wherever the jump happened to be.
+        p.y = GROUND;
+        p.vy = 0;
       } else {
         state.shielded = true;
       }
@@ -140,13 +150,13 @@ export function step(state, dt) {
   state.pickups = keptPickups;
   if (state.t >= state.nextPickupAt) spawnPickup(state);
 
-  // Flying (mid-boost) clears every obstacle; a shield absorbs exactly one
-  // hit (removing that obstacle so it can't immediately re-trigger next
-  // frame) before it's used up.
+  // Boosting (stationary + invincible) clears every obstacle; a shield
+  // absorbs exactly one hit (removing that obstacle so it can't immediately
+  // re-trigger next frame) before it's used up.
   let crashed = false;
   const keptObstacles = [];
   for (const o of state.obstacles) {
-    if (!crashed && !flying && aabbHit(p, o)) {
+    if (!crashed && !boosting && aabbHit(p, o)) {
       if (state.shielded) {
         state.shielded = false;
         continue; // absorbed, this obstacle is cleared

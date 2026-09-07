@@ -218,7 +218,7 @@ export default function RocketRunner() {
           <h2 className={styles.title}>Combien de points tu tiens ?</h2>
           <p className={styles.intro}>
             Saute par-dessus les obstacles avec <kbd>Espace</kbd> / clic. Ça accélère avec le temps — attrape le
-            <strong> boost</strong> (+3000 et tu voles au-dessus de tout) et le <strong>bouclier</strong> (encaisse un
+            <strong> boost</strong> (+3000 et tu deviens invincible un instant) et le <strong>bouclier</strong> (encaisse un
             crash gratuit) en sautant dedans. Copie une image de ton score et colle-la dans notre salon Discord.
           </p>
         </Reveal>
