@@ -42,3 +42,23 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+
+.legal {
+  max-width: var(--container);
+  margin: 24px auto 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-on-dark);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.legal a {
+  color: inherit;
+}
+
+.legal a:hover {
+  color: rgba(255, 255, 255, 0.6);
+}

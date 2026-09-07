@@ -17,6 +17,10 @@ export default function Footer() {
           ))}
         </div>
       </div>
+      <div className={styles.legal}>
+        <a href="/mentions-legales.html">Mentions légales</a>
+        <a href="/politique-de-confidentialite.html">Politique de confidentialité</a>
+      </div>
     </footer>
   );
 }
