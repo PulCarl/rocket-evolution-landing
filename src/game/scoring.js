@@ -25,24 +25,27 @@ export const GAME_CONFIG = {
   maxSpeed: 620,
   minSpawnGap: 0.5,
   maxSpawnGap: 1.35,
-  // Shield pickup: absorbs the next crash instead of ending the run.
-  shieldMinGap: 6,
+  // Shield pickup: absorbs the next crash instead of ending the run. Gaps
+  // ramp down over the same 0-60s curve as obstacle density (maxGap early,
+  // minGap once it's "vraiment dur") — more help exactly when it's needed.
+  shieldMinGap: 3,
   shieldMaxGap: 14,
   // Coin pickup: every coinsPerStep-th coin adds coinMultiplierStep to the
-  // score multiplier, capped at maxMultiplier. Some spawn higher up,
-  // reachable only with the double jump.
+  // score multiplier, capped at maxMultiplier (90 coins to fully max out).
+  // Some spawn higher up, reachable only with the double jump.
   coinMinGap: 1,
   coinMaxGap: 2,
   coinsPerStep: 3,
-  coinMultiplierStep: 0.1,
-  maxMultiplier: 3,
+  coinMultiplierStep: 0.3,
+  maxMultiplier: 10,
   // Bomb pickup: stores up a charge (capped at maxBombs); the player
   // activates one on demand to clear+suppress obstacles for bombDuration.
   // Two tiers: the common one is weak but stacks; the gold one is rare,
   // much stronger, and never stacks (picking up a 2nd is wasted while
   // holding one). Activating uses a normal charge first if you have one,
-  // saving the gold one for when normal bombs run out.
-  bombMinGap: 15,
+  // saving the gold one for when normal bombs run out. Gaps ramp down the
+  // same way as the shield's.
+  bombMinGap: 8,
   bombMaxGap: 25,
   maxBombs: 3,
   bombDuration: 1.2,

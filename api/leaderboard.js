@@ -26,7 +26,7 @@ const MAX_SPEED = 620;
 // a temporary burst multiplier on top of that, a flat instant points bonus,
 // or a free gold bomb charge (that last one doesn't add points). Duplicated
 // from src/game/scoring.js; keep in sync.
-const MAX_MULTIPLIER = 3;
+const MAX_MULTIPLIER = 10;
 const BURST_MULTIPLIER = 3;
 const POINTS_BONUS_AMOUNT = 10000;
 // One full word needs WORD_LENGTH letters, each taking at least

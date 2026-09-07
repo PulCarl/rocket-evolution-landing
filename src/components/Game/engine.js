@@ -148,34 +148,39 @@ export function useBomb(state) {
   return true;
 }
 
+// Shared 0-60s ramp: gap shrinks from maxGap (easy, early) to minGap (hard,
+// from ~60s on), with the same +/-25% jitter used everywhere it's applied.
+function rampedGap(t, minGap, maxGap) {
+  const difficulty = Math.min(t / 60, 1);
+  const gap = maxGap - (maxGap - minGap) * difficulty;
+  return gap * (0.75 + Math.random() * 0.5);
+}
+
 function spawnObstacle(state) {
   const base = OBSTACLE_KINDS[Math.floor(Math.random() * OBSTACLE_KINDS.length)];
   state.obstacles.push({ x: W + 20, w: base.w, h: base.h, kind: base.kind, passed: false });
   const { minSpawnGap, maxSpawnGap } = GAME_CONFIG;
-  const difficulty = Math.min(state.t / 60, 1);
-  const gap = maxSpawnGap - (maxSpawnGap - minSpawnGap) * difficulty;
-  state.nextSpawnAt = state.t + gap * (0.75 + Math.random() * 0.5);
+  state.nextSpawnAt = state.t + rampedGap(state.t, minSpawnGap, maxSpawnGap);
 }
 
 function spawnShield(state) {
   state.pickups.push({ x: W + 20, y: SHIELD_Y, w: SHIELD_SIZE, h: SHIELD_SIZE, kind: "shield" });
-  state.nextShieldAt = state.t + SHIELD_MIN_GAP + Math.random() * (SHIELD_MAX_GAP - SHIELD_MIN_GAP);
+  // More frequent later in the run — "vraiment dur" is exactly when a spare
+  // shield helps most.
+  state.nextShieldAt = state.t + rampedGap(state.t, SHIELD_MIN_GAP, SHIELD_MAX_GAP);
 }
 
 function spawnCoin(state) {
   // ~40% spawn high, reachable only with a well-timed double jump.
   const y = Math.random() < 0.4 ? COIN_Y_HIGH : COIN_Y_LOW;
   state.pickups.push({ x: W + 20, y, w: COIN_SIZE, h: COIN_SIZE, kind: "coin" });
-  // Same ramp as spawnObstacle: coins get more frequent as the run goes on
-  // (and gets harder), maxing out around the 60s mark like obstacle density.
-  const difficulty = Math.min(state.t / 60, 1);
-  const gap = COIN_MAX_GAP - (COIN_MAX_GAP - COIN_MIN_GAP) * difficulty;
-  state.nextCoinAt = state.t + gap * (0.75 + Math.random() * 0.5);
+  state.nextCoinAt = state.t + rampedGap(state.t, COIN_MIN_GAP, COIN_MAX_GAP);
 }
 
 function spawnBomb(state) {
   state.pickups.push({ x: W + 20, y: BOMB_Y, w: BOMB_SIZE, h: BOMB_SIZE, kind: "bomb" });
-  state.nextBombAt = state.t + BOMB_MIN_GAP + Math.random() * (BOMB_MAX_GAP - BOMB_MIN_GAP);
+  // Same late-run ramp as the shield.
+  state.nextBombAt = state.t + rampedGap(state.t, BOMB_MIN_GAP, BOMB_MAX_GAP);
 }
 
 function spawnGoldBomb(state) {
