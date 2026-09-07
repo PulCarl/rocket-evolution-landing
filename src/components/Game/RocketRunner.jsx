@@ -54,6 +54,10 @@ export default function RocketRunner() {
   const [bombs, setBombs] = useState(0);
   const [goldBombs, setGoldBombs] = useState(0);
   const [bombActive, setBombActive] = useState(false);
+  const [letterIndex, setLetterIndex] = useState(0);
+  const [slowActive, setSlowActive] = useState(false);
+  const [burstActive, setBurstActive] = useState(false);
+  const [bonusToast, setBonusToast] = useState(null); // "goldBomb" | "slow" | "burst" | null
   const [best, setBest] = useState(0);
   const [playerName, setPlayerName] = useState("");
   const [shareState, setShareState] = useState("idle"); // idle | copying | copied | downloaded | error
@@ -154,6 +158,10 @@ export default function RocketRunner() {
     setBombs(0);
     setGoldBombs(0);
     setBombActive(false);
+    setLetterIndex(0);
+    setSlowActive(false);
+    setBurstActive(false);
+    setBonusToast(null);
     setShareState("idle");
     setJustRanked(false);
     setPhase("playing");
@@ -198,6 +206,10 @@ export default function RocketRunner() {
       setBombs(gameRef.current.bombs);
       setGoldBombs(gameRef.current.goldBombs);
       setBombActive(gameRef.current.bombTimer > 0);
+      setLetterIndex(gameRef.current.letterIndex);
+      setSlowActive(gameRef.current.slowTimer > 0);
+      setBurstActive(gameRef.current.burstTimer > 0);
+      setBonusToast(gameRef.current.bonusAnnounceTimer > 0 ? gameRef.current.bonusAnnounce : null);
 
       if (crashed) {
         setPhase("over");
@@ -325,6 +337,7 @@ export default function RocketRunner() {
             <li>
               💣 Bombe → efface les obstacles (<kbd>B</kbd>)
             </li>
+            <li>🔤 Complète ROCKET → bonus surprise</li>
           </ul>
           {totalGames !== null && (
             <p className={styles.totalGames}>
@@ -404,6 +417,29 @@ export default function RocketRunner() {
                 {multiplier > 1 && (
                   <span className={styles.multiplierTag}>x{multiplier.toFixed(1)}</span>
                 )}
+                {burstActive && <span className={styles.burstTag}>⚡ x3</span>}
+                {slowActive && <span className={styles.slowTag}>🐌</span>}
+              </div>
+            )}
+
+            {phase === "playing" && (
+              <div className={styles.wordTracker} title="Complète ROCKET pour un bonus aléatoire">
+                {GAME_CONFIG.word.split("").map((letter, i) => (
+                  <span
+                    key={i}
+                    className={i < letterIndex ? styles.wordLetterDone : styles.wordLetter}
+                  >
+                    {letter}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {bonusToast && (
+              <div className={styles.bonusToast}>
+                {bonusToast === "goldBomb" && "🌟 Bombe dorée !"}
+                {bonusToast === "slow" && "🐌 Ralenti !"}
+                {bonusToast === "burst" && "⚡ x3 pendant 3s !"}
               </div>
             )}
 

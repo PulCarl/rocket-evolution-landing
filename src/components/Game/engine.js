@@ -22,6 +22,13 @@ const {
   goldBombMaxGap: GOLD_BOMB_MAX_GAP,
   maxGoldBombs: MAX_GOLD_BOMBS,
   goldBombDuration: GOLD_BOMB_DURATION,
+  word: WORD,
+  letterMinGap: LETTER_MIN_GAP,
+  letterMaxGap: LETTER_MAX_GAP,
+  slowDuration: SLOW_DURATION,
+  slowFactor: SLOW_FACTOR,
+  burstDuration: BURST_DURATION,
+  burstMultiplier: BURST_MULTIPLIER,
 } = GAME_CONFIG;
 
 const OBSTACLE_KINDS = [
@@ -43,6 +50,8 @@ const BOMB_SIZE = 24;
 const BOMB_Y = GROUND - 90;
 const GOLD_BOMB_SIZE = 26;
 const GOLD_BOMB_Y = GROUND - 90;
+const LETTER_SIZE = 20;
+const LETTER_Y = GROUND - 70;
 
 export function createGame() {
   return {
@@ -55,6 +64,11 @@ export function createGame() {
     goldBombs: 0, // rare bomb charges, never stacks past MAX_GOLD_BOMBS (1)
     bombTimer: 0, // >0 while a bomb's "no obstacles" window is active
     bombTimerMax: 0, // duration of the bomb currently active, for UI/fade math
+    letterIndex: 0, // progress spelling WORD; wraps to 0 + a random bonus on completion
+    slowTimer: 0, // >0: world scroll (not score) runs at SLOW_FACTOR
+    burstTimer: 0, // >0: score multiplier is temporarily x BURST_MULTIPLIER
+    bonusAnnounce: null, // "goldBomb" | "slow" | "burst" — last bonus won, for a UI toast
+    bonusAnnounceTimer: 0, // >0 while that toast should be shown
     player: { x: 90, y: GROUND, vy: 0, jumps: 0, w: 34, h: 30, spin: 0 },
     obstacles: [],
     pickups: [],
@@ -63,6 +77,7 @@ export function createGame() {
     nextCoinAt: 1.5 + Math.random() * 2,
     nextBombAt: BOMB_MIN_GAP + Math.random() * (BOMB_MAX_GAP - BOMB_MIN_GAP),
     nextGoldBombAt: GOLD_BOMB_MIN_GAP + Math.random() * (GOLD_BOMB_MAX_GAP - GOLD_BOMB_MIN_GAP),
+    nextLetterAt: 2 + Math.random() * 2,
     particles: [],
     over: false,
   };
@@ -142,6 +157,18 @@ function spawnGoldBomb(state) {
     state.t + GOLD_BOMB_MIN_GAP + Math.random() * (GOLD_BOMB_MAX_GAP - GOLD_BOMB_MIN_GAP);
 }
 
+function spawnLetter(state) {
+  state.pickups.push({
+    x: W + 20,
+    y: LETTER_Y,
+    w: LETTER_SIZE,
+    h: LETTER_SIZE,
+    kind: "letter",
+    letter: WORD[state.letterIndex],
+  });
+  state.nextLetterAt = state.t + LETTER_MIN_GAP + Math.random() * (LETTER_MAX_GAP - LETTER_MIN_GAP);
+}
+
 function aabbHit(p, o) {
   const px1 = p.x - p.w / 2;
   const px2 = p.x + p.w / 2;
@@ -171,13 +198,20 @@ export function step(state, dt) {
   if (state.over) return { crashed: false };
   state.t += dt;
 
-  // `speed` drives the world's scroll (and difficulty) — unaffected by the
-  // multiplier, so collecting coins never makes the game itself harder.
-  // The multiplier only scales how many *points* that same distance is worth.
+  // `speed` is the "real" time-based speed used for scoring and the
+  // difficulty ramp — always unaffected by pickups, so nothing can slow
+  // down how fast the run gets harder or how score accrues. `scrollSpeed` is
+  // only how fast obstacles/pickups actually move on screen; a slow-mo bonus
+  // drops just that, making things easier to dodge without touching score.
   const speed = speedAt(state.t);
-  state.distance += speed * dt * state.multiplier;
+  const scrollSpeed = speed * (state.slowTimer > 0 ? SLOW_FACTOR : 1);
+  const scoreMultiplier = state.multiplier * (state.burstTimer > 0 ? BURST_MULTIPLIER : 1);
+  state.distance += speed * dt * scoreMultiplier;
 
   if (state.bombTimer > 0) state.bombTimer = Math.max(0, state.bombTimer - dt);
+  if (state.slowTimer > 0) state.slowTimer = Math.max(0, state.slowTimer - dt);
+  if (state.burstTimer > 0) state.burstTimer = Math.max(0, state.burstTimer - dt);
+  if (state.bonusAnnounceTimer > 0) state.bonusAnnounceTimer = Math.max(0, state.bonusAnnounceTimer - dt);
 
   const p = state.player;
   p.vy += GRAVITY * dt;
@@ -191,13 +225,13 @@ export function step(state, dt) {
     p.spin += dt * 6; // little flip while airborne, purely visual
   }
 
-  for (const o of state.obstacles) o.x -= speed * dt;
+  for (const o of state.obstacles) o.x -= scrollSpeed * dt;
   state.obstacles = state.obstacles.filter((o) => o.x + o.w > -20);
   // Suppressed while a bomb is active — useBomb() already pushed nextSpawnAt
   // past the bomb window, this just double-guards against spawning early.
   if (state.bombTimer <= 0 && state.t >= state.nextSpawnAt) spawnObstacle(state);
 
-  for (const pk of state.pickups) pk.x -= speed * dt;
+  for (const pk of state.pickups) pk.x -= scrollSpeed * dt;
   const keptPickups = [];
   for (const pk of state.pickups) {
     if (pk.x + pk.w < -20) continue; // scrolled off, drop
@@ -211,6 +245,23 @@ export function step(state, dt) {
         state.bombs = Math.min(MAX_BOMBS, state.bombs + 1);
       } else if (pk.kind === "goldBomb") {
         state.goldBombs = Math.min(MAX_GOLD_BOMBS, state.goldBombs + 1);
+      } else if (pk.kind === "letter") {
+        state.letterIndex += 1;
+        if (state.letterIndex >= WORD.length) {
+          state.letterIndex = 0;
+          const roll = Math.floor(Math.random() * 3);
+          if (roll === 0) {
+            state.goldBombs = Math.min(MAX_GOLD_BOMBS, state.goldBombs + 1);
+            state.bonusAnnounce = "goldBomb";
+          } else if (roll === 1) {
+            state.slowTimer = SLOW_DURATION;
+            state.bonusAnnounce = "slow";
+          } else {
+            state.burstTimer = BURST_DURATION;
+            state.bonusAnnounce = "burst";
+          }
+          state.bonusAnnounceTimer = 2;
+        }
       } else {
         state.shielded = true;
       }
@@ -223,6 +274,7 @@ export function step(state, dt) {
   if (state.t >= state.nextCoinAt) spawnCoin(state);
   if (state.t >= state.nextBombAt) spawnBomb(state);
   if (state.t >= state.nextGoldBombAt) spawnGoldBomb(state);
+  if (state.t >= state.nextLetterAt) spawnLetter(state);
 
   // A shield absorbs exactly one hit (removing that obstacle so it can't
   // immediately re-trigger next frame) before it's used up.
@@ -342,6 +394,19 @@ export function draw(ctx, state, logoImg) {
       ctx.beginPath();
       ctx.arc(7, -pk.h / 2 - 4, 2, 0, Math.PI * 2);
       ctx.fill();
+    } else if (pk.kind === "letter") {
+      ctx.fillStyle = "rgba(29,29,29,0.9)";
+      ctx.beginPath();
+      ctx.roundRect(-pk.w / 2, -pk.h / 2, pk.w, pk.h, 5);
+      ctx.fill();
+      ctx.strokeStyle = "#fe980c";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.fillStyle = "#fff";
+      ctx.font = "800 14px Poppins, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(pk.letter, 0, 1);
     } else {
       ctx.strokeStyle = "rgba(120,190,255,0.9)";
       ctx.lineWidth = 3;

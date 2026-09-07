@@ -6,9 +6,11 @@
 // mid-run, capped at maxMultiplier — "plus t'avances, plus tu ramasses,
 // plus tu fais un gros score". The multiplier only scales *points*, not the
 // world's scroll speed, so collecting coins doesn't also make the game
-// harder. api/leaderboard.js duplicates maxMultiplier to bound how high a
-// claimed score could legitimately be for a given elapsed time (see that
-// file for why it's a bound, not an exact match, now that this exists).
+// harder. A temporary burst (see below) on top of that multiplier is the
+// only other thing that scales score. api/leaderboard.js duplicates
+// maxMultiplier and burstMultiplier to bound how high a claimed score could
+// legitimately be for a given elapsed time (see that file for why it's a
+// bound, not an exact match, now that these exist).
 
 export const GAME_CONFIG = {
   width: 800,
@@ -47,6 +49,19 @@ export const GAME_CONFIG = {
   goldBombMaxGap: 150,
   maxGoldBombs: 1,
   goldBombDuration: 8,
+  // Letter pickups spell out "ROCKET" (one letter in play at a time, in
+  // order); completing the word picks one random bonus and resets the word
+  // so it can be spelled again:
+  //   - a free gold bomb charge
+  //   - a temporary slowdown of the world's scroll (easier to dodge)
+  //   - a temporary burst: burstMultiplier on top of the coin multiplier
+  word: "ROCKET",
+  letterMinGap: 4,
+  letterMaxGap: 7,
+  slowDuration: 4,
+  slowFactor: 0.5,
+  burstDuration: 3,
+  burstMultiplier: 3,
 };
 
 export function speedAt(elapsedSeconds) {

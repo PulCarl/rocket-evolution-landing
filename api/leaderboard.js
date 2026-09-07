@@ -22,9 +22,11 @@ const BASE_SPEED = 220;
 const RAMP_RATE = 4.2;
 const MAX_SPEED = 620;
 // Coins raise a score multiplier (capped) that's applied to the time-based
-// distance — the shield doesn't add points, it just lets a run survive
-// longer. Duplicated from src/game/scoring.js; keep in sync.
+// distance; completing the ROCKET word can also grant a temporary burst
+// multiplier on top of that. Neither the shield nor the slow-mo/gold-bomb
+// bonuses add points. Duplicated from src/game/scoring.js; keep in sync.
 const MAX_MULTIPLIER = 3;
+const BURST_MULTIPLIER = 3;
 
 // The leaderboard is monthly, not all-time — "1 month to get the best
 // score". UTC-based, which is plenty precise for a community leaderboard
@@ -42,15 +44,15 @@ function maxDistance(t) {
   return atRamp + MAX_SPEED * (t - rampTime);
 }
 
-// The multiplier only ever increases and is capped, so at every instant the
-// score is being earned at somewhere between 1x and MAX_MULTIPLIER times the
-// base rate — bounding the total between maxDistance(t) (never collected a
-// coin) and MAX_MULTIPLIER * maxDistance(t) (implausibly maxed from t=0).
-// The server can't replay which random coins a run actually crossed, so this
-// is intentionally a bound, not an exact match (that was only possible
-// before any bonus mechanic existed).
+// The coin multiplier only ever increases and is capped, and a burst (from
+// spelling ROCKET) multiplies that further, also capped — so at every
+// instant score is earned at somewhere between 1x and
+// MAX_MULTIPLIER * BURST_MULTIPLIER times the base rate. This upper bound
+// (implausibly maxed the whole run) is intentionally loose, not an exact
+// match — the server can't replay which random pickups a run actually
+// crossed, only cap what's physically achievable.
 function maxPossibleScore(t) {
-  return MAX_MULTIPLIER * maxDistance(t);
+  return MAX_MULTIPLIER * BURST_MULTIPLIER * maxDistance(t);
 }
 
 function verifySessionToken(token) {
