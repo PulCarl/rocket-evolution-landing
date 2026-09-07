@@ -104,7 +104,11 @@ function spawnCoin(state) {
   // ~40% spawn high, reachable only with a well-timed double jump.
   const y = Math.random() < 0.4 ? COIN_Y_HIGH : COIN_Y_LOW;
   state.pickups.push({ x: W + 20, y, w: COIN_SIZE, h: COIN_SIZE, kind: "coin" });
-  state.nextCoinAt = state.t + COIN_MIN_GAP + Math.random() * (COIN_MAX_GAP - COIN_MIN_GAP);
+  // Same ramp as spawnObstacle: coins get more frequent as the run goes on
+  // (and gets harder), maxing out around the 60s mark like obstacle density.
+  const difficulty = Math.min(state.t / 60, 1);
+  const gap = COIN_MAX_GAP - (COIN_MAX_GAP - COIN_MIN_GAP) * difficulty;
+  state.nextCoinAt = state.t + gap * (0.75 + Math.random() * 0.5);
 }
 
 function spawnBomb(state) {
