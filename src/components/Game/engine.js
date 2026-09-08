@@ -686,4 +686,24 @@ export function draw(ctx, state, logoImg) {
     ctx.fillStyle = isGold ? `rgba(255, 210, 63, ${alpha})` : `rgba(254, 152, 12, ${alpha})`;
     ctx.fillRect(0, 0, W, H);
   }
+
+  // Big "3, 2, 1" countdown in the jetpack's last 3 seconds, on top of
+  // everything else, so landing (and the crash risk right after) is never
+  // a surprise. Pops bigger at the start of each second, settles down.
+  if (state.jetpackTimer > 0 && state.jetpackTimer <= 3) {
+    const secondsLeft = Math.ceil(state.jetpackTimer - 1e-6);
+    const frac = Math.max(0, Math.min(1, state.jetpackTimer - (secondsLeft - 1)));
+    const scale = 1 + 0.4 * frac;
+    ctx.save();
+    ctx.globalAlpha = 0.55 + 0.35 * frac;
+    ctx.font = `800 ${90 * scale}px Poppins, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = "rgba(0,0,0,0.45)";
+    ctx.strokeText(String(secondsLeft), W / 2, H / 2 - 10);
+    ctx.fillStyle = "#ffd23f";
+    ctx.fillText(String(secondsLeft), W / 2, H / 2 - 10);
+    ctx.restore();
+  }
 }
