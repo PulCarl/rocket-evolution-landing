@@ -70,7 +70,8 @@ const LETTER_SIZE = 20;
 const LETTER_Y = GROUND - 70;
 const JETPACK_SIZE = 24;
 const JETPACK_Y = GROUND - 90;
-const JETPACK_FLY_HEIGHT = GROUND - 100; // held here (ignoring gravity) while flying
+const JETPACK_CEILING = 30; // can't fly above this (stays on-screen)
+const JETPACK_GRAVITY_SCALE = 0.35; // floaty descent, controlled by tapping to go back up
 const MAGNET_SIZE = 24;
 const MAGNET_Y = GROUND - 70;
 const MAGNETABLE_KINDS = new Set(["coin", "bomb", "goldBomb", "letter"]);
@@ -113,6 +114,13 @@ export function createGame() {
 export function jump(state) {
   if (state.over) return;
   const p = state.player;
+  // While flying, every tap gives a free boost — no double-jump limit, so
+  // it actually controls like a jetpack instead of being capped at 2 taps
+  // over a 10s flight.
+  if (state.jetpackTimer > 0) {
+    p.vy = JUMP_V;
+    return;
+  }
   const onGround = p.y >= GROUND - 0.5;
   if (onGround) {
     p.vy = JUMP_V;
@@ -269,12 +277,25 @@ export function step(state, dt) {
   const p = state.player;
   if (state.jetpackTimer > 0) {
     state.jetpackTimer = Math.max(0, state.jetpackTimer - dt);
-    p.y = JETPACK_FLY_HEIGHT;
-    p.vy = 0;
+    // Controllable flight (Jetpack Joyride style): light gravity so you
+    // drift down, jump() (every tap, no double-jump limit) kicks you back
+    // up — instead of being frozen at a fixed height the whole time.
+    p.vy += GRAVITY * JETPACK_GRAVITY_SCALE * dt;
+    p.y += p.vy * dt;
+    if (p.y > GROUND) {
+      p.y = GROUND;
+      p.vy = 0;
+    } else if (p.y < JETPACK_CEILING) {
+      p.y = JETPACK_CEILING;
+      p.vy = 0;
+    }
     p.spin += dt * 10; // fast spin while flying, purely visual
     if (state.jetpackTimer <= 0) {
       // "Quand on retombe on a un shield" — landing back into danger with
       // one hit already covered.
+      p.y = GROUND;
+      p.vy = 0;
+      p.jumps = 0;
       state.shielded = true;
     }
   } else {
