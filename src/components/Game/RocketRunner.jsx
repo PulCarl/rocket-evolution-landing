@@ -57,6 +57,7 @@ export default function RocketRunner() {
   const [letterIndex, setLetterIndex] = useState(0);
   const [burstActive, setBurstActive] = useState(false);
   const [jetpackActive, setJetpackActive] = useState(false);
+  const [jetpackTimeLeft, setJetpackTimeLeft] = useState(0);
   const [magnetActive, setMagnetActive] = useState(false);
   const [bonusToast, setBonusToast] = useState(null); // "goldBomb" | "points" | "burst" | null
   const [colorTier, setColorTier] = useState(0);
@@ -164,6 +165,7 @@ export default function RocketRunner() {
     setLetterIndex(0);
     setBurstActive(false);
     setJetpackActive(false);
+    setJetpackTimeLeft(0);
     setMagnetActive(false);
     setBonusToast(null);
     setColorTier(0);
@@ -215,6 +217,7 @@ export default function RocketRunner() {
       setLetterIndex(gameRef.current.letterIndex);
       setBurstActive(gameRef.current.burstTimer > 0);
       setJetpackActive(gameRef.current.jetpackTimer > 0);
+      setJetpackTimeLeft(gameRef.current.jetpackTimer);
       setMagnetActive(gameRef.current.magnetTimer > 0);
       setBonusToast(gameRef.current.bonusAnnounceTimer > 0 ? gameRef.current.bonusAnnounce : null);
       setColorTier(gameRef.current.colorTier);
@@ -429,7 +432,9 @@ export default function RocketRunner() {
                   <span className={styles.multiplierTag}>x{multiplier.toFixed(1)}</span>
                 )}
                 {burstActive && <span className={styles.burstTag}>⚡ x3</span>}
-                {jetpackActive && <span className={styles.jetpackTag}>🚀 Vol</span>}
+                {jetpackActive && (
+                  <span className={styles.jetpackTag}>🚀 {Math.ceil(jetpackTimeLeft)}s</span>
+                )}
                 {magnetActive && <span className={styles.magnetTag}>🧲</span>}
               </div>
             )}

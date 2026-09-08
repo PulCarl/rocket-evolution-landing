@@ -75,6 +75,7 @@ const JETPACK_GRAVITY_SCALE = 0.35; // floaty descent, controlled by tapping to 
 const MAGNET_SIZE = 24;
 const MAGNET_Y = GROUND - 70;
 const MAGNETABLE_KINDS = new Set(["coin", "bomb", "goldBomb", "letter"]);
+const MAGNET_PULL_SPEED = 900; // px/s a magnetized pickup flies toward the player
 
 export function createGame() {
   return {
@@ -249,6 +250,45 @@ function aabbHitPickup(p, pk) {
   return px1 < ox2 && px2 > ox1 && py1 < oy2 && py2 > oy1;
 }
 
+// Applies a pickup's effect once it's actually reached (normal collision,
+// or a magnetized pickup arriving at the player) — shared so both paths
+// stay in sync instead of duplicating this logic.
+function collectPickup(state, pk) {
+  if (pk.kind === "coin") {
+    state.coinCount += 1;
+    if (state.coinCount % COINS_PER_STEP === 0) {
+      state.multiplier = Math.min(MAX_MULTIPLIER, state.multiplier + COIN_MULTIPLIER_STEP);
+    }
+  } else if (pk.kind === "bomb") {
+    state.bombs = Math.min(MAX_BOMBS, state.bombs + 1);
+  } else if (pk.kind === "goldBomb") {
+    state.goldBombs = Math.min(MAX_GOLD_BOMBS, state.goldBombs + 1);
+  } else if (pk.kind === "jetpack") {
+    state.jetpackTimer = JETPACK_DURATION;
+  } else if (pk.kind === "magnet") {
+    state.magnetTimer = MAGNET_DURATION;
+  } else if (pk.kind === "letter") {
+    state.letterIndex += 1;
+    if (state.letterIndex >= WORD.length) {
+      state.letterIndex = 0;
+      const roll = Math.floor(Math.random() * 3);
+      if (roll === 0) {
+        state.goldBombs = Math.min(MAX_GOLD_BOMBS, state.goldBombs + 1);
+        state.bonusAnnounce = "goldBomb";
+      } else if (roll === 1) {
+        state.distance += POINTS_BONUS_AMOUNT;
+        state.bonusAnnounce = "points";
+      } else {
+        state.burstTimer = BURST_DURATION;
+        state.bonusAnnounce = "burst";
+      }
+      state.bonusAnnounceTimer = 2;
+    }
+  } else {
+    state.shielded = true;
+  }
+}
+
 // Advances the simulation by dt seconds. Returns { crashed }.
 export function step(state, dt) {
   if (state.over) return { crashed: false };
@@ -317,47 +357,39 @@ export function step(state, dt) {
   // past the bomb window, this just double-guards against spawning early.
   if (state.bombTimer <= 0 && state.t >= state.nextSpawnAt) spawnObstacle(state);
 
-  for (const pk of state.pickups) pk.x -= speed * dt;
   const keptPickups = [];
   for (const pk of state.pickups) {
-    if (pk.x + pk.w < -20) continue; // scrolled off, drop
-    // While a magnet is active, coins/bombs/gold bombs/letters are collected
-    // the instant they're on screen — no need to fly/jump over to them.
-    const autoCollected = state.magnetTimer > 0 && MAGNETABLE_KINDS.has(pk.kind);
-    if (autoCollected || aabbHitPickup(p, pk)) {
-      if (pk.kind === "coin") {
-        state.coinCount += 1;
-        if (state.coinCount % COINS_PER_STEP === 0) {
-          state.multiplier = Math.min(MAX_MULTIPLIER, state.multiplier + COIN_MULTIPLIER_STEP);
-        }
-      } else if (pk.kind === "bomb") {
-        state.bombs = Math.min(MAX_BOMBS, state.bombs + 1);
-      } else if (pk.kind === "goldBomb") {
-        state.goldBombs = Math.min(MAX_GOLD_BOMBS, state.goldBombs + 1);
-      } else if (pk.kind === "jetpack") {
-        state.jetpackTimer = JETPACK_DURATION;
-      } else if (pk.kind === "magnet") {
-        state.magnetTimer = MAGNET_DURATION;
-      } else if (pk.kind === "letter") {
-        state.letterIndex += 1;
-        if (state.letterIndex >= WORD.length) {
-          state.letterIndex = 0;
-          const roll = Math.floor(Math.random() * 3);
-          if (roll === 0) {
-            state.goldBombs = Math.min(MAX_GOLD_BOMBS, state.goldBombs + 1);
-            state.bonusAnnounce = "goldBomb";
-          } else if (roll === 1) {
-            state.distance += POINTS_BONUS_AMOUNT;
-            state.bonusAnnounce = "points";
-          } else {
-            state.burstTimer = BURST_DURATION;
-            state.bonusAnnounce = "burst";
-          }
-          state.bonusAnnounceTimer = 2;
-        }
-      } else {
-        state.shielded = true;
+    // A magnetized pickup flies straight toward the player instead of
+    // scrolling with the world — collected for real once it actually
+    // reaches them, so it visibly travels there rather than teleporting.
+    if (pk.magnetized) {
+      const targetX = p.x;
+      const targetY = p.y - p.h / 2;
+      const dx = targetX - pk.x;
+      const dy = targetY - pk.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const pull = Math.min(dist, MAGNET_PULL_SPEED * dt);
+      pk.x += (dx / dist) * pull;
+      pk.y += (dy / dist) * pull;
+      if (dist < 10) {
+        collectPickup(state, pk);
+        continue; // reached the player, collected
       }
+      keptPickups.push(pk);
+      continue;
+    }
+
+    pk.x -= speed * dt;
+    if (pk.x + pk.w < -20) continue; // scrolled off, drop
+
+    if (state.magnetTimer > 0 && MAGNETABLE_KINDS.has(pk.kind)) {
+      pk.magnetized = true; // starts flying to the player from next frame
+      keptPickups.push(pk);
+      continue;
+    }
+
+    if (aabbHitPickup(p, pk)) {
+      collectPickup(state, pk);
       continue; // collected, remove
     }
     keptPickups.push(pk);
@@ -450,9 +482,29 @@ export function draw(ctx, state, logoImg) {
   // or a bomb (stored charge, activated on demand to clear obstacles).
   const pulse = 0.85 + Math.sin(state.t * 6) * 0.15;
   for (const pk of state.pickups) {
+    if (pk.magnetized) {
+      // Trailing streak back toward where it came from, so the pull reads
+      // as motion rather than a pickup instantly popping to the player.
+      const player = state.player;
+      ctx.save();
+      ctx.globalAlpha = 0.5;
+      const grad = ctx.createLinearGradient(
+        pk.x + pk.w / 2, pk.y,
+        player.x, player.y - player.h / 2,
+      );
+      grad.addColorStop(0, "rgba(216,34,78,0.7)");
+      grad.addColorStop(1, "rgba(216,34,78,0)");
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(pk.x + pk.w / 2, pk.y);
+      ctx.lineTo(player.x, player.y - player.h / 2);
+      ctx.stroke();
+      ctx.restore();
+    }
     ctx.save();
     ctx.translate(pk.x + pk.w / 2, pk.y);
-    ctx.scale(pulse, pulse);
+    ctx.scale(pk.magnetized ? 1 : pulse, pk.magnetized ? 1 : pulse);
     if (pk.kind === "coin") {
       const grad = ctx.createRadialGradient(-3, -3, 1, 0, 0, pk.w / 2);
       grad.addColorStop(0, "#fff3c4");
