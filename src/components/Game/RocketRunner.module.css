@@ -121,14 +121,15 @@
 .multiplierTag {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 12px;
+  font-size: 11px;
   color: #ffd23f;
   background: rgba(255, 210, 63, 0.14);
   border: 1px solid rgba(255, 210, 63, 0.4);
   border-radius: 999px;
-  padding: 2px 9px;
+  padding: 2px 8px;
   letter-spacing: normal;
   text-transform: none;
+  white-space: nowrap;
 }
 
 .burstTag,
@@ -136,12 +137,13 @@
 .magnetTag {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: normal;
   text-transform: none;
   border-radius: 999px;
-  padding: 2px 9px;
+  padding: 2px 8px;
   color: #fff;
+  white-space: nowrap;
 }
 
 .burstTag {
@@ -165,6 +167,10 @@
   transform: translateX(-50%);
   display: flex;
   gap: 5px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  background: rgba(20, 20, 20, 0.5);
+  backdrop-filter: blur(3px);
   pointer-events: none;
 }
 
@@ -329,33 +335,48 @@
   touch-action: manipulation;
 }
 
-.multiplierHud {
+.hudPanel {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 10px;
+  right: 10px;
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: rgba(20, 20, 20, 0.55);
+  backdrop-filter: blur(3px);
+  max-width: calc(100% - 20px);
   /* Sits over the canvas but must never intercept the click-to-jump. */
   pointer-events: none;
 }
 
+.hudRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
 .bombBtn {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: 10px;
+  left: 10px;
   z-index: 1;
   display: flex;
   align-items: center;
   gap: 5px;
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 12px;
+  font-size: 11px;
   color: #fff;
-  background: rgba(29, 29, 29, 0.65);
+  background: rgba(20, 20, 20, 0.55);
+  backdrop-filter: blur(3px);
   border: 1px solid rgba(254, 152, 12, 0.5);
   border-radius: 999px;
-  padding: 5px 12px 5px 10px;
+  padding: 5px 11px 5px 9px;
   cursor: pointer;
   transition: background 0.2s ease, opacity 0.2s ease;
 }

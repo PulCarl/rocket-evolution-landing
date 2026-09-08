@@ -416,26 +416,32 @@ export default function RocketRunner() {
             )}
 
             {phase === "playing" && (
-              <div className={styles.multiplierHud}>
-                {multiplier < GAME_CONFIG.maxMultiplier && (
-                  <div
-                    className={styles.coinGauge}
-                    title={`${coinProgress}/${GAME_CONFIG.coinsPerStep} pièces avant le prochain bonus`}
-                  >
+              <div className={styles.hudPanel}>
+                <div className={styles.hudRow}>
+                  {multiplier < GAME_CONFIG.maxMultiplier && (
                     <div
-                      className={styles.coinGaugeFill}
-                      style={{ width: `${(coinProgress / GAME_CONFIG.coinsPerStep) * 100}%` }}
-                    />
+                      className={styles.coinGauge}
+                      title={`${coinProgress}/${GAME_CONFIG.coinsPerStep} pièces avant le prochain bonus`}
+                    >
+                      <div
+                        className={styles.coinGaugeFill}
+                        style={{ width: `${(coinProgress / GAME_CONFIG.coinsPerStep) * 100}%` }}
+                      />
+                    </div>
+                  )}
+                  {multiplier > 1 && (
+                    <span className={styles.multiplierTag}>x{multiplier.toFixed(1)}</span>
+                  )}
+                </div>
+                {(burstActive || jetpackActive || magnetActive) && (
+                  <div className={styles.hudRow}>
+                    {burstActive && <span className={styles.burstTag}>⚡ x3</span>}
+                    {jetpackActive && (
+                      <span className={styles.jetpackTag}>🚀 {Math.ceil(jetpackTimeLeft)}s</span>
+                    )}
+                    {magnetActive && <span className={styles.magnetTag}>🧲</span>}
                   </div>
                 )}
-                {multiplier > 1 && (
-                  <span className={styles.multiplierTag}>x{multiplier.toFixed(1)}</span>
-                )}
-                {burstActive && <span className={styles.burstTag}>⚡ x3</span>}
-                {jetpackActive && (
-                  <span className={styles.jetpackTag}>🚀 {Math.ceil(jetpackTimeLeft)}s</span>
-                )}
-                {magnetActive && <span className={styles.magnetTag}>🧲</span>}
               </div>
             )}
 
