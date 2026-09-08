@@ -445,36 +445,81 @@ export function draw(ctx, state, logoImg) {
   }
 
   // Obstacles — recolored to the current score-tier palette (cosmetic only).
+  // Cone = traffic cone (stripe band), pad = glowing energy pylon, post = a
+  // small goal frame with netting — each reads as its own object at a
+  // glance instead of a plain triangle/block/bar.
   const palette = COLOR_TIERS[state.colorTier % COLOR_TIERS.length];
   const { r: pbR, g: pbG, b: pbB } = hexToRgb(palette.b);
   for (const o of state.obstacles) {
     const top = GROUND - o.h;
+    const cx = o.x + o.w / 2;
+
+    // Shared ground-contact shadow, grounds every shape the same way.
+    ctx.fillStyle = "rgba(0,0,0,0.22)";
+    ctx.beginPath();
+    ctx.ellipse(cx, GROUND + 2, o.w * 0.5, 3.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
     if (o.kind === "cone") {
       const grad = ctx.createLinearGradient(o.x, top, o.x, GROUND);
       grad.addColorStop(0, palette.a);
       grad.addColorStop(1, palette.b);
       ctx.fillStyle = grad;
       ctx.beginPath();
-      ctx.moveTo(o.x + o.w / 2, top);
+      ctx.moveTo(cx, top);
       ctx.lineTo(o.x + o.w, GROUND);
       ctx.lineTo(o.x, GROUND);
       ctx.closePath();
       ctx.fill();
+      // Reflective stripe band, like a real traffic cone.
+      const bandT0 = 0.5;
+      const bandT1 = 0.68;
+      ctx.fillStyle = "rgba(255,255,255,0.85)";
+      ctx.beginPath();
+      ctx.moveTo(cx + (o.x - cx) * bandT0, top + o.h * bandT0);
+      ctx.lineTo(cx + (o.x + o.w - cx) * bandT0, top + o.h * bandT0);
+      ctx.lineTo(cx + (o.x + o.w - cx) * bandT1, top + o.h * bandT1);
+      ctx.lineTo(cx + (o.x - cx) * bandT1, top + o.h * bandT1);
+      ctx.closePath();
+      ctx.fill();
     } else if (o.kind === "pad") {
-      const grad = ctx.createLinearGradient(o.x, top, o.x + o.w, GROUND);
+      // Glowing pylon: a rounded capsule with a bright core and energy bands.
+      const grad = ctx.createLinearGradient(o.x, top, o.x, GROUND);
       grad.addColorStop(0, palette.a);
       grad.addColorStop(1, palette.b);
       ctx.fillStyle = grad;
       ctx.beginPath();
-      ctx.roundRect(o.x, top, o.w, o.h, 5);
+      ctx.roundRect(o.x, top, o.w, o.h, o.w / 2);
       ctx.fill();
-    } else {
-      ctx.fillStyle = palette.b;
-      ctx.fillRect(o.x + o.w / 2 - 3, top, 6, o.h);
-      ctx.fillStyle = `rgba(${pbR},${pbG},${pbB},.35)`;
+      ctx.fillStyle = "rgba(255,255,255,0.45)";
       ctx.beginPath();
-      ctx.ellipse(o.x + o.w / 2, top, 11, 7, 0, 0, Math.PI * 2);
+      ctx.roundRect(o.x + o.w * 0.35, top + 3, o.w * 0.3, o.h - 6, o.w * 0.15);
       ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.55)";
+      ctx.lineWidth = 1.5;
+      for (const f of [0.35, 0.65]) {
+        ctx.beginPath();
+        ctx.moveTo(o.x + 2, top + o.h * f);
+        ctx.lineTo(o.x + o.w - 2, top + o.h * f);
+        ctx.stroke();
+      }
+    } else {
+      // Small goal frame: two posts, a crossbar, and faint netting.
+      const bar = 3;
+      ctx.fillStyle = `rgba(${pbR},${pbG},${pbB},0.14)`;
+      ctx.fillRect(o.x + bar, top + bar, o.w - bar * 2, o.h - bar);
+      ctx.strokeStyle = `rgba(${pbR},${pbG},${pbB},0.35)`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(o.x + bar, top + bar);
+      ctx.lineTo(o.x + o.w - bar, GROUND);
+      ctx.moveTo(o.x + o.w - bar, top + bar);
+      ctx.lineTo(o.x + bar, GROUND);
+      ctx.stroke();
+      ctx.fillStyle = palette.b;
+      ctx.fillRect(o.x, top, bar, o.h);
+      ctx.fillRect(o.x + o.w - bar, top, bar, o.h);
+      ctx.fillRect(o.x, top, o.w, bar);
     }
   }
 
