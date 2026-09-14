@@ -563,30 +563,17 @@ export default function RocketRunner() {
               {leaderboard.length === 0 ? (
                 <p className={styles.leaderboardEmpty}>Sois le premier à marquer un point !</p>
               ) : (
-                <>
-                  {/* Top 3 (podium) always visible, never scrolls away. */}
-                  <ol className={styles.leaderboardList}>
-                    {leaderboard.slice(0, 3).map((entry, i) => (
-                      <li key={i} className={styles.leaderboardRow}>
-                        <span className={styles.leaderboardRank}>{["🥇", "🥈", "🥉"][i]}</span>
-                        <span className={styles.leaderboardName}>{entry.name}</span>
-                        <span className={styles.leaderboardScore}>{entry.score}</span>
-                      </li>
-                    ))}
-                  </ol>
-                  {/* 4th-10th place: scrollable so the panel doesn't grow tall. */}
-                  {leaderboard.length > 3 && (
-                    <ol className={styles.leaderboardListScroll}>
-                      {leaderboard.slice(3).map((entry, i) => (
-                        <li key={i + 3} className={styles.leaderboardRow}>
-                          <span className={styles.leaderboardRank}>{i + 4}</span>
-                          <span className={styles.leaderboardName}>{entry.name}</span>
-                          <span className={styles.leaderboardScore}>{entry.score}</span>
-                        </li>
-                      ))}
-                    </ol>
-                  )}
-                </>
+                <ol className={styles.leaderboardList}>
+                  {leaderboard.map((entry, i) => (
+                    <li key={i} className={styles.leaderboardRow}>
+                      <span className={styles.leaderboardRank}>
+                        {i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1}
+                      </span>
+                      <span className={styles.leaderboardName}>{entry.name}</span>
+                      <span className={styles.leaderboardScore}>{entry.score}</span>
+                    </li>
+                  ))}
+                </ol>
               )}
             </div>
           )}
