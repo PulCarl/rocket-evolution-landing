@@ -609,6 +609,29 @@
   gap: 6px;
 }
 
+.leaderboardListScroll {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 8px 4px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 168px; /* ~4 rows visible, rest scrolls — top 3 above stay put */
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+.leaderboardListScroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.leaderboardListScroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+}
+
 .leaderboardRow {
   display: flex;
   align-items: center;
