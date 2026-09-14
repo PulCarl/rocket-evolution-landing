@@ -193,7 +193,11 @@ export default function RocketRunner() {
     // Ask the server for a signed "run started now" token — checked against
     // the elapsed time claimed when the score is submitted at game over.
     sessionTokenRef.current = null;
-    fetch("/api/game-session", { method: "POST" })
+    fetch("/api/game-session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: playerName }),
+    })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (data?.token) sessionTokenRef.current = data.token;

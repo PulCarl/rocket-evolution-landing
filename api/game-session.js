@@ -4,16 +4,23 @@
 // version of "edit the score in devtools and submit" since the timing
 // wouldn't add up.
 //
-// It also bumps a site-wide "total games played" counter — kept in the same
-// Gist as the leaderboard, but its own file (stats.json) so it's untouched
-// by the monthly reset. GET just reads the current count (for page load,
-// before anyone's played). Best-effort: if the Gist call fails, the game
-// still starts/counts fine, it just won't have a fresh total to show.
+// It also bumps two counters, kept in the same Gist as the leaderboard but
+// their own file (stats.json) so they're untouched by the monthly reset:
+// a site-wide "total games played" total, and a per-player breakdown
+// (players[normalizedName] = { name, count }). GET reads both without
+// incrementing (used on page load, and to check per-player counts — e.g.
+// by fetching this endpoint directly). Best-effort throughout: if the Gist
+// call fails, the game still starts fine, it just won't have fresh numbers.
 import crypto from "node:crypto";
 
 const GIST_ID = process.env.GIST_ID;
 const GIST_TOKEN = process.env.GIST_TOKEN;
 const STATS_FILE = "stats.json";
+
+function normalizeName(name) {
+  const clean = String(name || "").trim().slice(0, 20);
+  return clean || "Joueur anonyme";
+}
 
 async function readStats() {
   const r = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
@@ -22,13 +29,14 @@ async function readStats() {
   if (!r.ok) throw new Error(`gist read failed: ${r.status}`);
   const data = await r.json();
   const content = data.files?.[STATS_FILE]?.content;
-  if (!content) return { totalGames: 0 };
+  if (!content) return { totalGames: 0, players: {} };
   try {
     const parsed = JSON.parse(content);
     const totalGames = Number(parsed.totalGames);
-    return { totalGames: Number.isFinite(totalGames) ? totalGames : 0 };
+    const players = parsed.players && typeof parsed.players === "object" ? parsed.players : {};
+    return { totalGames: Number.isFinite(totalGames) ? totalGames : 0, players };
   } catch {
-    return { totalGames: 0 };
+    return { totalGames: 0, players: {} };
   }
 }
 
@@ -48,14 +56,14 @@ async function writeStats(stats) {
 export default async function handler(req, res) {
   if (req.method === "GET") {
     if (!GIST_ID || !GIST_TOKEN) {
-      res.status(200).json({ totalGames: null });
+      res.status(200).json({ totalGames: null, players: {} });
       return;
     }
     try {
-      const { totalGames } = await readStats();
-      res.status(200).json({ totalGames });
+      const { totalGames, players } = await readStats();
+      res.status(200).json({ totalGames, players });
     } catch {
-      res.status(200).json({ totalGames: null });
+      res.status(200).json({ totalGames: null, players: {} });
     }
     return;
   }
@@ -75,6 +83,12 @@ export default async function handler(req, res) {
       try {
         const stats = await readStats();
         stats.totalGames += 1;
+
+        const displayName = normalizeName(req.body?.name);
+        const key = displayName.toLowerCase();
+        const existing = stats.players[key];
+        stats.players[key] = { name: displayName, count: (existing?.count || 0) + 1 };
+
         await writeStats(stats);
         totalGames = stats.totalGames;
       } catch {
