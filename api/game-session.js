@@ -55,15 +55,26 @@ async function writeStats(stats) {
 
 export default async function handler(req, res) {
   if (req.method === "GET") {
+    // ?name=Poms -> just that player's count, e.g.
+    // /api/game-session?name=Poms -> { player: { name: "Poms", count: 12 } }
+    const queryName = req.query?.name;
+
     if (!GIST_ID || !GIST_TOKEN) {
-      res.status(200).json({ totalGames: null, players: {} });
+      res.status(200).json(
+        queryName ? { player: null } : { totalGames: null, players: {} },
+      );
       return;
     }
     try {
       const { totalGames, players } = await readStats();
+      if (queryName) {
+        const key = normalizeName(queryName).toLowerCase();
+        res.status(200).json({ player: players[key] || null });
+        return;
+      }
       res.status(200).json({ totalGames, players });
     } catch {
-      res.status(200).json({ totalGames: null, players: {} });
+      res.status(200).json(queryName ? { player: null } : { totalGames: null, players: {} });
     }
     return;
   }
