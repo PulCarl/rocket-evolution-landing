@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import Reveal from "../Reveal.jsx";
 import { createGame, jump, step, draw, useBomb } from "./engine.js";
+import {
+  unlockAudio,
+  playCoin,
+  playBombPickup,
+  playBombExplode,
+  playLetter,
+  playWordComplete,
+  playJetpack,
+  playMagnet,
+} from "./sfx.js";
 import { renderShareCardBlob, renderShareCard } from "./shareCard.js";
 import { GAME_CONFIG } from "../../game/scoring.js";
 import logoUrl from "../../assets/logo-rocket-evolution.svg";
@@ -81,6 +91,11 @@ export default function RocketRunner() {
   // track is never fetched until someone actually plays, not on page load.
   const musicRef = useRef(null);
   const loseSoundRef = useRef(null);
+  // Pickup sound effects are synthesized on the fly (see sfx.js), so they
+  // need the current volume/muted at play time rather than a persistent
+  // Audio element's properties — kept in refs, updated alongside the state.
+  const sfxVolumeRef = useRef(DEFAULT_VOLUME);
+  const sfxMutedRef = useRef(false);
 
   useEffect(() => {
     const id = setInterval(() => setCountdown(getCountdown()), 60000);
@@ -91,7 +106,9 @@ export default function RocketRunner() {
     const stored = Number(localStorage.getItem(BEST_KEY) || 0);
     if (Number.isFinite(stored)) setBest(stored);
     setPlayerName(localStorage.getItem(NAME_KEY) || "");
-    setMuted(localStorage.getItem(MUTED_KEY) === "1");
+    const storedMuted = localStorage.getItem(MUTED_KEY) === "1";
+    setMuted(storedMuted);
+    sfxMutedRef.current = storedMuted;
     // getItem returns null when nothing's stored yet, and Number(null) is 0
     // (not NaN) -- checking Number.isFinite alone would silently zero the
     // volume for every first-time visitor instead of keeping DEFAULT_VOLUME.
@@ -100,6 +117,7 @@ export default function RocketRunner() {
       const storedVolume = Number(storedVolumeRaw);
       if (Number.isFinite(storedVolume) && storedVolume >= 0 && storedVolume <= 1) {
         setVolume(storedVolume);
+        sfxVolumeRef.current = storedVolume;
       }
     }
   }, []);
@@ -115,6 +133,7 @@ export default function RocketRunner() {
       const next = !prev;
       localStorage.setItem(MUTED_KEY, next ? "1" : "0");
       if (musicRef.current) musicRef.current.muted = next;
+      sfxMutedRef.current = next;
       return next;
     });
   };
@@ -124,6 +143,7 @@ export default function RocketRunner() {
     setVolume(vol);
     localStorage.setItem(VOLUME_KEY, String(vol));
     if (musicRef.current) musicRef.current.volume = vol;
+    sfxVolumeRef.current = vol;
   };
 
   useEffect(() => {
@@ -189,6 +209,7 @@ export default function RocketRunner() {
     // gesture — browsers won't block it. Still catch: a slow first load of
     // the file shouldn't ever throw and interrupt the game starting.
     musicRef.current.play().catch(() => {});
+    unlockAudio();
 
     // Ask the server for a signed "run started now" token — checked against
     // the elapsed time claimed when the score is submitted at game over.
@@ -211,6 +232,26 @@ export default function RocketRunner() {
       const { crashed } = step(gameRef.current, dt);
       const ctx = canvasRef.current?.getContext("2d");
       if (ctx) draw(ctx, gameRef.current, logoRef.current);
+
+      if (gameRef.current.events.length > 0) {
+        const vol = sfxVolumeRef.current;
+        const mut = sfxMutedRef.current;
+        for (const evt of gameRef.current.events) {
+          switch (evt.type) {
+            case "coin": playCoin(vol, mut); break;
+            case "bombPickup": playBombPickup(vol, mut, false); break;
+            case "goldBombPickup": playBombPickup(vol, mut, true); break;
+            case "bombExplode": playBombExplode(vol, mut, false); break;
+            case "goldBombExplode": playBombExplode(vol, mut, true); break;
+            case "letter": playLetter(vol, mut, evt.index); break;
+            case "wordComplete": playWordComplete(vol, mut); break;
+            case "jetpack": playJetpack(vol, mut); break;
+            case "magnet": playMagnet(vol, mut); break;
+            default: break;
+          }
+        }
+        gameRef.current.events.length = 0;
+      }
       const currentScore = Math.floor(gameRef.current.distance);
       setScore(currentScore);
       setMultiplier(gameRef.current.multiplier);

@@ -109,6 +109,7 @@ export function createGame() {
     nextMagnetAt: MAGNET_MIN_GAP + Math.random() * (MAGNET_MAX_GAP - MAGNET_MIN_GAP),
     particles: [],
     over: false,
+    events: [], // { type } pushed by pickups/bombs this frame, for RocketRunner to turn into sound
   };
 }
 
@@ -139,12 +140,14 @@ export function jump(state) {
 export function useBomb(state) {
   if (state.over || state.bombTimer > 0) return false;
   let duration;
+  let gold = false;
   if (state.bombs > 0) {
     state.bombs -= 1;
     duration = BOMB_DURATION;
   } else if (state.goldBombs > 0) {
     state.goldBombs -= 1;
     duration = GOLD_BOMB_DURATION;
+    gold = true;
   } else {
     return false;
   }
@@ -154,6 +157,7 @@ export function useBomb(state) {
   // Push the next spawn out past the bomb window (plus a small grace gap)
   // so obstacles don't pile up waiting right at the moment it ends.
   state.nextSpawnAt = state.t + duration + 0.6;
+  state.events.push({ type: gold ? "goldBombExplode" : "bombExplode" });
   return true;
 }
 
@@ -259,15 +263,21 @@ function collectPickup(state, pk) {
     if (state.coinCount % COINS_PER_STEP === 0) {
       state.multiplier = Math.min(MAX_MULTIPLIER, state.multiplier + COIN_MULTIPLIER_STEP);
     }
+    state.events.push({ type: "coin" });
   } else if (pk.kind === "bomb") {
     state.bombs = Math.min(MAX_BOMBS, state.bombs + 1);
+    state.events.push({ type: "bombPickup" });
   } else if (pk.kind === "goldBomb") {
     state.goldBombs = Math.min(MAX_GOLD_BOMBS, state.goldBombs + 1);
+    state.events.push({ type: "goldBombPickup" });
   } else if (pk.kind === "jetpack") {
     state.jetpackTimer = JETPACK_DURATION;
+    state.events.push({ type: "jetpack" });
   } else if (pk.kind === "magnet") {
     state.magnetTimer = MAGNET_DURATION;
+    state.events.push({ type: "magnet" });
   } else if (pk.kind === "letter") {
+    const collectedIndex = state.letterIndex; // position (0-based) of the letter just collected
     state.letterIndex += 1;
     if (state.letterIndex >= WORD.length) {
       state.letterIndex = 0;
@@ -283,6 +293,9 @@ function collectPickup(state, pk) {
         state.bonusAnnounce = "burst";
       }
       state.bonusAnnounceTimer = 2;
+      state.events.push({ type: "wordComplete" });
+    } else {
+      state.events.push({ type: "letter", index: collectedIndex });
     }
   } else {
     state.shielded = true;
