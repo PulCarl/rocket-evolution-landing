@@ -52,6 +52,7 @@ export default function DoodleGame() {
   const [playerName, setPlayerName] = useState("");
   const [muted, setMuted] = useState(false);
   const mutedRef = useRef(false);
+  const [discordError, setDiscordError] = useState(false);
 
   useEffect(() => {
     const storedBest = Number(localStorage.getItem(BEST_KEY) || 0);
@@ -60,6 +61,13 @@ export default function DoodleGame() {
     const storedMuted = localStorage.getItem(MUTED_KEY) === "1";
     setMuted(storedMuted);
     mutedRef.current = storedMuted;
+
+    // api/discord-callback.js redirects here with this flag when the
+    // Discord login attempt failed — surface it once, then clean the URL.
+    if (window.location.search.includes("discord_error=1")) {
+      setDiscordError(true);
+      window.history.replaceState(null, "", window.location.pathname + window.location.hash);
+    }
   }, []);
 
   const toggleMute = () => {
@@ -261,6 +269,13 @@ export default function DoodleGame() {
 
             {phase === "idle" && (
               <div className={styles.overlay}>
+                <a href="/api/discord-login" className={styles.discordBtn}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M20.32 4.57A19.8 19.8 0 0 0 15.4 3.1a13.6 13.6 0 0 0-.63 1.28 18.3 18.3 0 0 0-5.53 0A13 13 0 0 0 8.6 3.1a19.7 19.7 0 0 0-4.93 1.47C.54 9.2-.32 13.7.11 18.15a19.9 19.9 0 0 0 6.03 3.03c.49-.66.92-1.36 1.29-2.09-.71-.26-1.39-.59-2.03-.97.17-.13.34-.26.5-.4a14.2 14.2 0 0 0 12.2 0c.16.14.33.28.5.4-.64.39-1.32.71-2.03.98.37.73.8 1.43 1.29 2.09a19.8 19.8 0 0 0 6.03-3.03c.5-5.16-.86-9.62-3.57-13.58ZM8.02 15.43c-1.18 0-2.16-1.08-2.16-2.41 0-1.33.95-2.42 2.16-2.42 1.22 0 2.19 1.09 2.17 2.42 0 1.33-.96 2.41-2.17 2.41Zm7.96 0c-1.19 0-2.16-1.08-2.16-2.41 0-1.33.95-2.42 2.16-2.42 1.22 0 2.19 1.09 2.17 2.42 0 1.33-.95 2.41-2.17 2.41Z" />
+                  </svg>
+                  Se connecter avec Discord
+                </a>
+                <p className={styles.orDivider}>ou entre ton pseudo</p>
                 <input
                   type="text"
                   className={styles.nameInput}
@@ -281,6 +296,7 @@ export default function DoodleGame() {
                 <p className={styles.hintText}>
                   {playerName.trim() ? "ou appuie sur Espace" : "Entre ton pseudo pour jouer"}
                 </p>
+                {discordError && <p className={styles.errorText}>La connexion Discord a échoué, réessaie.</p>}
               </div>
             )}
 
