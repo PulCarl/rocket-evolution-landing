@@ -14,14 +14,18 @@
   overflow: hidden;
 }
 
+/* Elongated, angled and blurred instead of a flat circle — reads as a
+   boost flare trailing the car rather than a generic decorative blob. */
 .circle {
   position: absolute;
-  right: -80px;
-  bottom: -120px;
-  width: 420px;
-  height: 420px;
+  right: -60px;
+  bottom: -90px;
+  width: 520px;
+  height: 260px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.16);
+  filter: blur(22px);
+  transform: rotate(-16deg);
   pointer-events: none;
 }
 

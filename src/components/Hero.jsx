@@ -20,12 +20,26 @@ export default function Hero() {
 
   return (
     <section className={styles.hero}>
-      <div className={styles.haloPink} aria-hidden="true" />
-      <div className={styles.haloOrange} aria-hidden="true" />
+      <div className={styles.arenaGrid} aria-hidden="true" />
+      <div className={styles.arenaGlow} aria-hidden="true" />
       <div className={styles.grid}>
         <div className={styles.textCol}>
           <Reveal className={styles.badge}>
-            <span className={styles.badgeDot} />
+            <svg
+              className={styles.badgeIcon}
+              width="11"
+              height="11"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <polyline points="4 2 14 12 4 22" />
+              <polyline points="12 2 22 12 12 22" opacity="0.5" />
+            </svg>
             Coaching Rocket League · France
           </Reveal>
           <Reveal as="h1" delay={90} className={styles.title}>
