@@ -24,26 +24,6 @@ const MUTED_KEY = "re-runner-muted";
 const VOLUME_KEY = "re-runner-volume";
 const DEFAULT_VOLUME = 0.35;
 
-const MONTH_NAMES_FR = [
-  "janvier", "février", "mars", "avril", "mai", "juin",
-  "juillet", "août", "septembre", "octobre", "novembre", "décembre",
-];
-
-function formatPeriod(period) {
-  if (!period) return "";
-  const [y, m] = period.split("-").map(Number);
-  return `${MONTH_NAMES_FR[m - 1]} ${y}`;
-}
-
-// Time left until the leaderboard resets, i.e. until the next UTC month
-// starts (matches api/leaderboard.js's currentPeriod()).
-function getCountdown() {
-  const now = new Date();
-  const nextReset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1, 0, 0, 0));
-  const diffMs = Math.max(0, nextReset - now);
-  return { days: Math.floor(diffMs / 86400000), hours: Math.floor((diffMs % 86400000) / 3600000) };
-}
-
 export default function RocketRunner() {
   const canvasRef = useRef(null);
   const gameRef = useRef(createGame());
@@ -80,9 +60,7 @@ export default function RocketRunner() {
   // unavailable (e.g. the gist env vars aren't configured yet) — hidden in
   // that case rather than showing a broken-looking empty panel.
   const [leaderboard, setLeaderboard] = useState(null);
-  const [previous, setPrevious] = useState(null); // { period, top3 } | null
   const [justRanked, setJustRanked] = useState(false);
-  const [countdown, setCountdown] = useState(getCountdown);
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(DEFAULT_VOLUME);
   const [totalGames, setTotalGames] = useState(null); // site-wide count; null = not loaded yet
@@ -96,11 +74,6 @@ export default function RocketRunner() {
   // Audio element's properties — kept in refs, updated alongside the state.
   const sfxVolumeRef = useRef(DEFAULT_VOLUME);
   const sfxMutedRef = useRef(false);
-
-  useEffect(() => {
-    const id = setInterval(() => setCountdown(getCountdown()), 60000);
-    return () => clearInterval(id);
-  }, []);
 
   useEffect(() => {
     const stored = Number(localStorage.getItem(BEST_KEY) || 0);
@@ -152,7 +125,6 @@ export default function RocketRunner() {
       .then((data) => {
         if (!data?.leaderboard) return;
         setLeaderboard(data.leaderboard);
-        setPrevious(data.previous ?? null);
       })
       .catch(() => {});
     fetch("/api/game-session")
@@ -300,7 +272,6 @@ export default function RocketRunner() {
             .then((data) => {
               if (!data?.leaderboard) return;
               setLeaderboard(data.leaderboard);
-              setPrevious(data.previous ?? null);
               if (data.qualified) setJustRanked(true);
             })
             .catch(() => {});
@@ -576,30 +547,10 @@ export default function RocketRunner() {
             )}
           </div>
 
-          {leaderboard !== null && previous?.top3?.length > 0 && (
-            <div className={styles.previousBoard}>
-              <h4 className={styles.previousTitle}>Top 3 de {formatPeriod(previous.period)}</h4>
-              <ol className={styles.previousList}>
-                {previous.top3.map((entry, i) => (
-                  <li key={i}>
-                    <span>{["🥇", "🥈", "🥉"][i]}</span>
-                    <span className={styles.previousName}>{entry.name}</span>
-                    <span className={styles.previousScore}>{entry.score}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          )}
-
           {leaderboard !== null && (
             <div className={styles.leaderboard}>
               <div className={styles.leaderboardHead}>
-                <h3 className={styles.leaderboardTitle}>🏆 Top 10 du mois</h3>
-                <span className={styles.leaderboardSub}>
-                  {countdown.days > 0
-                    ? `${countdown.days}j ${countdown.hours}h avant la remise à zéro`
-                    : `${countdown.hours}h avant la remise à zéro`}
-                </span>
+                <h3 className={styles.leaderboardTitle}>🏆 Top 10</h3>
               </div>
               {leaderboard.length === 0 ? (
                 <p className={styles.leaderboardEmpty}>Sois le premier à marquer un point !</p>
