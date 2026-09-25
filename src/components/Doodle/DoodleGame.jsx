@@ -365,9 +365,10 @@ export default function DoodleGame() {
       <div className={styles.container}>
         <Reveal className={styles.head}>
           <div className={styles.eyebrow}>Mini-jeu</div>
-          <h2 className={styles.title}>Monte le plus haut possible</h2>
+          <h2 className={styles.title}>Rocket Jump</h2>
           <p className={styles.intro}>
-            Rebondis de plateforme en plateforme (<kbd>ZQSD</kbd> / <kbd>flèches</kbd>) — ne tombe pas de l'écran.
+            Monte le plus haut possible en rebondissant de plateforme en plateforme (<kbd>ZQSD</kbd> /{" "}
+            <kbd>flèches</kbd>) — ne tombe pas de l'écran.
           </p>
           <ul className={styles.legend}>
             <li>🌀 Ressort → rebond géant</li>
@@ -589,7 +590,7 @@ export default function DoodleGame() {
                 {newLeaderboard !== null && (
                   <div className={styles.leaderboard}>
                     <div className={styles.leaderboardHead}>
-                      <h3 className={styles.leaderboardTitle}>🏆 Top 10 — nouveau mini-jeu</h3>
+                      <h3 className={styles.leaderboardTitle}>🏆 Top 10 — Rocket Jump</h3>
                     </div>
                     <p className={styles.leaderboardNote}>Les meilleurs scores des joueurs connectés à Discord.</p>
                     {newLeaderboard.length === 0 ? (
