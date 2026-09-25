@@ -355,6 +355,12 @@
   color: transparent !important;
 }
 
+.overCoins {
+  margin-top: -6px !important;
+  font-size: 13px !important;
+  color: #ffd23f !important;
+}
+
 .record {
   font-family: var(--font-display);
   font-weight: 700;

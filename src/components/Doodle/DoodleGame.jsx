@@ -65,7 +65,10 @@ export default function DoodleGame() {
   }, []);
 
   const [phase, setPhase] = useState("idle"); // idle | playing | over
-  const [score, setScore] = useState(0);
+  const [score, setScore] = useState(0); // height climbed + coin value combined
+  // Pure coin count collected this run, shown separately from the score
+  // above (which also folds in height) so it's clear what came from where.
+  const [coinsCollected, setCoinsCollected] = useState(0);
   const [best, setBest] = useState(0);
   const [isNewBest, setIsNewBest] = useState(false);
   const [jetpackActive, setJetpackActive] = useState(false);
@@ -204,6 +207,7 @@ export default function DoodleGame() {
     unlockAudio();
     gameRef.current = createGame(upgradesFromLevels(levels, rebirths));
     setScore(0);
+    setCoinsCollected(0);
     setIsNewBest(false);
     setJetpackActive(false);
     setShielded(false);
@@ -250,6 +254,7 @@ export default function DoodleGame() {
 
       const currentScore = gameRef.current.score;
       setScore(currentScore);
+      setCoinsCollected(gameRef.current.coinScore);
       setJetpackActive(gameRef.current.jetpackTimer > 0);
       setShielded(gameRef.current.shieldCharges > 0);
 
@@ -462,6 +467,11 @@ export default function DoodleGame() {
               <span>
                 Score <strong>{score}</strong>
               </span>
+              {phase !== "idle" && (
+                <span>
+                  🪙 <strong>{coinsCollected}</strong>
+                </span>
+              )}
               <span>
                 Record <strong>{best}</strong>
               </span>
@@ -678,6 +688,7 @@ export default function DoodleGame() {
               {phase === "over" && (
                 <div className={styles.overlay}>
                   <p className={styles.overScore}>{score}</p>
+                  <p className={styles.overCoins}>🪙 {coinsCollected} pièces récupérées</p>
                   {isNewBest && <p className={styles.record}>Nouveau record !</p>}
                   <div className={styles.overActions}>
                     <button type="button" className={styles.primaryBtn} onClick={startGame}>
