@@ -166,6 +166,7 @@ const DEFAULT_UPGRADES = {
   springVelocity: SPRING_V,
   shieldCharges: 1,
   coinValue: COIN_VALUE,
+  bounceVelocity: BOUNCE_V,
 };
 
 export function createGame(upgrades) {
@@ -244,7 +245,7 @@ export function step(state, dt) {
     for (const plat of state.platforms) {
       if (landedOn(p, plat)) {
         const spring = plat.hasSpring;
-        p.vy = spring ? state.upgrades.springVelocity : BOUNCE_V;
+        p.vy = spring ? state.upgrades.springVelocity : state.upgrades.bounceVelocity;
         state.events.push({ type: spring ? "spring" : "bounce" });
         if (spring) plat.hasSpring = false;
         if (plat.kind === "breakable") plat.broken = true;

@@ -25,6 +25,11 @@ const LEVEL_UP_COST = { 2: 300, 3: 600 };
 // a loose sanity cap, not full anti-cheat (nothing here is worth building
 // the score/time-based bound the point leaderboard has).
 const MAX_COINS_PER_RUN = 5000;
+// Height needed (during a single run) to unlock the NEXT rebirth tier —
+// REBIRTH_HEIGHTS[record.rebirths] is that threshold. Kept in sync by hand
+// with src/components/Doodle/levels.js.
+const REBIRTH_HEIGHTS = [5000, 15000, 30000, 50000, 75000];
+const MAX_REBIRTHS = REBIRTH_HEIGHTS.length;
 
 function verifySig(discordId, sig) {
   if (typeof discordId !== "string" || !discordId || typeof sig !== "string" || !sig) return false;
@@ -35,7 +40,43 @@ function verifySig(discordId, sig) {
 }
 
 function defaultRecord() {
-  return { name: "", coins: 0, levels: { jetpack: 1, shield: 1, spring: 1, coinMultiplier: 1 }, best: 0 };
+  return {
+    name: "",
+    coins: 0,
+    totalCoinsEarned: 0,
+    levels: { jetpack: 1, shield: 1, spring: 1, coinMultiplier: 1 },
+    rebirths: 0,
+    best: 0,
+  };
+}
+
+// Fills in fields that didn't exist yet when this record was first written
+// (totalCoinsEarned/rebirths shipped after coins/levels/best did), so old
+// saved records keep working without a migration step.
+function normalizeRecord(record) {
+  const base = defaultRecord();
+  if (!record) return base;
+  return {
+    ...base,
+    ...record,
+    levels: { ...base.levels, ...(record.levels || {}) },
+  };
+}
+
+// Shared by the "finishRun" and "rebirth" actions — both submit a run's
+// result the same way, rebirth just additionally bumps the rebirth tier.
+function applyRunResult(record, { name, score, coinsEarned }) {
+  if (typeof name === "string" && name.trim()) record.name = name.trim().slice(0, 20);
+
+  const earned = Number(coinsEarned);
+  if (Number.isFinite(earned) && earned > 0) {
+    const gained = Math.floor(Math.min(earned, MAX_COINS_PER_RUN));
+    record.coins += gained;
+    record.totalCoinsEarned += gained;
+  }
+
+  const s = Number(score);
+  if (Number.isFinite(s) && s > record.best) record.best = Math.floor(s);
 }
 
 async function readAllPlayers() {
@@ -92,6 +133,24 @@ export default async function handler(req, res) {
       return;
     }
 
+    // ?coinsLeaderboard=1 -> top 10 by LIFETIME coins earned (never
+    // decreases when coins get spent on upgrades, unlike the balance) —
+    // same shape again, `score` here just means "the ranked number".
+    if (req.query?.coinsLeaderboard === "1") {
+      try {
+        const players = await readAllPlayers();
+        const list = Object.values(players)
+          .filter((p) => p.totalCoinsEarned > 0)
+          .sort((a, b) => b.totalCoinsEarned - a.totalCoinsEarned)
+          .slice(0, 10)
+          .map((p) => ({ name: p.name || "Joueur anonyme", score: p.totalCoinsEarned }));
+        res.status(200).json({ leaderboard: list });
+      } catch (err) {
+        res.status(502).json({ error: String(err) });
+      }
+      return;
+    }
+
     const discordId = req.query?.discordId;
     if (!discordId) {
       res.status(400).json({ error: "missing discordId" });
@@ -99,7 +158,7 @@ export default async function handler(req, res) {
     }
     try {
       const players = await readAllPlayers();
-      res.status(200).json(players[discordId] || defaultRecord());
+      res.status(200).json(normalizeRecord(players[discordId]));
     } catch (err) {
       res.status(502).json({ error: String(err) });
     }
@@ -115,19 +174,10 @@ export default async function handler(req, res) {
 
     try {
       const players = await readAllPlayers();
-      const record = players[discordId] || defaultRecord();
+      const record = normalizeRecord(players[discordId]);
 
       if (action === "finishRun") {
-        const { name, score, coinsEarned } = req.body;
-        if (typeof name === "string" && name.trim()) record.name = name.trim().slice(0, 20);
-
-        const earned = Number(coinsEarned);
-        if (Number.isFinite(earned) && earned > 0) {
-          record.coins += Math.floor(Math.min(earned, MAX_COINS_PER_RUN));
-        }
-
-        const s = Number(score);
-        if (Number.isFinite(s) && s > record.best) record.best = Math.floor(s);
+        applyRunResult(record, req.body);
       } else if (action === "levelUp") {
         const bonus = req.body.bonus;
         if (!BONUS_TYPES.includes(bonus)) {
@@ -147,6 +197,19 @@ export default async function handler(req, res) {
         }
         record.coins -= cost;
         record.levels[bonus] = nextLevel;
+      } else if (action === "rebirth") {
+        if (record.rebirths >= MAX_REBIRTHS) {
+          res.status(400).json({ error: "already max rebirth" });
+          return;
+        }
+        const height = Number(req.body.height);
+        const threshold = REBIRTH_HEIGHTS[record.rebirths];
+        if (!Number.isFinite(height) || height < threshold) {
+          res.status(400).json({ error: "height below rebirth threshold" });
+          return;
+        }
+        applyRunResult(record, req.body);
+        record.rebirths += 1;
       } else {
         res.status(400).json({ error: "invalid action" });
         return;

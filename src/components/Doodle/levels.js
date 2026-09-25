@@ -41,14 +41,40 @@ export function defaultLevels() {
   return { jetpack: 1, shield: 1, spring: 1, coinMultiplier: 1 };
 }
 
-// Turns { jetpack: 2, shield: 1, ... } into the flat upgrades object
-// engine.js's createGame() expects (jetpackDuration, shieldCharges, ...).
-export function upgradesFromLevels(levels) {
+// Rebirth: reaching one of these heights DURING a run unlocks the option to
+// "renaître" — ending that run early in exchange for a permanent, stacking
+// boost to bounce height and coin gain (on top of the coin-bought levels
+// above). REBIRTH_HEIGHTS[rebirths] is the height needed for the NEXT tier.
+// Kept in sync by hand with api/player-progress.js (same reasoning as the
+// cost table above).
+export const REBIRTH_HEIGHTS = [5000, 15000, 30000, 50000, 75000];
+export const MAX_REBIRTHS = REBIRTH_HEIGHTS.length;
+export const REBIRTH_BOUNCE_BONUS = 0.1; // +10% bounce power per rebirth
+export const REBIRTH_COIN_BONUS = 0.15; // +15% coin value per rebirth
+// Base (rebirth 0, level 1) normal-platform bounce — must match
+// engine.js's GAME_CONFIG.bounceVelocity.
+const BASE_BOUNCE_VELOCITY = -700;
+
+export function rebirthMultipliers(rebirths) {
+  const r = Math.min(Math.max(rebirths || 0, 0), MAX_REBIRTHS);
+  return { bounce: 1 + REBIRTH_BOUNCE_BONUS * r, coins: 1 + REBIRTH_COIN_BONUS * r };
+}
+
+// Turns { jetpack: 2, shield: 1, ... } + a rebirth count into the flat
+// upgrades object engine.js's createGame() expects (jetpackDuration,
+// shieldCharges, springVelocity, coinValue, bounceVelocity) — rebirth
+// multipliers stack on top of whatever the coin-bought level already gives.
+export function upgradesFromLevels(levels, rebirths = 0) {
   const lv = levels || defaultLevels();
+  const { bounce, coins } = rebirthMultipliers(rebirths);
   const out = {};
   for (const [bonus, cfg] of Object.entries(LEVEL_EFFECTS)) {
     const level = lv[bonus] || 1;
-    out[cfg.key] = cfg.values[Math.min(Math.max(level, 1), MAX_LEVEL) - 1];
+    let value = cfg.values[Math.min(Math.max(level, 1), MAX_LEVEL) - 1];
+    if (bonus === "spring") value *= bounce; // more negative = higher bounce
+    if (bonus === "coinMultiplier") value = Math.round(value * coins);
+    out[cfg.key] = value;
   }
+  out.bounceVelocity = BASE_BOUNCE_VELOCITY * bounce;
   return out;
 }

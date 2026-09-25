@@ -12,6 +12,7 @@ import {
   playCrash,
   playRecord,
   playLevelUp,
+  playRebirth,
 } from "./sfx.js";
 import {
   MAX_LEVEL,
@@ -20,6 +21,8 @@ import {
   BONUS_ICONS,
   BONUS_LABELS,
   LEVEL_EFFECTS,
+  REBIRTH_HEIGHTS,
+  MAX_REBIRTHS,
   defaultLevels,
   upgradesFromLevels,
 } from "./levels.js";
@@ -87,6 +90,15 @@ export default function DoodleGame() {
   // Which bonus just leveled up, for a brief pop/glow on its card — cleared
   // after the animation finishes.
   const [justUpgraded, setJustUpgraded] = useState(null);
+  // Rebirth tier (0-MAX_REBIRTHS) — a permanent, stacking boost to bounce
+  // height + coin gain, unlocked by reaching REBIRTH_HEIGHTS[rebirths]
+  // during a run and choosing to end that run early for it.
+  const [rebirths, setRebirths] = useState(0);
+  const [currentHeight, setCurrentHeight] = useState(0);
+  const [justRebirthed, setJustRebirthed] = useState(false);
+  // Top-10 by lifetime coins earned (api/player-progress.js) — a separate
+  // ranking from the height-based leaderboard above.
+  const [coinsLeaderboard, setCoinsLeaderboard] = useState(null);
   // Shared top-10 from the old 2D mini-game's leaderboard (api/leaderboard.js
   // — all-time, unrelated to this game's own local best) — kept visible as
   // a compact top-3 podium per user request even though that game itself
@@ -112,6 +124,13 @@ export default function DoodleGame() {
         setNewLeaderboard(data.leaderboard);
       })
       .catch(() => {});
+    fetch("/api/player-progress?coinsLeaderboard=1")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data?.leaderboard) return;
+        setCoinsLeaderboard(data.leaderboard);
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -134,6 +153,7 @@ export default function DoodleGame() {
           if (!record) return;
           setCoins(record.coins || 0);
           if (record.levels) setLevels(record.levels);
+          if (typeof record.rebirths === "number") setRebirths(record.rebirths);
           if (typeof record.best === "number") setBest((prev) => Math.max(prev, record.best));
         })
         .catch(() => {});
@@ -169,11 +189,13 @@ export default function DoodleGame() {
 
   const startGame = useCallback(() => {
     unlockAudio();
-    gameRef.current = createGame(upgradesFromLevels(levels));
+    gameRef.current = createGame(upgradesFromLevels(levels, rebirths));
     setScore(0);
     setIsNewBest(false);
     setJetpackActive(false);
     setShielded(false);
+    setCurrentHeight(0);
+    setJustRebirthed(false);
     setPhase("playing");
     lastRef.current = performance.now();
 
@@ -219,6 +241,7 @@ export default function DoodleGame() {
       setScore(currentScore);
       setJetpackActive(gameRef.current.jetpackTimer > 0);
       setShielded(gameRef.current.shieldCharges > 0);
+      setCurrentHeight(gameRef.current.height);
 
       if (crashed) {
         setPhase("over");
@@ -269,7 +292,7 @@ export default function DoodleGame() {
       rafRef.current = requestAnimationFrame(loop);
     };
     rafRef.current = requestAnimationFrame(loop);
-  }, [stopLoop, levels, discordId, playerName]);
+  }, [stopLoop, levels, rebirths, discordId, playerName]);
 
   useEffect(() => stopLoop, [stopLoop]);
 
@@ -292,6 +315,50 @@ export default function DoodleGame() {
       })
       .catch(() => {});
   };
+
+  // Ends the current run early, in exchange for the next permanent rebirth
+  // tier — only available once this run's height has crossed the
+  // threshold (REBIRTH_HEIGHTS[rebirths]), enforced again server-side.
+  const triggerRebirth = useCallback(() => {
+    if (!discordId || !discordSigRef.current) return;
+    const g = gameRef.current;
+    if (g.over) return;
+    const heightNow = g.height;
+    const scoreNow = g.score;
+    const coinsNow = g.coinScore;
+    g.over = true;
+    stopLoop();
+    unlockAudio();
+    setScore(scoreNow);
+    setPhase("over");
+
+    fetch("/api/player-progress", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        discordId,
+        sig: discordSigRef.current,
+        action: "rebirth",
+        name: playerName,
+        score: scoreNow,
+        coinsEarned: coinsNow,
+        height: heightNow,
+      }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((record) => {
+        if (!record) return;
+        setCoins(record.coins);
+        setRebirths(record.rebirths);
+        setBest((prevBest) => {
+          if (record.best > prevBest) setIsNewBest(true);
+          return Math.max(prevBest, record.best);
+        });
+        setJustRebirthed(true);
+        playRebirth(SFX_VOLUME, mutedRef.current);
+      })
+      .catch(() => {});
+  }, [discordId, playerName, stopLoop]);
 
   // Keyboard: held left/right steer the character; only meaningful once
   // playing, but harmless to track at any phase.
@@ -436,6 +503,16 @@ export default function DoodleGame() {
                 <p className={styles.leaderboardNote}>
                   Dépense les pièces ramassées en jeu pour améliorer tes bonus. Sauvegardé sur ton compte Discord.
                 </p>
+                <div className={styles.rebirthInfo}>
+                  <span className={styles.rebirthBadge}>
+                    ✨ Renaissance {rebirths}/{MAX_REBIRTHS}
+                  </span>
+                  {rebirths < MAX_REBIRTHS && (
+                    <span className={styles.rebirthNext}>
+                      Prochaine à {REBIRTH_HEIGHTS[rebirths].toLocaleString("fr-FR")} de hauteur
+                    </span>
+                  )}
+                </div>
                 <div className={styles.upgradeGrid}>
                   {BONUS_TYPES.map((bonus) => {
                     const cfg = LEVEL_EFFECTS[bonus];
@@ -491,6 +568,15 @@ export default function DoodleGame() {
                   {shielded && <span className={styles.shieldTag}>🛡️</span>}
                 </div>
               )}
+
+              {phase === "playing" &&
+                discordId &&
+                rebirths < MAX_REBIRTHS &&
+                currentHeight >= REBIRTH_HEIGHTS[rebirths] && (
+                  <button type="button" className={styles.rebirthBtn} onClick={triggerRebirth}>
+                    ✨ Renaître (Nv.{rebirths + 1})
+                  </button>
+                )}
 
               {phase === "idle" && (
                 <div className={styles.overlay}>
@@ -568,8 +654,15 @@ export default function DoodleGame() {
 
               {phase === "over" && (
                 <div className={styles.overlay}>
+                  {justRebirthed && <p className={styles.rebirthTitle}>✨ Renaissance !</p>}
                   <p className={styles.overScore}>{score}</p>
-                  {isNewBest && <p className={styles.record}>Nouveau record !</p>}
+                  {justRebirthed ? (
+                    <p className={styles.record}>
+                      Palier {rebirths}/{MAX_REBIRTHS} débloqué
+                    </p>
+                  ) : (
+                    isNewBest && <p className={styles.record}>Nouveau record !</p>
+                  )}
                   <div className={styles.overActions}>
                     <button type="button" className={styles.primaryBtn} onClick={startGame}>
                       Rejouer
@@ -579,7 +672,7 @@ export default function DoodleGame() {
               )}
             </div>
 
-            {(oldLeaderboard !== null || newLeaderboard !== null) && (
+            {(oldLeaderboard !== null || newLeaderboard !== null || coinsLeaderboard !== null) && (
               <div className={`${styles.rightColumn} ${styles.sidePanel}`}>
                 {oldLeaderboard !== null && oldLeaderboard.length > 0 && (
                   <div className={styles.leaderboard}>
@@ -615,6 +708,30 @@ export default function DoodleGame() {
                             </span>
                             <span className={styles.leaderboardName}>{entry.name}</span>
                             <span className={styles.leaderboardScore}>{entry.score}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    )}
+                  </div>
+                )}
+
+                {coinsLeaderboard !== null && (
+                  <div className={styles.leaderboard}>
+                    <div className={styles.leaderboardHead}>
+                      <h3 className={styles.leaderboardTitle}>🪙 Top 10 — Plus riches</h3>
+                    </div>
+                    <p className={styles.leaderboardNote}>Total de pièces gagnées à vie.</p>
+                    {coinsLeaderboard.length === 0 ? (
+                      <p className={styles.leaderboardEmpty}>Personne n'a encore gagné de pièce.</p>
+                    ) : (
+                      <ol className={styles.leaderboardList}>
+                        {coinsLeaderboard.map((entry, i) => (
+                          <li key={i} className={styles.leaderboardRow}>
+                            <span className={styles.leaderboardRank}>
+                              {i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1}
+                            </span>
+                            <span className={styles.leaderboardName}>{entry.name}</span>
+                            <span className={styles.leaderboardScore}>{entry.score} 🪙</span>
                           </li>
                         ))}
                       </ol>

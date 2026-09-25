@@ -96,6 +96,19 @@ export function playLevelUp(volume, muted) {
   });
 }
 
+export function playRebirth(volume, muted) {
+  const v = clampVolume(volume, muted);
+  if (v <= 0) return;
+  const c = getCtx();
+  const t = c.currentTime;
+  // A rising sweep followed by a bright triad — bigger and longer than the
+  // other cues, since a rebirth is the rarest event in the game.
+  tone(c, { freq: 220, start: t, duration: 0.5, type: "sawtooth", gain: 0.14 * v, sweepTo: 880 });
+  [659.25, 830.61, 987.77, 1318.5].forEach((freq, i) => {
+    tone(c, { freq, start: t + 0.3 + i * 0.09, duration: 0.22, type: "triangle", gain: 0.16 * v });
+  });
+}
+
 export function playRecord(volume, muted) {
   const v = clampVolume(volume, muted);
   if (v <= 0) return;
