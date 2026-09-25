@@ -152,7 +152,11 @@
 
   .stageFullscreen .sidePanel {
     display: block;
-    width: 280px;
+    /* Scales with the viewport instead of a fixed width — stays close to
+       the old 280px near the 900px breakpoint (no overflow risk on modest
+       windows) but grows on wide screens, using the dead space either side
+       of the canvas instead of leaving the stats/upgrade cards cramped. */
+    width: clamp(280px, 24vw, 420px);
     flex-shrink: 0;
   }
 
@@ -731,7 +735,7 @@
 
 .upgradeGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
   gap: 10px;
 }
 
