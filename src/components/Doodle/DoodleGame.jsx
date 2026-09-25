@@ -385,149 +385,151 @@ export default function DoodleGame() {
             </div>
           </div>
 
-          <div className={styles.canvasWrap}>
-            <canvas
-              ref={canvasRef}
-              width={GAME_CONFIG.width}
-              height={GAME_CONFIG.height}
-              className={styles.canvas}
-              onTouchStart={updateTouchInput}
-              onTouchMove={updateTouchInput}
-              onTouchEnd={onTouchEnd}
-              onTouchCancel={onTouchEnd}
-            />
-
-            {phase === "playing" && (jetpackActive || shielded) && (
-              <div className={styles.hudPanel}>
-                {jetpackActive && <span className={styles.jetpackTag}>🚀</span>}
-                {shielded && <span className={styles.shieldTag}>🛡️</span>}
-              </div>
-            )}
-
-            {phase === "idle" && (
-              <div className={styles.overlay}>
-                {discordId && playerName ? (
-                  <p className={styles.discordConnected}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                      <path d="M20.32 4.57A19.8 19.8 0 0 0 15.4 3.1a13.6 13.6 0 0 0-.63 1.28 18.3 18.3 0 0 0-5.53 0A13 13 0 0 0 8.6 3.1a19.7 19.7 0 0 0-4.93 1.47C.54 9.2-.32 13.7.11 18.15a19.9 19.9 0 0 0 6.03 3.03c.49-.66.92-1.36 1.29-2.09-.71-.26-1.39-.59-2.03-.97.17-.13.34-.26.5-.4a14.2 14.2 0 0 0 12.2 0c.16.14.33.28.5.4-.64.39-1.32.71-2.03.98.37.73.8 1.43 1.29 2.09a19.8 19.8 0 0 0 6.03-3.03c.5-5.16-.86-9.62-3.57-13.58ZM8.02 15.43c-1.18 0-2.16-1.08-2.16-2.41 0-1.33.95-2.42 2.16-2.42 1.22 0 2.19 1.09 2.17 2.42 0 1.33-.96 2.41-2.17 2.41Zm7.96 0c-1.19 0-2.16-1.08-2.16-2.41 0-1.33.95-2.42 2.16-2.42 1.22 0 2.19 1.09 2.17 2.42 0 1.33-.95 2.41-2.17 2.41Z" />
-                    </svg>
-                    Connecté en tant que <strong>{playerName}</strong>
-                  </p>
-                ) : (
-                  <a href="/api/discord-login" className={styles.discordBtn}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                      <path d="M20.32 4.57A19.8 19.8 0 0 0 15.4 3.1a13.6 13.6 0 0 0-.63 1.28 18.3 18.3 0 0 0-5.53 0A13 13 0 0 0 8.6 3.1a19.7 19.7 0 0 0-4.93 1.47C.54 9.2-.32 13.7.11 18.15a19.9 19.9 0 0 0 6.03 3.03c.49-.66.92-1.36 1.29-2.09-.71-.26-1.39-.59-2.03-.97.17-.13.34-.26.5-.4a14.2 14.2 0 0 0 12.2 0c.16.14.33.28.5.4-.64.39-1.32.71-2.03.98.37.73.8 1.43 1.29 2.09a19.8 19.8 0 0 0 6.03-3.03c.5-5.16-.86-9.62-3.57-13.58ZM8.02 15.43c-1.18 0-2.16-1.08-2.16-2.41 0-1.33.95-2.42 2.16-2.42 1.22 0 2.19 1.09 2.17 2.42 0 1.33-.96 2.41-2.17 2.41Zm7.96 0c-1.19 0-2.16-1.08-2.16-2.41 0-1.33.95-2.42 2.16-2.42 1.22 0 2.19 1.09 2.17 2.42 0 1.33-.95 2.41-2.17 2.41Z" />
-                    </svg>
-                    Se connecter avec Discord
-                  </a>
-                )}
-                <p className={styles.orDivider}>{discordId && playerName ? "pas toi ?" : "ou entre ton pseudo"}</p>
-                <input
-                  type="text"
-                  className={styles.nameInput}
-                  placeholder="Ton pseudo Discord"
-                  value={playerName}
-                  onChange={onNameChange}
-                  maxLength={20}
-                  required
-                />
-                <button
-                  type="button"
-                  className={styles.primaryBtn}
-                  onClick={startGame}
-                  disabled={!playerName.trim()}
-                >
-                  Jouer
-                </button>
-                <p className={styles.hintText}>
-                  {playerName.trim() ? "ou appuie sur Espace" : "Entre ton pseudo pour jouer"}
+          <div className={styles.stageBody}>
+            {discordId ? (
+              <div className={`${styles.progress} ${styles.sidePanel}`}>
+                <div className={styles.leaderboardHead}>
+                  <h3 className={styles.leaderboardTitle}>🪙 Progression</h3>
+                  <span className={styles.coinBalance}>{coins} pièces</span>
+                </div>
+                <p className={styles.leaderboardNote}>
+                  Dépense les pièces ramassées en jeu pour améliorer tes bonus. Sauvegardé sur ton compte Discord.
                 </p>
-                {discordError && <p className={styles.errorText}>La connexion Discord a échoué, réessaie.</p>}
-              </div>
-            )}
-
-            {phase === "over" && (
-              <div className={styles.overlay}>
-                <p className={styles.overScore}>{score}</p>
-                {isNewBest && <p className={styles.record}>Nouveau record !</p>}
-                <div className={styles.overActions}>
-                  <button type="button" className={styles.primaryBtn} onClick={startGame}>
-                    Rejouer
-                  </button>
+                <div className={styles.upgradeGrid}>
+                  {BONUS_TYPES.map((bonus) => {
+                    const cfg = LEVEL_EFFECTS[bonus];
+                    const level = levels[bonus] || 1;
+                    const maxed = level >= MAX_LEVEL;
+                    const cost = maxed ? null : LEVEL_UP_COST[level + 1];
+                    const canAfford = !maxed && coins >= cost;
+                    return (
+                      <div key={bonus} className={styles.upgradeCard}>
+                        <span className={styles.upgradeIcon}>{BONUS_ICONS[bonus]}</span>
+                        <span className={styles.upgradeName}>{BONUS_LABELS[bonus]}</span>
+                        <span className={styles.upgradeLevel}>
+                          Nv. {level}/{MAX_LEVEL}
+                        </span>
+                        <span className={styles.upgradeEffect}>{cfg.label(cfg.values[level - 1])}</span>
+                        <button
+                          type="button"
+                          className={styles.upgradeBtn}
+                          onClick={() => levelUp(bonus)}
+                          disabled={maxed || !canAfford}
+                        >
+                          {maxed ? "Niveau max" : `Améliorer (${cost} 🪙)`}
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
+            ) : (
+              <p className={`${styles.progressHint} ${styles.sidePanel}`}>
+                🪙 Connecte-toi avec Discord pour débloquer la progression des bonus.
+              </p>
+            )}
+
+            <div className={styles.canvasWrap}>
+              <canvas
+                ref={canvasRef}
+                width={GAME_CONFIG.width}
+                height={GAME_CONFIG.height}
+                className={styles.canvas}
+                onTouchStart={updateTouchInput}
+                onTouchMove={updateTouchInput}
+                onTouchEnd={onTouchEnd}
+                onTouchCancel={onTouchEnd}
+              />
+
+              {phase === "playing" && (jetpackActive || shielded) && (
+                <div className={styles.hudPanel}>
+                  {jetpackActive && <span className={styles.jetpackTag}>🚀</span>}
+                  {shielded && <span className={styles.shieldTag}>🛡️</span>}
+                </div>
+              )}
+
+              {phase === "idle" && (
+                <div className={styles.overlay}>
+                  {discordId && playerName ? (
+                    <p className={styles.discordConnected}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M20.32 4.57A19.8 19.8 0 0 0 15.4 3.1a13.6 13.6 0 0 0-.63 1.28 18.3 18.3 0 0 0-5.53 0A13 13 0 0 0 8.6 3.1a19.7 19.7 0 0 0-4.93 1.47C.54 9.2-.32 13.7.11 18.15a19.9 19.9 0 0 0 6.03 3.03c.49-.66.92-1.36 1.29-2.09-.71-.26-1.39-.59-2.03-.97.17-.13.34-.26.5-.4a14.2 14.2 0 0 0 12.2 0c.16.14.33.28.5.4-.64.39-1.32.71-2.03.98.37.73.8 1.43 1.29 2.09a19.8 19.8 0 0 0 6.03-3.03c.5-5.16-.86-9.62-3.57-13.58ZM8.02 15.43c-1.18 0-2.16-1.08-2.16-2.41 0-1.33.95-2.42 2.16-2.42 1.22 0 2.19 1.09 2.17 2.42 0 1.33-.96 2.41-2.17 2.41Zm7.96 0c-1.19 0-2.16-1.08-2.16-2.41 0-1.33.95-2.42 2.16-2.42 1.22 0 2.19 1.09 2.17 2.42 0 1.33-.95 2.41-2.17 2.41Z" />
+                      </svg>
+                      Connecté en tant que <strong>{playerName}</strong>
+                    </p>
+                  ) : (
+                    <a href="/api/discord-login" className={styles.discordBtn}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M20.32 4.57A19.8 19.8 0 0 0 15.4 3.1a13.6 13.6 0 0 0-.63 1.28 18.3 18.3 0 0 0-5.53 0A13 13 0 0 0 8.6 3.1a19.7 19.7 0 0 0-4.93 1.47C.54 9.2-.32 13.7.11 18.15a19.9 19.9 0 0 0 6.03 3.03c.49-.66.92-1.36 1.29-2.09-.71-.26-1.39-.59-2.03-.97.17-.13.34-.26.5-.4a14.2 14.2 0 0 0 12.2 0c.16.14.33.28.5.4-.64.39-1.32.71-2.03.98.37.73.8 1.43 1.29 2.09a19.8 19.8 0 0 0 6.03-3.03c.5-5.16-.86-9.62-3.57-13.58ZM8.02 15.43c-1.18 0-2.16-1.08-2.16-2.41 0-1.33.95-2.42 2.16-2.42 1.22 0 2.19 1.09 2.17 2.42 0 1.33-.96 2.41-2.17 2.41Zm7.96 0c-1.19 0-2.16-1.08-2.16-2.41 0-1.33.95-2.42 2.16-2.42 1.22 0 2.19 1.09 2.17 2.42 0 1.33-.95 2.41-2.17 2.41Z" />
+                      </svg>
+                      Se connecter avec Discord
+                    </a>
+                  )}
+                  <p className={styles.orDivider}>{discordId && playerName ? "pas toi ?" : "ou entre ton pseudo"}</p>
+                  <input
+                    type="text"
+                    className={styles.nameInput}
+                    placeholder="Ton pseudo Discord"
+                    value={playerName}
+                    onChange={onNameChange}
+                    maxLength={20}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className={styles.primaryBtn}
+                    onClick={startGame}
+                    disabled={!playerName.trim()}
+                  >
+                    Jouer
+                  </button>
+                  <p className={styles.hintText}>
+                    {playerName.trim() ? "ou appuie sur Espace" : "Entre ton pseudo pour jouer"}
+                  </p>
+                  {discordError && <p className={styles.errorText}>La connexion Discord a échoué, réessaie.</p>}
+                </div>
+              )}
+
+              {phase === "over" && (
+                <div className={styles.overlay}>
+                  <p className={styles.overScore}>{score}</p>
+                  {isNewBest && <p className={styles.record}>Nouveau record !</p>}
+                  <div className={styles.overActions}>
+                    <button type="button" className={styles.primaryBtn} onClick={startGame}>
+                      Rejouer
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {oldLeaderboard !== null && (
+              <div className={`${styles.leaderboard} ${styles.sidePanel}`}>
+                <div className={styles.leaderboardHead}>
+                  <h3 className={styles.leaderboardTitle}>🏆 Top 10 — ancien mini-jeu</h3>
+                </div>
+                <p className={styles.leaderboardNote}>
+                  Le classement du mini-jeu précédent, conservé ici pour la postérité.
+                </p>
+                {oldLeaderboard.length === 0 ? (
+                  <p className={styles.leaderboardEmpty}>Personne n'a encore marqué de point.</p>
+                ) : (
+                  <ol className={styles.leaderboardList}>
+                    {oldLeaderboard.map((entry, i) => (
+                      <li key={i} className={styles.leaderboardRow}>
+                        <span className={styles.leaderboardRank}>
+                          {i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1}
+                        </span>
+                        <span className={styles.leaderboardName}>{entry.name}</span>
+                        <span className={styles.leaderboardScore}>{entry.score}</span>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </div>
             )}
           </div>
           </div>
-
-          {discordId ? (
-            <div className={styles.progress}>
-              <div className={styles.leaderboardHead}>
-                <h3 className={styles.leaderboardTitle}>🪙 Progression</h3>
-                <span className={styles.coinBalance}>{coins} pièces</span>
-              </div>
-              <p className={styles.leaderboardNote}>
-                Dépense les pièces ramassées en jeu pour améliorer tes bonus. Sauvegardé sur ton compte Discord.
-              </p>
-              <div className={styles.upgradeGrid}>
-                {BONUS_TYPES.map((bonus) => {
-                  const cfg = LEVEL_EFFECTS[bonus];
-                  const level = levels[bonus] || 1;
-                  const maxed = level >= MAX_LEVEL;
-                  const cost = maxed ? null : LEVEL_UP_COST[level + 1];
-                  const canAfford = !maxed && coins >= cost;
-                  return (
-                    <div key={bonus} className={styles.upgradeCard}>
-                      <span className={styles.upgradeIcon}>{BONUS_ICONS[bonus]}</span>
-                      <span className={styles.upgradeName}>{BONUS_LABELS[bonus]}</span>
-                      <span className={styles.upgradeLevel}>
-                        Nv. {level}/{MAX_LEVEL}
-                      </span>
-                      <span className={styles.upgradeEffect}>{cfg.label(cfg.values[level - 1])}</span>
-                      <button
-                        type="button"
-                        className={styles.upgradeBtn}
-                        onClick={() => levelUp(bonus)}
-                        disabled={maxed || !canAfford}
-                      >
-                        {maxed ? "Niveau max" : `Améliorer (${cost} 🪙)`}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            <p className={styles.progressHint}>
-              🪙 Connecte-toi avec Discord pour débloquer la progression des bonus.
-            </p>
-          )}
-
-          {oldLeaderboard !== null && (
-            <div className={styles.leaderboard}>
-              <div className={styles.leaderboardHead}>
-                <h3 className={styles.leaderboardTitle}>🏆 Top 10 — ancien mini-jeu</h3>
-              </div>
-              <p className={styles.leaderboardNote}>
-                Le classement du mini-jeu précédent, conservé ici pour la postérité.
-              </p>
-              {oldLeaderboard.length === 0 ? (
-                <p className={styles.leaderboardEmpty}>Personne n'a encore marqué de point.</p>
-              ) : (
-                <ol className={styles.leaderboardList}>
-                  {oldLeaderboard.map((entry, i) => (
-                    <li key={i} className={styles.leaderboardRow}>
-                      <span className={styles.leaderboardRank}>
-                        {i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1}
-                      </span>
-                      <span className={styles.leaderboardName}>{entry.name}</span>
-                      <span className={styles.leaderboardScore}>{entry.score}</span>
-                    </li>
-                  ))}
-                </ol>
-              )}
-            </div>
-          )}
         </Reveal>
       </div>
     </section>
