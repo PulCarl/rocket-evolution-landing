@@ -58,6 +58,21 @@ export default function DoodleGame() {
   const [discordError, setDiscordError] = useState(false);
   const [discordConnected, setDiscordConnected] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  // Shared top-10 from the old 2D mini-game's leaderboard (api/leaderboard.js
+  // — all-time, unrelated to this game's own local best) — kept visible
+  // here per user request even though that game itself is gone. null = not
+  // loaded yet / unavailable.
+  const [oldLeaderboard, setOldLeaderboard] = useState(null);
+
+  useEffect(() => {
+    fetch("/api/leaderboard")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data?.leaderboard) return;
+        setOldLeaderboard(data.leaderboard);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const storedBest = Number(localStorage.getItem(BEST_KEY) || 0);
@@ -370,6 +385,32 @@ export default function DoodleGame() {
             )}
           </div>
           </div>
+
+          {oldLeaderboard !== null && (
+            <div className={styles.leaderboard}>
+              <div className={styles.leaderboardHead}>
+                <h3 className={styles.leaderboardTitle}>🏆 Top 10 — ancien mini-jeu</h3>
+              </div>
+              <p className={styles.leaderboardNote}>
+                Le classement du mini-jeu précédent, conservé ici pour la postérité.
+              </p>
+              {oldLeaderboard.length === 0 ? (
+                <p className={styles.leaderboardEmpty}>Personne n'a encore marqué de point.</p>
+              ) : (
+                <ol className={styles.leaderboardList}>
+                  {oldLeaderboard.map((entry, i) => (
+                    <li key={i} className={styles.leaderboardRow}>
+                      <span className={styles.leaderboardRank}>
+                        {i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1}
+                      </span>
+                      <span className={styles.leaderboardName}>{entry.name}</span>
+                      <span className={styles.leaderboardScore}>{entry.score}</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
+          )}
         </Reveal>
       </div>
     </section>
