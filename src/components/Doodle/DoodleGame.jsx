@@ -113,14 +113,10 @@ export default function DoodleGame() {
   // used to sit.
   const [newLeaderboard, setNewLeaderboard] = useState(null);
 
-  useEffect(() => {
-    fetch("/api/leaderboard")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (!data?.leaderboard) return;
-        setOldLeaderboard(data.leaderboard);
-      })
-      .catch(() => {});
+  // Re-run after a run finishes (score/coins change where those boards rank
+  // from) so a new best or a new lifetime-coins total shows up without the
+  // player needing to reload the page.
+  const refreshLeaderboards = useCallback(() => {
     fetch("/api/player-progress?leaderboard=1")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
@@ -135,6 +131,17 @@ export default function DoodleGame() {
         setCoinsLeaderboard(data.leaderboard);
       })
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/leaderboard")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data?.leaderboard) return;
+        setOldLeaderboard(data.leaderboard);
+      })
+      .catch(() => {});
+    refreshLeaderboards();
   }, []);
 
   useEffect(() => {
@@ -278,6 +285,7 @@ export default function DoodleGame() {
                 }
                 return Math.max(prevBest, record.best);
               });
+              refreshLeaderboards();
             })
             .catch(() => {});
         } else {
@@ -297,7 +305,7 @@ export default function DoodleGame() {
       rafRef.current = requestAnimationFrame(loop);
     };
     rafRef.current = requestAnimationFrame(loop);
-  }, [stopLoop, levels, rebirths, discordId, playerName]);
+  }, [stopLoop, levels, rebirths, discordId, playerName, refreshLeaderboards]);
 
   useEffect(() => stopLoop, [stopLoop]);
 
