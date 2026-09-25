@@ -86,6 +86,16 @@ export function playCrash(volume, muted) {
   tone(c, { freq: 260, start: c.currentTime, duration: 0.4, type: "sawtooth", gain: 0.16 * v, sweepTo: 60 });
 }
 
+export function playLevelUp(volume, muted) {
+  const v = clampVolume(volume, muted);
+  if (v <= 0) return;
+  const c = getCtx();
+  const t = c.currentTime;
+  [440, 587.33, 880].forEach((freq, i) => {
+    tone(c, { freq, start: t + i * 0.06, duration: 0.16, type: "triangle", gain: 0.15 * v });
+  });
+}
+
 export function playRecord(volume, muted) {
   const v = clampVolume(volume, muted);
   if (v <= 0) return;

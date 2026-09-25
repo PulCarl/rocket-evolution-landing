@@ -11,6 +11,7 @@ import {
   playCoin,
   playCrash,
   playRecord,
+  playLevelUp,
 } from "./sfx.js";
 import {
   MAX_LEVEL,
@@ -83,6 +84,9 @@ export default function DoodleGame() {
   // (api/player-progress.js) — local-only defaults otherwise.
   const [coins, setCoins] = useState(0);
   const [levels, setLevels] = useState(defaultLevels());
+  // Which bonus just leveled up, for a brief pop/glow on its card — cleared
+  // after the animation finishes.
+  const [justUpgraded, setJustUpgraded] = useState(null);
   // Shared top-10 from the old 2D mini-game's leaderboard (api/leaderboard.js
   // — all-time, unrelated to this game's own local best) — kept visible as
   // a compact top-3 podium per user request even though that game itself
@@ -271,6 +275,7 @@ export default function DoodleGame() {
 
   const levelUp = (bonus) => {
     if (!discordId || !discordSigRef.current) return;
+    unlockAudio();
     fetch("/api/player-progress", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -281,6 +286,9 @@ export default function DoodleGame() {
         if (!record) return;
         setCoins(record.coins);
         setLevels(record.levels);
+        playLevelUp(SFX_VOLUME, mutedRef.current);
+        setJustUpgraded(bonus);
+        setTimeout(() => setJustUpgraded((cur) => (cur === bonus ? null : cur)), 700);
       })
       .catch(() => {});
   };
@@ -436,7 +444,10 @@ export default function DoodleGame() {
                     const cost = maxed ? null : LEVEL_UP_COST[level + 1];
                     const canAfford = !maxed && coins >= cost;
                     return (
-                      <div key={bonus} className={styles.upgradeCard}>
+                      <div
+                        key={bonus}
+                        className={`${styles.upgradeCard} ${justUpgraded === bonus ? styles.upgradeCardPulse : ""}`}
+                      >
                         <span className={styles.upgradeIcon}>{BONUS_ICONS[bonus]}</span>
                         <span className={styles.upgradeName}>{BONUS_LABELS[bonus]}</span>
                         <span className={styles.upgradeLevel}>

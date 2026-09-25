@@ -619,6 +619,34 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.upgradeCardPulse {
+  animation: upgradePop 0.7s ease;
+}
+
+@keyframes upgradePop {
+  0% {
+    transform: scale(1);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 0 rgba(255, 210, 63, 0.5);
+  }
+  25% {
+    transform: scale(1.06);
+    border-color: #ffd23f;
+    box-shadow: 0 0 0 8px rgba(255, 210, 63, 0.18);
+  }
+  100% {
+    transform: scale(1);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 0 rgba(255, 210, 63, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .upgradeCardPulse {
+    animation: none;
+  }
+}
+
 .upgradeIcon {
   font-size: 22px;
   line-height: 1;
