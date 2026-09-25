@@ -214,6 +214,24 @@
   opacity: 0.92;
 }
 
+.discordConnected {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: rgba(88, 101, 242, 0.16);
+  border: 1px solid rgba(88, 101, 242, 0.5);
+  color: #b3b9ff !important;
+  font-size: 13px !important;
+}
+
+.discordConnected strong {
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
 .orDivider {
   margin: 0 !important;
   font-size: 11px !important;

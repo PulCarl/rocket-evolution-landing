@@ -6,6 +6,9 @@
 // database, since nothing here is more sensitive than a display name the
 // field already let anyone type in freely.
 const NAME_KEYS = ["re-doodle-name", "re-runner-name", "re-circuit-name"];
+// Set alongside the name so the game UI can show a clear "connected" state
+// instead of silently pre-filling a field with no confirmation.
+const CONNECTED_KEY = "re-discord-connected";
 
 function sendResult(res, result) {
   const payload = JSON.stringify(result).replace(/</g, "\\u003c");
@@ -19,6 +22,7 @@ function sendResult(res, result) {
     ${JSON.stringify(NAME_KEYS)}.forEach(function (key) {
       try { localStorage.setItem(key, result.name); } catch (e) {}
     });
+    try { localStorage.setItem(${JSON.stringify(CONNECTED_KEY)}, "1"); } catch (e) {}
   }
   window.location.replace(result.ok ? "/#jeu" : "/?discord_error=1#jeu");
 })();
