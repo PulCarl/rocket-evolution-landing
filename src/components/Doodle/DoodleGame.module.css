@@ -385,12 +385,35 @@
   font-weight: 700;
 }
 
-.orDivider {
-  margin: 0 !important;
-  font-size: 11px !important;
-  color: rgba(255, 255, 255, 0.4) !important;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+/* Groups the "connected" badge with the Jouer button so together they
+   read as one "you're set, go" unit instead of a badge sitting above an
+   otherwise-unchanged form. */
+.connectedCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+  border-radius: 20px;
+  background: rgba(88, 101, 242, 0.08);
+  border: 1px solid rgba(88, 101, 242, 0.3);
+}
+
+.linkBtn {
+  background: none;
+  border: none;
+  padding: 4px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.linkBtn:hover {
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .errorText {

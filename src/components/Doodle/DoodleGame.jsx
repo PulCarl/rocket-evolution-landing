@@ -69,6 +69,10 @@ export default function DoodleGame() {
   const [muted, setMuted] = useState(false);
   const mutedRef = useRef(false);
   const [discordError, setDiscordError] = useState(false);
+  // Idle screen defaults to Discord-only — the manual pseudo field is
+  // tucked behind this until explicitly requested, so there's one clear
+  // path instead of two competing ones side by side.
+  const [showManualEntry, setShowManualEntry] = useState(false);
   const [discordId, setDiscordId] = useState(null);
   const discordSigRef = useRef(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -479,41 +483,73 @@ export default function DoodleGame() {
               {phase === "idle" && (
                 <div className={styles.overlay}>
                   {discordId && playerName ? (
-                    <p className={styles.discordConnected}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                        <path d="M20.32 4.57A19.8 19.8 0 0 0 15.4 3.1a13.6 13.6 0 0 0-.63 1.28 18.3 18.3 0 0 0-5.53 0A13 13 0 0 0 8.6 3.1a19.7 19.7 0 0 0-4.93 1.47C.54 9.2-.32 13.7.11 18.15a19.9 19.9 0 0 0 6.03 3.03c.49-.66.92-1.36 1.29-2.09-.71-.26-1.39-.59-2.03-.97.17-.13.34-.26.5-.4a14.2 14.2 0 0 0 12.2 0c.16.14.33.28.5.4-.64.39-1.32.71-2.03.98.37.73.8 1.43 1.29 2.09a19.8 19.8 0 0 0 6.03-3.03c.5-5.16-.86-9.62-3.57-13.58ZM8.02 15.43c-1.18 0-2.16-1.08-2.16-2.41 0-1.33.95-2.42 2.16-2.42 1.22 0 2.19 1.09 2.17 2.42 0 1.33-.96 2.41-2.17 2.41Zm7.96 0c-1.19 0-2.16-1.08-2.16-2.41 0-1.33.95-2.42 2.16-2.42 1.22 0 2.19 1.09 2.17 2.42 0 1.33-.95 2.41-2.17 2.41Z" />
-                      </svg>
-                      Connecté en tant que <strong>{playerName}</strong>
-                    </p>
+                    // Connected: badge + Jouer grouped in one card, so it
+                    // reads as "you're set, go" instead of a badge sitting
+                    // above an otherwise-unchanged form.
+                    <div className={styles.connectedCard}>
+                      <p className={styles.discordConnected}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                          <path d="M20.32 4.57A19.8 19.8 0 0 0 15.4 3.1a13.6 13.6 0 0 0-.63 1.28 18.3 18.3 0 0 0-5.53 0A13 13 0 0 0 8.6 3.1a19.7 19.7 0 0 0-4.93 1.47C.54 9.2-.32 13.7.11 18.15a19.9 19.9 0 0 0 6.03 3.03c.49-.66.92-1.36 1.29-2.09-.71-.26-1.39-.59-2.03-.97.17-.13.34-.26.5-.4a14.2 14.2 0 0 0 12.2 0c.16.14.33.28.5.4-.64.39-1.32.71-2.03.98.37.73.8 1.43 1.29 2.09a19.8 19.8 0 0 0 6.03-3.03c.5-5.16-.86-9.62-3.57-13.58ZM8.02 15.43c-1.18 0-2.16-1.08-2.16-2.41 0-1.33.95-2.42 2.16-2.42 1.22 0 2.19 1.09 2.17 2.42 0 1.33-.96 2.41-2.17 2.41Zm7.96 0c-1.19 0-2.16-1.08-2.16-2.41 0-1.33.95-2.42 2.16-2.42 1.22 0 2.19 1.09 2.17 2.42 0 1.33-.95 2.41-2.17 2.41Z" />
+                        </svg>
+                        Connecté en tant que <strong>{playerName}</strong>
+                      </p>
+                      <button type="button" className={styles.primaryBtn} onClick={startGame}>
+                        Jouer
+                      </button>
+                      <p className={styles.hintText}>ou appuie sur Espace</p>
+                    </div>
+                  ) : showManualEntry ? (
+                    // Manual path, opened on request — pseudo typed by hand,
+                    // no Discord account needed.
+                    <>
+                      <input
+                        type="text"
+                        className={styles.nameInput}
+                        placeholder="Ton pseudo Discord"
+                        value={playerName}
+                        onChange={onNameChange}
+                        maxLength={20}
+                        required
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        className={styles.primaryBtn}
+                        onClick={startGame}
+                        disabled={!playerName.trim()}
+                      >
+                        Jouer
+                      </button>
+                      <p className={styles.hintText}>
+                        {playerName.trim() ? "ou appuie sur Espace" : "Entre ton pseudo pour jouer"}
+                      </p>
+                      <button
+                        type="button"
+                        className={styles.linkBtn}
+                        onClick={() => setShowManualEntry(false)}
+                      >
+                        ← Se connecter avec Discord
+                      </button>
+                    </>
                   ) : (
-                    <a href="/api/discord-login" className={styles.discordBtn}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                        <path d="M20.32 4.57A19.8 19.8 0 0 0 15.4 3.1a13.6 13.6 0 0 0-.63 1.28 18.3 18.3 0 0 0-5.53 0A13 13 0 0 0 8.6 3.1a19.7 19.7 0 0 0-4.93 1.47C.54 9.2-.32 13.7.11 18.15a19.9 19.9 0 0 0 6.03 3.03c.49-.66.92-1.36 1.29-2.09-.71-.26-1.39-.59-2.03-.97.17-.13.34-.26.5-.4a14.2 14.2 0 0 0 12.2 0c.16.14.33.28.5.4-.64.39-1.32.71-2.03.98.37.73.8 1.43 1.29 2.09a19.8 19.8 0 0 0 6.03-3.03c.5-5.16-.86-9.62-3.57-13.58ZM8.02 15.43c-1.18 0-2.16-1.08-2.16-2.41 0-1.33.95-2.42 2.16-2.42 1.22 0 2.19 1.09 2.17 2.42 0 1.33-.96 2.41-2.17 2.41Zm7.96 0c-1.19 0-2.16-1.08-2.16-2.41 0-1.33.95-2.42 2.16-2.42 1.22 0 2.19 1.09 2.17 2.42 0 1.33-.95 2.41-2.17 2.41Z" />
-                      </svg>
-                      Se connecter avec Discord
-                    </a>
+                    // Default: Discord-only, so there's one clear path
+                    // instead of two options competing for attention.
+                    <>
+                      <a href="/api/discord-login" className={styles.discordBtn}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                          <path d="M20.32 4.57A19.8 19.8 0 0 0 15.4 3.1a13.6 13.6 0 0 0-.63 1.28 18.3 18.3 0 0 0-5.53 0A13 13 0 0 0 8.6 3.1a19.7 19.7 0 0 0-4.93 1.47C.54 9.2-.32 13.7.11 18.15a19.9 19.9 0 0 0 6.03 3.03c.49-.66.92-1.36 1.29-2.09-.71-.26-1.39-.59-2.03-.97.17-.13.34-.26.5-.4a14.2 14.2 0 0 0 12.2 0c.16.14.33.28.5.4-.64.39-1.32.71-2.03.98.37.73.8 1.43 1.29 2.09a19.8 19.8 0 0 0 6.03-3.03c.5-5.16-.86-9.62-3.57-13.58ZM8.02 15.43c-1.18 0-2.16-1.08-2.16-2.41 0-1.33.95-2.42 2.16-2.42 1.22 0 2.19 1.09 2.17 2.42 0 1.33-.96 2.41-2.17 2.41Zm7.96 0c-1.19 0-2.16-1.08-2.16-2.41 0-1.33.95-2.42 2.16-2.42 1.22 0 2.19 1.09 2.17 2.42 0 1.33-.95 2.41-2.17 2.41Z" />
+                        </svg>
+                        Se connecter avec Discord
+                      </a>
+                      <button
+                        type="button"
+                        className={styles.linkBtn}
+                        onClick={() => setShowManualEntry(true)}
+                      >
+                        ou jouer sans te connecter
+                      </button>
+                    </>
                   )}
-                  <p className={styles.orDivider}>{discordId && playerName ? "pas toi ?" : "ou entre ton pseudo"}</p>
-                  <input
-                    type="text"
-                    className={styles.nameInput}
-                    placeholder="Ton pseudo Discord"
-                    value={playerName}
-                    onChange={onNameChange}
-                    maxLength={20}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className={styles.primaryBtn}
-                    onClick={startGame}
-                    disabled={!playerName.trim()}
-                  >
-                    Jouer
-                  </button>
-                  <p className={styles.hintText}>
-                    {playerName.trim() ? "ou appuie sur Espace" : "Entre ton pseudo pour jouer"}
-                  </p>
                   {discordError && <p className={styles.errorText}>La connexion Discord a échoué, réessaie.</p>}
                 </div>
               )}
