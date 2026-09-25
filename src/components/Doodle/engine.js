@@ -156,7 +156,19 @@ function spawnRow(state) {
   }
 }
 
-export function createGame() {
+// Base (level-1) effect values, used whenever the caller doesn't pass its
+// own — e.g. no Discord-linked upgrades yet. Kept here as plain numbers
+// (not imported from levels.js) so engine.js stays a self-contained,
+// React-free module; DoodleGame.jsx is the one place that knows how
+// "level" maps to these values.
+const DEFAULT_UPGRADES = {
+  jetpackDuration: JETPACK_DURATION,
+  springVelocity: SPRING_V,
+  shieldCharges: 1,
+  coinValue: COIN_VALUE,
+};
+
+export function createGame(upgrades) {
   const startY = 0;
   const cameraY = startY - H * CAMERA_FRAC;
   const state = {
@@ -170,11 +182,14 @@ export function createGame() {
     pickups: [],
     enemies: [],
     jetpackTimer: 0,
-    shielded: false,
+    shieldCharges: 0,
     over: false,
     events: [], // consumed once per frame by React for sound effects
     input: { left: false, right: false },
     highestGeneratedY: startY,
+    // Per-player upgrade levels (coins spent on jetpack duration, spring
+    // strength, shield charges, coin value) — see levels.js.
+    upgrades: upgrades || DEFAULT_UPGRADES,
   };
   // A platform right under the player so the run starts with a clean first
   // bounce instead of an instant fall.
@@ -229,7 +244,7 @@ export function step(state, dt) {
     for (const plat of state.platforms) {
       if (landedOn(p, plat)) {
         const spring = plat.hasSpring;
-        p.vy = spring ? SPRING_V : BOUNCE_V;
+        p.vy = spring ? state.upgrades.springVelocity : BOUNCE_V;
         state.events.push({ type: spring ? "spring" : "bounce" });
         if (spring) plat.hasSpring = false;
         if (plat.kind === "breakable") plat.broken = true;
@@ -255,13 +270,13 @@ export function step(state, dt) {
   for (const pk of state.pickups) {
     if (aabbOverlap(p, pk)) {
       if (pk.kind === "coin") {
-        state.coinScore += COIN_VALUE;
+        state.coinScore += state.upgrades.coinValue;
         state.events.push({ type: "coin" });
       } else if (pk.kind === "jetpack") {
-        state.jetpackTimer = JETPACK_DURATION;
+        state.jetpackTimer = state.upgrades.jetpackDuration;
         state.events.push({ type: "jetpack" });
       } else if (pk.kind === "shield") {
-        state.shielded = true;
+        state.shieldCharges = state.upgrades.shieldCharges;
         state.events.push({ type: "shield" });
       }
       continue;
@@ -273,8 +288,8 @@ export function step(state, dt) {
   for (const en of state.enemies) {
     if (en.dead) continue;
     if (aabbOverlap(p, en)) {
-      if (state.shielded) {
-        state.shielded = false;
+      if (state.shieldCharges > 0) {
+        state.shieldCharges -= 1;
         en.dead = true;
         state.events.push({ type: "shieldBreak" });
       } else {
@@ -469,13 +484,20 @@ export function draw(ctx, state, logoImg) {
     ctx.fill();
   }
 
-  if (state.shielded) {
+  if (state.shieldCharges > 0) {
     ctx.save();
     ctx.strokeStyle = "rgba(120,190,255,0.85)";
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.arc(p.x, psy, p.w * 0.85, 0, Math.PI * 2);
     ctx.stroke();
+    if (state.shieldCharges > 1) {
+      ctx.fillStyle = "#fff";
+      ctx.font = "800 12px Poppins, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(String(state.shieldCharges), p.x, psy - p.h * 0.85);
+    }
     ctx.restore();
   }
 

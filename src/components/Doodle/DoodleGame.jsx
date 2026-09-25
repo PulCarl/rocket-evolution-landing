@@ -12,6 +12,16 @@ import {
   playCrash,
   playRecord,
 } from "./sfx.js";
+import {
+  MAX_LEVEL,
+  BONUS_TYPES,
+  LEVEL_UP_COST,
+  BONUS_ICONS,
+  BONUS_LABELS,
+  LEVEL_EFFECTS,
+  defaultLevels,
+  upgradesFromLevels,
+} from "./levels.js";
 import logoUrl from "../../assets/logo-rocket-evolution.svg";
 import styles from "./DoodleGame.module.css";
 
@@ -19,9 +29,11 @@ const BEST_KEY = "re-doodle-best";
 const NAME_KEY = "re-doodle-name";
 const LEGACY_NAME_KEY = "re-runner-name";
 const MUTED_KEY = "re-doodle-muted";
-// Set by api/discord-callback.js alongside the name, so the UI can show a
-// clear "connected" confirmation instead of silently pre-filling a field.
-const DISCORD_CONNECTED_KEY = "re-discord-connected";
+// Written by api/discord-callback.js alongside the name — the Discord user
+// id and an HMAC proving this browser actually completed OAuth for it, used
+// to sync coins/bonus-levels progression (api/player-progress.js).
+const DISCORD_ID_KEY = "re-discord-id";
+const DISCORD_SIG_KEY = "re-discord-sig";
 const SFX_VOLUME = 0.55;
 
 // Physical key position, so this covers WASD on QWERTY and ZQSD on AZERTY
@@ -56,8 +68,13 @@ export default function DoodleGame() {
   const [muted, setMuted] = useState(false);
   const mutedRef = useRef(false);
   const [discordError, setDiscordError] = useState(false);
-  const [discordConnected, setDiscordConnected] = useState(false);
+  const [discordId, setDiscordId] = useState(null);
+  const discordSigRef = useRef(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  // Coins + bonus levels, synced to the Discord account when connected
+  // (api/player-progress.js) — local-only defaults otherwise.
+  const [coins, setCoins] = useState(0);
+  const [levels, setLevels] = useState(defaultLevels());
   // Shared top-10 from the old 2D mini-game's leaderboard (api/leaderboard.js
   // — all-time, unrelated to this game's own local best) — kept visible
   // here per user request even though that game itself is gone. null = not
@@ -78,10 +95,25 @@ export default function DoodleGame() {
     const storedBest = Number(localStorage.getItem(BEST_KEY) || 0);
     if (Number.isFinite(storedBest)) setBest(storedBest);
     setPlayerName(localStorage.getItem(NAME_KEY) || localStorage.getItem(LEGACY_NAME_KEY) || "");
-    setDiscordConnected(localStorage.getItem(DISCORD_CONNECTED_KEY) === "1");
     const storedMuted = localStorage.getItem(MUTED_KEY) === "1";
     setMuted(storedMuted);
     mutedRef.current = storedMuted;
+
+    const storedId = localStorage.getItem(DISCORD_ID_KEY);
+    const storedSig = localStorage.getItem(DISCORD_SIG_KEY);
+    if (storedId && storedSig) {
+      discordSigRef.current = storedSig;
+      setDiscordId(storedId);
+      fetch(`/api/player-progress?discordId=${encodeURIComponent(storedId)}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((record) => {
+          if (!record) return;
+          setCoins(record.coins || 0);
+          if (record.levels) setLevels(record.levels);
+          if (typeof record.best === "number") setBest((prev) => Math.max(prev, record.best));
+        })
+        .catch(() => {});
+    }
 
     // api/discord-callback.js redirects here with this flag when the
     // Discord login attempt failed — surface it once, then clean the URL.
@@ -104,12 +136,6 @@ export default function DoodleGame() {
     const value = e.target.value.slice(0, 20);
     setPlayerName(value);
     localStorage.setItem(NAME_KEY, value);
-    // Editing by hand overrides whatever Discord login set — the
-    // "connected" badge shouldn't keep claiming a name the visitor changed.
-    if (discordConnected) {
-      localStorage.removeItem(DISCORD_CONNECTED_KEY);
-      setDiscordConnected(false);
-    }
   };
 
   const stopLoop = useCallback(() => {
@@ -119,7 +145,7 @@ export default function DoodleGame() {
 
   const startGame = useCallback(() => {
     unlockAudio();
-    gameRef.current = createGame();
+    gameRef.current = createGame(upgradesFromLevels(levels));
     setScore(0);
     setIsNewBest(false);
     setJetpackActive(false);
@@ -168,28 +194,76 @@ export default function DoodleGame() {
       const currentScore = gameRef.current.score;
       setScore(currentScore);
       setJetpackActive(gameRef.current.jetpackTimer > 0);
-      setShielded(gameRef.current.shielded);
+      setShielded(gameRef.current.shieldCharges > 0);
 
       if (crashed) {
         setPhase("over");
-        setBest((prevBest) => {
-          const newBest = Math.max(prevBest, currentScore);
-          if (newBest > prevBest) {
-            localStorage.setItem(BEST_KEY, String(newBest));
-            setIsNewBest(true);
-            playRecord(SFX_VOLUME, mutedRef.current);
-          }
-          return newBest;
-        });
+        const runCoins = gameRef.current.coinScore;
+
+        if (discordId && discordSigRef.current) {
+          // Connected: the server record is the source of truth for coins
+          // and best score going forward — sync this run's result to it.
+          fetch("/api/player-progress", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              discordId,
+              sig: discordSigRef.current,
+              action: "finishRun",
+              name: playerName,
+              score: currentScore,
+              coinsEarned: runCoins,
+            }),
+          })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((record) => {
+              if (!record) return;
+              setCoins(record.coins);
+              setBest((prevBest) => {
+                if (record.best > prevBest) {
+                  setIsNewBest(true);
+                  playRecord(SFX_VOLUME, mutedRef.current);
+                }
+                return Math.max(prevBest, record.best);
+              });
+            })
+            .catch(() => {});
+        } else {
+          setBest((prevBest) => {
+            const newBest = Math.max(prevBest, currentScore);
+            if (newBest > prevBest) {
+              localStorage.setItem(BEST_KEY, String(newBest));
+              setIsNewBest(true);
+              playRecord(SFX_VOLUME, mutedRef.current);
+            }
+            return newBest;
+          });
+        }
         stopLoop();
         return;
       }
       rafRef.current = requestAnimationFrame(loop);
     };
     rafRef.current = requestAnimationFrame(loop);
-  }, [stopLoop]);
+  }, [stopLoop, levels, discordId, playerName]);
 
   useEffect(() => stopLoop, [stopLoop]);
+
+  const levelUp = (bonus) => {
+    if (!discordId || !discordSigRef.current) return;
+    fetch("/api/player-progress", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ discordId, sig: discordSigRef.current, action: "levelUp", bonus }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((record) => {
+        if (!record) return;
+        setCoins(record.coins);
+        setLevels(record.levels);
+      })
+      .catch(() => {});
+  };
 
   // Keyboard: held left/right steer the character; only meaningful once
   // playing, but harmless to track at any phase.
@@ -332,7 +406,7 @@ export default function DoodleGame() {
 
             {phase === "idle" && (
               <div className={styles.overlay}>
-                {discordConnected && playerName ? (
+                {discordId && playerName ? (
                   <p className={styles.discordConnected}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                       <path d="M20.32 4.57A19.8 19.8 0 0 0 15.4 3.1a13.6 13.6 0 0 0-.63 1.28 18.3 18.3 0 0 0-5.53 0A13 13 0 0 0 8.6 3.1a19.7 19.7 0 0 0-4.93 1.47C.54 9.2-.32 13.7.11 18.15a19.9 19.9 0 0 0 6.03 3.03c.49-.66.92-1.36 1.29-2.09-.71-.26-1.39-.59-2.03-.97.17-.13.34-.26.5-.4a14.2 14.2 0 0 0 12.2 0c.16.14.33.28.5.4-.64.39-1.32.71-2.03.98.37.73.8 1.43 1.29 2.09a19.8 19.8 0 0 0 6.03-3.03c.5-5.16-.86-9.62-3.57-13.58ZM8.02 15.43c-1.18 0-2.16-1.08-2.16-2.41 0-1.33.95-2.42 2.16-2.42 1.22 0 2.19 1.09 2.17 2.42 0 1.33-.96 2.41-2.17 2.41Zm7.96 0c-1.19 0-2.16-1.08-2.16-2.41 0-1.33.95-2.42 2.16-2.42 1.22 0 2.19 1.09 2.17 2.42 0 1.33-.95 2.41-2.17 2.41Z" />
@@ -347,7 +421,7 @@ export default function DoodleGame() {
                     Se connecter avec Discord
                   </a>
                 )}
-                <p className={styles.orDivider}>{discordConnected && playerName ? "pas toi ?" : "ou entre ton pseudo"}</p>
+                <p className={styles.orDivider}>{discordId && playerName ? "pas toi ?" : "ou entre ton pseudo"}</p>
                 <input
                   type="text"
                   className={styles.nameInput}
@@ -385,6 +459,49 @@ export default function DoodleGame() {
             )}
           </div>
           </div>
+
+          {discordId ? (
+            <div className={styles.progress}>
+              <div className={styles.leaderboardHead}>
+                <h3 className={styles.leaderboardTitle}>🪙 Progression</h3>
+                <span className={styles.coinBalance}>{coins} pièces</span>
+              </div>
+              <p className={styles.leaderboardNote}>
+                Dépense les pièces ramassées en jeu pour améliorer tes bonus. Sauvegardé sur ton compte Discord.
+              </p>
+              <div className={styles.upgradeGrid}>
+                {BONUS_TYPES.map((bonus) => {
+                  const cfg = LEVEL_EFFECTS[bonus];
+                  const level = levels[bonus] || 1;
+                  const maxed = level >= MAX_LEVEL;
+                  const cost = maxed ? null : LEVEL_UP_COST[level + 1];
+                  const canAfford = !maxed && coins >= cost;
+                  return (
+                    <div key={bonus} className={styles.upgradeCard}>
+                      <span className={styles.upgradeIcon}>{BONUS_ICONS[bonus]}</span>
+                      <span className={styles.upgradeName}>{BONUS_LABELS[bonus]}</span>
+                      <span className={styles.upgradeLevel}>
+                        Nv. {level}/{MAX_LEVEL}
+                      </span>
+                      <span className={styles.upgradeEffect}>{cfg.label(cfg.values[level - 1])}</span>
+                      <button
+                        type="button"
+                        className={styles.upgradeBtn}
+                        onClick={() => levelUp(bonus)}
+                        disabled={maxed || !canAfford}
+                      >
+                        {maxed ? "Niveau max" : `Améliorer (${cost} 🪙)`}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <p className={styles.progressHint}>
+              🪙 Connecte-toi avec Discord pour débloquer la progression des bonus.
+            </p>
+          )}
 
           {oldLeaderboard !== null && (
             <div className={styles.leaderboard}>

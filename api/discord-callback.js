@@ -1,14 +1,19 @@
 // The other half of "Se connecter avec Discord" (see api/discord-login.js).
-// Exchanges the auth code for a token, reads the visitor's Discord display
-// name, and hands back a tiny HTML page whose only job is to write that
-// name into localStorage (the same keys the mini-games already read their
-// pseudo from) and bounce back to the site — no cookies, no session, no
-// database, since nothing here is more sensitive than a display name the
-// field already let anyone type in freely.
+// Exchanges the auth code for a token, reads the visitor's Discord identity,
+// and hands back a tiny HTML page whose only job is to write it into
+// localStorage (the same keys the mini-games already read their pseudo
+// from) and bounce back to the site — no cookies, no session.
+//
+// Alongside the display name, this now also writes the Discord user id and
+// an HMAC signature of it (see api/player-progress.js) so the per-player
+// coins/bonus-levels progression can be synced to that id later without a
+// real login session — the signature just proves this browser actually
+// completed OAuth for that id, nothing more sensitive than that.
+import crypto from "node:crypto";
+
 const NAME_KEYS = ["re-doodle-name", "re-runner-name", "re-circuit-name"];
-// Set alongside the name so the game UI can show a clear "connected" state
-// instead of silently pre-filling a field with no confirmation.
-const CONNECTED_KEY = "re-discord-connected";
+const ID_KEY = "re-discord-id";
+const SIG_KEY = "re-discord-sig";
 
 function sendResult(res, result) {
   const payload = JSON.stringify(result).replace(/</g, "\\u003c");
@@ -22,7 +27,12 @@ function sendResult(res, result) {
     ${JSON.stringify(NAME_KEYS)}.forEach(function (key) {
       try { localStorage.setItem(key, result.name); } catch (e) {}
     });
-    try { localStorage.setItem(${JSON.stringify(CONNECTED_KEY)}, "1"); } catch (e) {}
+  }
+  if (result.ok && result.id && result.sig) {
+    try {
+      localStorage.setItem(${JSON.stringify(ID_KEY)}, result.id);
+      localStorage.setItem(${JSON.stringify(SIG_KEY)}, result.sig);
+    } catch (e) {}
   }
   window.location.replace(result.ok ? "/#jeu" : "/?discord_error=1#jeu");
 })();
@@ -34,6 +44,7 @@ export default async function handler(req, res) {
   const clientId = process.env.DISCORD_CLIENT_ID;
   const clientSecret = process.env.DISCORD_CLIENT_SECRET;
   const redirectUri = process.env.DISCORD_REDIRECT_URI;
+  const gistToken = process.env.GIST_TOKEN;
 
   if (error) {
     sendResult(res, { ok: false });
@@ -68,7 +79,20 @@ export default async function handler(req, res) {
     // Discord phased out discriminators for most accounts — global_name is
     // the current display name, username is the pre-migration fallback.
     const displayName = (user.global_name || user.username || "").trim().slice(0, 20);
-    sendResult(res, displayName ? { ok: true, name: displayName } : { ok: false });
+    if (!displayName || !user.id) {
+      sendResult(res, { ok: false });
+      return;
+    }
+
+    // Progression sync needs a real HMAC secret to sign against — without
+    // it (e.g. GIST_TOKEN not configured yet) still let the name pre-fill
+    // work, just without an id/sig pair.
+    if (!gistToken) {
+      sendResult(res, { ok: true, name: displayName });
+      return;
+    }
+    const sig = crypto.createHmac("sha256", gistToken).update(user.id).digest("hex");
+    sendResult(res, { ok: true, name: displayName, id: user.id, sig });
   } catch {
     sendResult(res, { ok: false });
   }
