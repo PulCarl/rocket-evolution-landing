@@ -17,12 +17,13 @@ import {
 import {
   MAX_LEVEL,
   BONUS_TYPES,
-  LEVEL_UP_COST,
   BONUS_ICONS,
   BONUS_LABELS,
   LEVEL_EFFECTS,
-  REBIRTH_HEIGHTS,
-  MAX_REBIRTHS,
+  levelUpCost,
+  rebirthCost,
+  rebirthMultiplier,
+  REBIRTH_BONUS_RATE,
   defaultLevels,
   upgradesFromLevels,
 } from "./levels.js";
@@ -90,12 +91,15 @@ export default function DoodleGame() {
   // Which bonus just leveled up, for a brief pop/glow on its card — cleared
   // after the animation finishes.
   const [justUpgraded, setJustUpgraded] = useState(null);
-  // Rebirth tier (0-MAX_REBIRTHS) — a permanent, stacking boost to bounce
-  // height + coin gain, unlocked by reaching REBIRTH_HEIGHTS[rebirths]
-  // during a run and choosing to end that run early for it.
+  // Rebirth tier — an uncapped prestige loop bought with coins from the menu
+  // (idle or game-over screen, never mid-run): resets bonus levels to 1 but
+  // permanently raises the multiplier levels.js applies from then on.
   const [rebirths, setRebirths] = useState(0);
-  const [currentHeight, setCurrentHeight] = useState(0);
+  // Brief pulse on the rebirth button right after a successful purchase.
   const [justRebirthed, setJustRebirthed] = useState(false);
+  // Lifetime stats panel (Discord-synced players only).
+  const [gamesPlayed, setGamesPlayed] = useState(0);
+  const [totalScore, setTotalScore] = useState(0);
   // Top-10 by lifetime coins earned (api/player-progress.js) — a separate
   // ranking from the height-based leaderboard above.
   const [coinsLeaderboard, setCoinsLeaderboard] = useState(null);
@@ -155,6 +159,8 @@ export default function DoodleGame() {
           if (record.levels) setLevels(record.levels);
           if (typeof record.rebirths === "number") setRebirths(record.rebirths);
           if (typeof record.best === "number") setBest((prev) => Math.max(prev, record.best));
+          if (typeof record.gamesPlayed === "number") setGamesPlayed(record.gamesPlayed);
+          if (typeof record.totalScore === "number") setTotalScore(record.totalScore);
         })
         .catch(() => {});
     }
@@ -194,8 +200,6 @@ export default function DoodleGame() {
     setIsNewBest(false);
     setJetpackActive(false);
     setShielded(false);
-    setCurrentHeight(0);
-    setJustRebirthed(false);
     setPhase("playing");
     lastRef.current = performance.now();
 
@@ -241,7 +245,6 @@ export default function DoodleGame() {
       setScore(currentScore);
       setJetpackActive(gameRef.current.jetpackTimer > 0);
       setShielded(gameRef.current.shieldCharges > 0);
-      setCurrentHeight(gameRef.current.height);
 
       if (crashed) {
         setPhase("over");
@@ -266,6 +269,8 @@ export default function DoodleGame() {
             .then((record) => {
               if (!record) return;
               setCoins(record.coins);
+              setGamesPlayed(record.gamesPlayed);
+              setTotalScore(record.totalScore);
               setBest((prevBest) => {
                 if (record.best > prevBest) {
                   setIsNewBest(true);
@@ -316,49 +321,31 @@ export default function DoodleGame() {
       .catch(() => {});
   };
 
-  // Ends the current run early, in exchange for the next permanent rebirth
-  // tier — only available once this run's height has crossed the
-  // threshold (REBIRTH_HEIGHTS[rebirths]), enforced again server-side.
+  // A menu-level purchase (idle or game-over screen, never mid-run): spends
+  // coins for the next permanent rebirth tier, which resets bonus levels to
+  // 1 but raises the multiplier levels.js applies from then on. Cost/levels
+  // are enforced again server-side.
   const triggerRebirth = useCallback(() => {
     if (!discordId || !discordSigRef.current) return;
-    const g = gameRef.current;
-    if (g.over) return;
-    const heightNow = g.height;
-    const scoreNow = g.score;
-    const coinsNow = g.coinScore;
-    g.over = true;
-    stopLoop();
+    if (coins < rebirthCost(rebirths)) return;
     unlockAudio();
-    setScore(scoreNow);
-    setPhase("over");
-
     fetch("/api/player-progress", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        discordId,
-        sig: discordSigRef.current,
-        action: "rebirth",
-        name: playerName,
-        score: scoreNow,
-        coinsEarned: coinsNow,
-        height: heightNow,
-      }),
+      body: JSON.stringify({ discordId, sig: discordSigRef.current, action: "rebirth", name: playerName }),
     })
       .then((r) => (r.ok ? r.json() : null))
       .then((record) => {
         if (!record) return;
         setCoins(record.coins);
+        setLevels(record.levels);
         setRebirths(record.rebirths);
-        setBest((prevBest) => {
-          if (record.best > prevBest) setIsNewBest(true);
-          return Math.max(prevBest, record.best);
-        });
         setJustRebirthed(true);
+        setTimeout(() => setJustRebirthed(false), 800);
         playRebirth(SFX_VOLUME, mutedRef.current);
       })
       .catch(() => {});
-  }, [discordId, playerName, stopLoop]);
+  }, [discordId, playerName, coins, rebirths]);
 
   // Keyboard: held left/right steer the character; only meaningful once
   // playing, but harmless to track at any phase.
@@ -503,22 +490,59 @@ export default function DoodleGame() {
                 <p className={styles.leaderboardNote}>
                   Dépense les pièces ramassées en jeu pour améliorer tes bonus. Sauvegardé sur ton compte Discord.
                 </p>
-                <div className={styles.rebirthInfo}>
-                  <span className={styles.rebirthBadge}>
-                    ✨ Renaissance {rebirths}/{MAX_REBIRTHS}
-                  </span>
-                  {rebirths < MAX_REBIRTHS && (
-                    <span className={styles.rebirthNext}>
-                      Prochaine à {REBIRTH_HEIGHTS[rebirths].toLocaleString("fr-FR")} de hauteur
-                    </span>
-                  )}
+
+                <div className={styles.statsGrid}>
+                  <div className={styles.statItem}>
+                    <span className={styles.statValue}>{gamesPlayed}</span>
+                    <span className={styles.statLabel}>Parties</span>
+                  </div>
+                  <div className={styles.statItem}>
+                    <span className={styles.statValue}>{best}</span>
+                    <span className={styles.statLabel}>Meilleur score</span>
+                  </div>
+                  <div className={styles.statItem}>
+                    <span className={styles.statValue}>{gamesPlayed > 0 ? Math.round(totalScore / gamesPlayed) : 0}</span>
+                    <span className={styles.statLabel}>Score moyen</span>
+                  </div>
+                  <div className={styles.statItem}>
+                    <span className={styles.statValue}>{coins}</span>
+                    <span className={styles.statLabel}>Pièces</span>
+                  </div>
+                  <div className={styles.statItem}>
+                    <span className={styles.statValue}>{playerName || "—"}</span>
+                    <span className={styles.statLabel}>Pseudo Discord</span>
+                  </div>
                 </div>
+
+                <div className={styles.rebirthInfo}>
+                  <span className={styles.rebirthBadge}>✨ Renaissance {rebirths}</span>
+                  <span className={styles.rebirthNext}>
+                    Boost actuel : +{Math.round((rebirthMultiplier(rebirths) - 1) * 100)}%
+                  </span>
+                </div>
+                {phase !== "playing" && (
+                  <>
+                    <button
+                      type="button"
+                      className={`${styles.rebirthPurchaseBtn} ${justRebirthed ? styles.rebirthPurchaseBtnPulse : ""}`}
+                      onClick={triggerRebirth}
+                      disabled={coins < rebirthCost(rebirths)}
+                    >
+                      ✨ Renaître ({rebirthCost(rebirths)} 🪙)
+                    </button>
+                    <p className={styles.rebirthHint}>
+                      Réinitialise tes niveaux de bonus (tu gardes tes pièces) et augmente définitivement leur
+                      puissance.
+                    </p>
+                  </>
+                )}
+
                 <div className={styles.upgradeGrid}>
                   {BONUS_TYPES.map((bonus) => {
                     const cfg = LEVEL_EFFECTS[bonus];
                     const level = levels[bonus] || 1;
                     const maxed = level >= MAX_LEVEL;
-                    const cost = maxed ? null : LEVEL_UP_COST[level + 1];
+                    const cost = maxed ? null : levelUpCost(level + 1, rebirths);
                     const canAfford = !maxed && coins >= cost;
                     return (
                       <div
@@ -568,15 +592,6 @@ export default function DoodleGame() {
                   {shielded && <span className={styles.shieldTag}>🛡️</span>}
                 </div>
               )}
-
-              {phase === "playing" &&
-                discordId &&
-                rebirths < MAX_REBIRTHS &&
-                currentHeight >= REBIRTH_HEIGHTS[rebirths] && (
-                  <button type="button" className={styles.rebirthBtn} onClick={triggerRebirth}>
-                    ✨ Renaître (Nv.{rebirths + 1})
-                  </button>
-                )}
 
               {phase === "idle" && (
                 <div className={styles.overlay}>
@@ -654,15 +669,8 @@ export default function DoodleGame() {
 
               {phase === "over" && (
                 <div className={styles.overlay}>
-                  {justRebirthed && <p className={styles.rebirthTitle}>✨ Renaissance !</p>}
                   <p className={styles.overScore}>{score}</p>
-                  {justRebirthed ? (
-                    <p className={styles.record}>
-                      Palier {rebirths}/{MAX_REBIRTHS} débloqué
-                    </p>
-                  ) : (
-                    isNewBest && <p className={styles.record}>Nouveau record !</p>
-                  )}
+                  {isNewBest && <p className={styles.record}>Nouveau record !</p>}
                   <div className={styles.overActions}>
                     <button type="button" className={styles.primaryBtn} onClick={startGame}>
                       Rejouer

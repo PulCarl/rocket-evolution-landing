@@ -18,18 +18,22 @@ const FILE_NAME = "player-progress.json";
 
 const BONUS_TYPES = ["jetpack", "shield", "spring", "coinMultiplier"];
 const MAX_LEVEL = 3;
-// Cost to buy the level named by the key — kept in sync by hand with
+// Base cost to buy the level named by the key — kept in sync by hand with
 // src/components/Doodle/levels.js (see that file's comment).
 const LEVEL_UP_COST = { 2: 300, 3: 600 };
+function levelUpCost(targetLevel, rebirths) {
+  return Math.round(LEVEL_UP_COST[targetLevel] * (1 + Math.max(rebirths || 0, 0)));
+}
 // A single run can plausibly net a handful of coins, never thousands —
 // a loose sanity cap, not full anti-cheat (nothing here is worth building
 // the score/time-based bound the point leaderboard has).
 const MAX_COINS_PER_RUN = 5000;
-// Height needed (during a single run) to unlock the NEXT rebirth tier —
-// REBIRTH_HEIGHTS[record.rebirths] is that threshold. Kept in sync by hand
-// with src/components/Doodle/levels.js.
-const REBIRTH_HEIGHTS = [5000, 15000, 30000, 50000, 75000];
-const MAX_REBIRTHS = REBIRTH_HEIGHTS.length;
+// Rebirth: bought with coins (not height-gated), unlimited tiers, cost rises
+// with each one bought. Kept in sync by hand with src/components/Doodle/levels.js.
+const REBIRTH_BASE_COST = 500;
+function rebirthCost(rebirths) {
+  return Math.round(REBIRTH_BASE_COST * (1 + Math.max(rebirths || 0, 0)));
+}
 
 function verifySig(discordId, sig) {
   if (typeof discordId !== "string" || !discordId || typeof sig !== "string" || !sig) return false;
@@ -47,6 +51,8 @@ function defaultRecord() {
     levels: { jetpack: 1, shield: 1, spring: 1, coinMultiplier: 1 },
     rebirths: 0,
     best: 0,
+    gamesPlayed: 0,
+    totalScore: 0,
   };
 }
 
@@ -63,8 +69,10 @@ function normalizeRecord(record) {
   };
 }
 
-// Shared by the "finishRun" and "rebirth" actions — both submit a run's
-// result the same way, rebirth just additionally bumps the rebirth tier.
+// Applies one finished run's result: name, coins earned, best score, and
+// the gamesPlayed/totalScore counters behind the stats panel (average score
+// = totalScore / gamesPlayed). Rebirth is a separate, run-independent action
+// and doesn't go through this.
 function applyRunResult(record, { name, score, coinsEarned }) {
   if (typeof name === "string" && name.trim()) record.name = name.trim().slice(0, 20);
 
@@ -76,7 +84,10 @@ function applyRunResult(record, { name, score, coinsEarned }) {
   }
 
   const s = Number(score);
-  if (Number.isFinite(s) && s > record.best) record.best = Math.floor(s);
+  const finalScore = Number.isFinite(s) ? Math.max(0, Math.floor(s)) : 0;
+  if (finalScore > record.best) record.best = finalScore;
+  record.gamesPlayed += 1;
+  record.totalScore += finalScore;
 }
 
 async function readAllPlayers() {
@@ -190,7 +201,7 @@ export default async function handler(req, res) {
           res.status(400).json({ error: "already max level" });
           return;
         }
-        const cost = LEVEL_UP_COST[nextLevel];
+        const cost = levelUpCost(nextLevel, record.rebirths);
         if (record.coins < cost) {
           res.status(400).json({ error: "not enough coins" });
           return;
@@ -198,18 +209,20 @@ export default async function handler(req, res) {
         record.coins -= cost;
         record.levels[bonus] = nextLevel;
       } else if (action === "rebirth") {
-        if (record.rebirths >= MAX_REBIRTHS) {
-          res.status(400).json({ error: "already max rebirth" });
+        // Bought from the menu (idle or game-over screen), never mid-run —
+        // spends coins (kept otherwise), resets bonus levels to 1, and
+        // permanently raises the multiplier levels.js applies from then on.
+        const cost = rebirthCost(record.rebirths);
+        if (record.coins < cost) {
+          res.status(400).json({ error: "not enough coins" });
           return;
         }
-        const height = Number(req.body.height);
-        const threshold = REBIRTH_HEIGHTS[record.rebirths];
-        if (!Number.isFinite(height) || height < threshold) {
-          res.status(400).json({ error: "height below rebirth threshold" });
-          return;
+        if (typeof req.body.name === "string" && req.body.name.trim()) {
+          record.name = req.body.name.trim().slice(0, 20);
         }
-        applyRunResult(record, req.body);
+        record.coins -= cost;
         record.rebirths += 1;
+        record.levels = { jetpack: 1, shield: 1, spring: 1, coinMultiplier: 1 };
       } else {
         res.status(400).json({ error: "invalid action" });
         return;

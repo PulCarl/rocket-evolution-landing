@@ -305,42 +305,6 @@
   line-height: 1;
 }
 
-/* Appears mid-run once the height threshold for the next rebirth tier is
-   crossed — rare and exciting, so it gets its own pulsing gold treatment
-   distinct from the jetpack/boost/mute buttons. */
-.rebirthBtn {
-  position: absolute;
-  bottom: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 10px 18px;
-  border-radius: 999px;
-  border: none;
-  background: linear-gradient(90deg, #ffd23f, #fe980c);
-  color: #1d1d1d;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 13px;
-  cursor: pointer;
-  animation: rebirthPulse 1.6s ease-in-out infinite;
-}
-
-@keyframes rebirthPulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(255, 210, 63, 0.6);
-  }
-  50% {
-    box-shadow: 0 0 0 10px rgba(255, 210, 63, 0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .rebirthBtn {
-    animation: none;
-  }
-}
-
 .overlay {
   position: absolute;
   inset: 0;
@@ -380,14 +344,6 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--orange) !important;
-}
-
-.rebirthTitle {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(20px, 4vw, 28px) !important;
-  color: #ffd23f !important;
-  text-shadow: 0 0 16px rgba(255, 210, 63, 0.6);
 }
 
 .discordBtn {
@@ -645,12 +601,49 @@
   color: rgba(255, 255, 255, 0.4) !important;
 }
 
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 6px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: center;
+}
+
+.statValue {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 15px;
+  color: #fff;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.statLabel {
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
 .rebirthInfo {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .rebirthBadge {
@@ -667,6 +660,59 @@
 .rebirthNext {
   font-size: 11px;
   color: rgba(255, 255, 255, 0.45);
+}
+
+/* Bought from the menu (idle or game-over, never mid-run) — a coin-cost
+   purchase, so it reads like the upgrade buttons rather than the old
+   floating pulsing in-run prompt. */
+.rebirthPurchaseBtn {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(90deg, #ffd23f, #fe980c);
+  color: #1d1d1d;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 12px;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.rebirthPurchaseBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.rebirthPurchaseBtn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.rebirthPurchaseBtnPulse {
+  animation: rebirthSuccess 0.8s ease;
+}
+
+@keyframes rebirthSuccess {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 210, 63, 0.7);
+  }
+  100% {
+    box-shadow: 0 0 0 14px rgba(255, 210, 63, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rebirthPurchaseBtnPulse {
+    animation: none;
+  }
+}
+
+.rebirthHint {
+  margin: 8px 0 14px !important;
+  font-size: 11px !important;
+  color: rgba(255, 255, 255, 0.4) !important;
+  text-align: center;
 }
 
 .upgradeGrid {
