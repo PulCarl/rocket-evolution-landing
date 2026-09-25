@@ -74,6 +74,24 @@ export default async function handler(req, res) {
   }
 
   if (req.method === "GET") {
+    // ?leaderboard=1 -> top 10 by best score across every synced player,
+    // same { leaderboard: [{name, score}] } shape as api/leaderboard.js so
+    // the same list UI can render either one.
+    if (req.query?.leaderboard === "1") {
+      try {
+        const players = await readAllPlayers();
+        const list = Object.values(players)
+          .filter((p) => p.best > 0)
+          .sort((a, b) => b.best - a.best)
+          .slice(0, 10)
+          .map((p) => ({ name: p.name || "Joueur anonyme", score: p.best }));
+        res.status(200).json({ leaderboard: list });
+      } catch (err) {
+        res.status(502).json({ error: String(err) });
+      }
+      return;
+    }
+
     const discordId = req.query?.discordId;
     if (!discordId) {
       res.status(400).json({ error: "missing discordId" });

@@ -76,10 +76,14 @@ export default function DoodleGame() {
   const [coins, setCoins] = useState(0);
   const [levels, setLevels] = useState(defaultLevels());
   // Shared top-10 from the old 2D mini-game's leaderboard (api/leaderboard.js
-  // — all-time, unrelated to this game's own local best) — kept visible
-  // here per user request even though that game itself is gone. null = not
-  // loaded yet / unavailable.
+  // — all-time, unrelated to this game's own local best) — kept visible as
+  // a compact top-3 podium per user request even though that game itself
+  // is gone. null = not loaded yet / unavailable.
   const [oldLeaderboard, setOldLeaderboard] = useState(null);
+  // Top-10 by best score across every Discord-synced player of THIS game
+  // (api/player-progress.js), replacing where the old game's full list
+  // used to sit.
+  const [newLeaderboard, setNewLeaderboard] = useState(null);
 
   useEffect(() => {
     fetch("/api/leaderboard")
@@ -87,6 +91,13 @@ export default function DoodleGame() {
       .then((data) => {
         if (!data?.leaderboard) return;
         setOldLeaderboard(data.leaderboard);
+      })
+      .catch(() => {});
+    fetch("/api/player-progress?leaderboard=1")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data?.leaderboard) return;
+        setNewLeaderboard(data.leaderboard);
       })
       .catch(() => {});
   }, []);
@@ -503,28 +514,47 @@ export default function DoodleGame() {
               )}
             </div>
 
-            {oldLeaderboard !== null && (
-              <div className={`${styles.leaderboard} ${styles.sidePanel}`}>
-                <div className={styles.leaderboardHead}>
-                  <h3 className={styles.leaderboardTitle}>🏆 Top 10 — ancien mini-jeu</h3>
-                </div>
-                <p className={styles.leaderboardNote}>
-                  Le classement du mini-jeu précédent, conservé ici pour la postérité.
-                </p>
-                {oldLeaderboard.length === 0 ? (
-                  <p className={styles.leaderboardEmpty}>Personne n'a encore marqué de point.</p>
-                ) : (
-                  <ol className={styles.leaderboardList}>
-                    {oldLeaderboard.map((entry, i) => (
-                      <li key={i} className={styles.leaderboardRow}>
-                        <span className={styles.leaderboardRank}>
-                          {i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1}
-                        </span>
-                        <span className={styles.leaderboardName}>{entry.name}</span>
-                        <span className={styles.leaderboardScore}>{entry.score}</span>
-                      </li>
-                    ))}
-                  </ol>
+            {(oldLeaderboard !== null || newLeaderboard !== null) && (
+              <div className={`${styles.rightColumn} ${styles.sidePanel}`}>
+                {oldLeaderboard !== null && oldLeaderboard.length > 0 && (
+                  <div className={styles.leaderboard}>
+                    <div className={styles.leaderboardHead}>
+                      <h3 className={styles.leaderboardTitle}>🏆 Top 3 — ancien mini-jeu</h3>
+                    </div>
+                    <ol className={styles.leaderboardList}>
+                      {oldLeaderboard.slice(0, 3).map((entry, i) => (
+                        <li key={i} className={styles.leaderboardRow}>
+                          <span className={styles.leaderboardRank}>{["🥇", "🥈", "🥉"][i]}</span>
+                          <span className={styles.leaderboardName}>{entry.name}</span>
+                          <span className={styles.leaderboardScore}>{entry.score}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+
+                {newLeaderboard !== null && (
+                  <div className={styles.leaderboard}>
+                    <div className={styles.leaderboardHead}>
+                      <h3 className={styles.leaderboardTitle}>🏆 Top 10 — nouveau mini-jeu</h3>
+                    </div>
+                    <p className={styles.leaderboardNote}>Les meilleurs scores des joueurs connectés à Discord.</p>
+                    {newLeaderboard.length === 0 ? (
+                      <p className={styles.leaderboardEmpty}>Personne n'a encore marqué de point.</p>
+                    ) : (
+                      <ol className={styles.leaderboardList}>
+                        {newLeaderboard.map((entry, i) => (
+                          <li key={i} className={styles.leaderboardRow}>
+                            <span className={styles.leaderboardRank}>
+                              {i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1}
+                            </span>
+                            <span className={styles.leaderboardName}>{entry.name}</span>
+                            <span className={styles.leaderboardScore}>{entry.score}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    )}
+                  </div>
                 )}
               </div>
             )}
