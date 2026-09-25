@@ -57,6 +57,7 @@ export default function DoodleGame() {
   const mutedRef = useRef(false);
   const [discordError, setDiscordError] = useState(false);
   const [discordConnected, setDiscordConnected] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     const storedBest = Number(localStorage.getItem(BEST_KEY) || 0);
@@ -209,17 +210,40 @@ export default function DoodleGame() {
     return () => window.removeEventListener("keydown", onKey);
   }, [phase, startGame, playerName]);
 
-  // Touch: left/right halves of the canvas, held.
-  const onTouchStart = (e) => {
+  // Touch: the character steers toward wherever the finger is, updated
+  // continuously as it drags — reuses the same accelerate-toward-input
+  // physics as the keyboard (left/right flags), just derived from "is the
+  // finger left or right of the player" instead of a held key.
+  const updateTouchInput = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.touches[0].clientX - rect.left;
-    if (x < rect.width / 2) gameRef.current.input.left = true;
-    else gameRef.current.input.right = true;
+    const touchX = e.touches[0].clientX - rect.left;
+    const gameX = (touchX / rect.width) * GAME_CONFIG.width;
+    const playerX = gameRef.current.player.x;
+    const deadzone = 4;
+    gameRef.current.input.left = gameX < playerX - deadzone;
+    gameRef.current.input.right = gameX > playerX + deadzone;
   };
   const onTouchEnd = () => {
     gameRef.current.input.left = false;
     gameRef.current.input.right = false;
   };
+
+  const toggleFullscreen = () => setIsFullscreen((v) => !v);
+
+  // Lock background scroll while the fullscreen overlay is up, and let
+  // Escape close it (handy when testing on desktop).
+  useEffect(() => {
+    if (!isFullscreen) return;
+    document.body.style.overflow = "hidden";
+    const onKey = (e) => {
+      if (e.code === "Escape") setIsFullscreen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [isFullscreen]);
 
   return (
     <section id="jeu" data-bg="dark" className={styles.section}>
@@ -240,6 +264,7 @@ export default function DoodleGame() {
         </Reveal>
 
         <Reveal delay={90} className={styles.stage}>
+          <div className={`${styles.stageInner} ${isFullscreen ? styles.stageFullscreen : ""}`}>
           <div className={styles.hud}>
             <div className={styles.hudScores}>
               <span>
@@ -249,15 +274,26 @@ export default function DoodleGame() {
                 Record <strong>{best}</strong>
               </span>
             </div>
-            <button
-              type="button"
-              className={styles.muteBtn}
-              onClick={toggleMute}
-              aria-label={muted ? "Activer le son" : "Couper le son"}
-              title={muted ? "Activer le son" : "Couper le son"}
-            >
-              {muted ? "🔇" : "🔊"}
-            </button>
+            <div className={styles.hudButtons}>
+              <button
+                type="button"
+                className={styles.muteBtn}
+                onClick={toggleFullscreen}
+                aria-label={isFullscreen ? "Quitter le plein écran" : "Plein écran"}
+                title={isFullscreen ? "Quitter le plein écran" : "Plein écran"}
+              >
+                {isFullscreen ? "✕" : "⛶"}
+              </button>
+              <button
+                type="button"
+                className={styles.muteBtn}
+                onClick={toggleMute}
+                aria-label={muted ? "Activer le son" : "Couper le son"}
+                title={muted ? "Activer le son" : "Couper le son"}
+              >
+                {muted ? "🔇" : "🔊"}
+              </button>
+            </div>
           </div>
 
           <div className={styles.canvasWrap}>
@@ -266,7 +302,8 @@ export default function DoodleGame() {
               width={GAME_CONFIG.width}
               height={GAME_CONFIG.height}
               className={styles.canvas}
-              onTouchStart={onTouchStart}
+              onTouchStart={updateTouchInput}
+              onTouchMove={updateTouchInput}
               onTouchEnd={onTouchEnd}
               onTouchCancel={onTouchEnd}
             />
@@ -331,6 +368,7 @@ export default function DoodleGame() {
                 </div>
               </div>
             )}
+          </div>
           </div>
         </Reveal>
       </div>

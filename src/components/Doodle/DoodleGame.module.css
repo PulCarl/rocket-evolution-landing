@@ -69,6 +69,35 @@
   margin: 0 auto;
 }
 
+.stageInner {
+  display: flex;
+  flex-direction: column;
+}
+
+/* CSS-only "fullscreen" (a fixed overlay covering the viewport) instead of
+   the real Fullscreen API — iOS Safari still doesn't support
+   requestFullscreen() on anything but <video>, so this is the version that
+   actually works on every phone. The hud stays in normal flow (a fixed-size
+   row) and the canvas fills the rest of the viewport, letterboxed to keep
+   its portrait aspect ratio. */
+.stageFullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--ink);
+  padding: 14px;
+}
+
+.stageFullscreen .canvasWrap {
+  flex: 1;
+  min-height: 0;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  margin: 0 auto;
+}
+
 .hud {
   display: flex;
   align-items: center;
@@ -85,6 +114,12 @@
   display: flex;
   align-items: center;
   gap: 24px;
+}
+
+.hudButtons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .hud strong {
