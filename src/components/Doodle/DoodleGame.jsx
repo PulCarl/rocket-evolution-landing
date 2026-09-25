@@ -34,6 +34,7 @@ const MUTED_KEY = "re-doodle-muted";
 // to sync coins/bonus-levels progression (api/player-progress.js).
 const DISCORD_ID_KEY = "re-discord-id";
 const DISCORD_SIG_KEY = "re-discord-sig";
+const FULLSCREEN_SEEN_KEY = "re-doodle-fullscreen-seen";
 const SFX_VOLUME = 0.55;
 
 // Physical key position, so this covers WASD on QWERTY and ZQSD on AZERTY
@@ -71,6 +72,9 @@ export default function DoodleGame() {
   const [discordId, setDiscordId] = useState(null);
   const discordSigRef = useRef(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  // Tracks whether this visitor has ever used fullscreen — until they
+  // have, the button gets a pulse + a hint nudging them to try it.
+  const [hasUsedFullscreen, setHasUsedFullscreen] = useState(false);
   // Coins + bonus levels, synced to the Discord account when connected
   // (api/player-progress.js) — local-only defaults otherwise.
   const [coins, setCoins] = useState(0);
@@ -109,6 +113,7 @@ export default function DoodleGame() {
     const storedMuted = localStorage.getItem(MUTED_KEY) === "1";
     setMuted(storedMuted);
     mutedRef.current = storedMuted;
+    setHasUsedFullscreen(localStorage.getItem(FULLSCREEN_SEEN_KEY) === "1");
 
     const storedId = localStorage.getItem(DISCORD_ID_KEY);
     const storedSig = localStorage.getItem(DISCORD_SIG_KEY);
@@ -328,7 +333,13 @@ export default function DoodleGame() {
     gameRef.current.input.right = false;
   };
 
-  const toggleFullscreen = () => setIsFullscreen((v) => !v);
+  const toggleFullscreen = () => {
+    setIsFullscreen((v) => !v);
+    if (!hasUsedFullscreen) {
+      localStorage.setItem(FULLSCREEN_SEEN_KEY, "1");
+      setHasUsedFullscreen(true);
+    }
+  };
 
   // Lock background scroll while the fullscreen overlay is up, and let
   // Escape close it (handy when testing on desktop).
@@ -361,6 +372,12 @@ export default function DoodleGame() {
             <li>🪙 Pièce → bonus de score</li>
             <li>👾 Ennemi → termine la partie sans bouclier</li>
           </ul>
+          {!hasUsedFullscreen && (
+            <p className={styles.fullscreenHint}>
+              💡 Astuce : passe en <strong>plein écran</strong> (⛶) pour une meilleure expérience, surtout sur
+              mobile !
+            </p>
+          )}
         </Reveal>
 
         <Reveal delay={90} className={styles.stage}>
@@ -377,7 +394,7 @@ export default function DoodleGame() {
             <div className={styles.hudButtons}>
               <button
                 type="button"
-                className={styles.muteBtn}
+                className={`${styles.fullscreenBtn} ${!hasUsedFullscreen && !isFullscreen ? styles.fullscreenBtnPulse : ""}`}
                 onClick={toggleFullscreen}
                 aria-label={isFullscreen ? "Quitter le plein écran" : "Plein écran"}
                 title={isFullscreen ? "Quitter le plein écran" : "Plein écran"}

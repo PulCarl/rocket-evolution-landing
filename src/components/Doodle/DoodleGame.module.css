@@ -216,6 +216,59 @@
   background: rgba(255, 255, 255, 0.12);
 }
 
+/* Same shape as .muteBtn but branded — meant to stand out and get
+   discovered, unlike the neutral mute toggle next to it. */
+.fullscreenBtn {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: var(--grad-brand);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.fullscreenBtn:hover {
+  transform: scale(1.08);
+}
+
+.fullscreenBtnPulse {
+  animation: fullscreenPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes fullscreenPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(254, 152, 12, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(254, 152, 12, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fullscreenBtnPulse {
+    animation: none;
+  }
+}
+
+.fullscreenHint {
+  margin: 14px 0 0;
+  font-size: 12px;
+  color: var(--orange);
+}
+
+.fullscreenHint strong {
+  color: #fff;
+}
+
 .canvasWrap {
   position: relative;
   width: 100%;
