@@ -24,10 +24,15 @@ const LEVEL_UP_COST = { 2: 300, 3: 600 };
 function levelUpCost(targetLevel, rebirths) {
   return Math.round(LEVEL_UP_COST[targetLevel] * (1 + Math.max(rebirths || 0, 0)));
 }
-// A single run can plausibly net a handful of coins, never thousands —
-// a loose sanity cap, not full anti-cheat (nothing here is worth building
-// the score/time-based bound the point leaderboard has).
-const MAX_COINS_PER_RUN = 5000;
+// A loose sanity cap on one run's coin haul, not full anti-cheat (nothing
+// here is worth building the score/time-based bound the point leaderboard
+// has). Scales with rebirths — coin value itself is multiplied by rebirths
+// (and doubled again during a score-x2 boost, see levels.js), so a fixed
+// cap would silently truncate legitimate high-rebirth earnings.
+const MAX_COINS_PER_RUN_BASE = 5000;
+function maxCoinsPerRun(rebirths) {
+  return MAX_COINS_PER_RUN_BASE * (1 + Math.max(rebirths || 0, 0));
+}
 // Rebirth: bought with coins (not height-gated), unlimited tiers, cost rises
 // with each one bought. Kept in sync by hand with src/components/Doodle/levels.js.
 const REBIRTH_BASE_COST = 500;
@@ -78,7 +83,7 @@ function applyRunResult(record, { name, score, coinsEarned }) {
 
   const earned = Number(coinsEarned);
   if (Number.isFinite(earned) && earned > 0) {
-    const gained = Math.floor(Math.min(earned, MAX_COINS_PER_RUN));
+    const gained = Math.floor(Math.min(earned, maxCoinsPerRun(record.rebirths)));
     record.coins += gained;
     record.totalCoinsEarned += gained;
   }
