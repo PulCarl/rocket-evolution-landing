@@ -16,7 +16,7 @@ const GIST_ID = process.env.GIST_ID;
 const GIST_TOKEN = process.env.GIST_TOKEN;
 const FILE_NAME = "player-progress.json";
 
-const BONUS_TYPES = ["jetpack", "shield", "spring", "coinMultiplier"];
+const BONUS_TYPES = ["jetpack", "scoreBoost", "spring", "coinMultiplier"];
 const MAX_LEVEL = 3;
 // Base cost to buy the level named by the key — kept in sync by hand with
 // src/components/Doodle/levels.js (see that file's comment).
@@ -48,7 +48,7 @@ function defaultRecord() {
     name: "",
     coins: 0,
     totalCoinsEarned: 0,
-    levels: { jetpack: 1, shield: 1, spring: 1, coinMultiplier: 1 },
+    levels: { jetpack: 1, scoreBoost: 1, spring: 1, coinMultiplier: 1 },
     rebirths: 0,
     best: 0,
     gamesPlayed: 0,
@@ -222,7 +222,7 @@ export default async function handler(req, res) {
         }
         record.coins -= cost;
         record.rebirths += 1;
-        record.levels = { jetpack: 1, shield: 1, spring: 1, coinMultiplier: 1 };
+        record.levels = { jetpack: 1, scoreBoost: 1, spring: 1, coinMultiplier: 1 };
       } else {
         res.status(400).json({ error: "invalid action" });
         return;

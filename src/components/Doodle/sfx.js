@@ -54,20 +54,14 @@ export function playJetpack(volume, muted) {
   tone(c, { freq: 260, start: t, duration: 0.3, type: "sawtooth", gain: 0.12 * v, sweepTo: 500 });
 }
 
-export function playShield(volume, muted) {
+export function playScoreBoost(volume, muted) {
   const v = clampVolume(volume, muted);
   if (v <= 0) return;
   const c = getCtx();
   const t = c.currentTime;
-  tone(c, { freq: 500, start: t, duration: 0.14, type: "triangle", gain: 0.14 * v });
-  tone(c, { freq: 750, start: t + 0.06, duration: 0.14, type: "triangle", gain: 0.12 * v });
-}
-
-export function playShieldBreak(volume, muted) {
-  const v = clampVolume(volume, muted);
-  if (v <= 0) return;
-  const c = getCtx();
-  tone(c, { freq: 620, start: c.currentTime, duration: 0.18, type: "square", gain: 0.14 * v, sweepTo: 180 });
+  [523.25, 659.25, 783.99].forEach((freq, i) => {
+    tone(c, { freq, start: t + i * 0.05, duration: 0.16, type: "triangle", gain: 0.15 * v });
+  });
 }
 
 export function playCoin(volume, muted) {

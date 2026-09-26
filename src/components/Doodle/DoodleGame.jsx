@@ -6,8 +6,7 @@ import {
   playBounce,
   playSpring,
   playJetpack,
-  playShield,
-  playShieldBreak,
+  playScoreBoost,
   playCoin,
   playCrash,
   playRecord,
@@ -72,7 +71,7 @@ export default function DoodleGame() {
   const [best, setBest] = useState(0);
   const [isNewBest, setIsNewBest] = useState(false);
   const [jetpackActive, setJetpackActive] = useState(false);
-  const [shielded, setShielded] = useState(false);
+  const [scoreBoostActive, setScoreBoostActive] = useState(false);
   const [playerName, setPlayerName] = useState("");
   const [muted, setMuted] = useState(false);
   const mutedRef = useRef(false);
@@ -210,7 +209,7 @@ export default function DoodleGame() {
     setCoinsCollected(0);
     setIsNewBest(false);
     setJetpackActive(false);
-    setShielded(false);
+    setScoreBoostActive(false);
     setPhase("playing");
     lastRef.current = performance.now();
 
@@ -233,11 +232,8 @@ export default function DoodleGame() {
             case "jetpack":
               playJetpack(SFX_VOLUME, mutedRef.current);
               break;
-            case "shield":
-              playShield(SFX_VOLUME, mutedRef.current);
-              break;
-            case "shieldBreak":
-              playShieldBreak(SFX_VOLUME, mutedRef.current);
+            case "scoreBoost":
+              playScoreBoost(SFX_VOLUME, mutedRef.current);
               break;
             case "coin":
               playCoin(SFX_VOLUME, mutedRef.current);
@@ -256,7 +252,7 @@ export default function DoodleGame() {
       setScore(currentScore);
       setCoinsCollected(gameRef.current.coinScore);
       setJetpackActive(gameRef.current.jetpackTimer > 0);
-      setShielded(gameRef.current.shieldCharges > 0);
+      setScoreBoostActive(gameRef.current.scoreBoostTimer > 0);
 
       if (crashed) {
         setPhase("over");
@@ -448,9 +444,8 @@ export default function DoodleGame() {
           <ul className={styles.legend}>
             <li>🌀 Ressort → rebond géant</li>
             <li>🚀 Jetpack → vol temporaire</li>
-            <li>🛡️ Bouclier → absorbe un ennemi</li>
+            <li>⭐ Score x2 → double tes points quelques secondes</li>
             <li>🪙 Pièce → bonus de score</li>
-            <li>👾 Ennemi → termine la partie sans bouclier</li>
           </ul>
           {!hasUsedFullscreen && (
             <p className={styles.fullscreenHint}>
@@ -604,10 +599,10 @@ export default function DoodleGame() {
                 onTouchCancel={onTouchEnd}
               />
 
-              {phase === "playing" && (jetpackActive || shielded) && (
+              {phase === "playing" && (jetpackActive || scoreBoostActive) && (
                 <div className={styles.hudPanel}>
                   {jetpackActive && <span className={styles.jetpackTag}>🚀</span>}
-                  {shielded && <span className={styles.shieldTag}>🛡️</span>}
+                  {scoreBoostActive && <span className={styles.scoreBoostTag}>⭐×2</span>}
                 </div>
               )}
 

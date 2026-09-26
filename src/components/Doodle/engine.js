@@ -22,16 +22,13 @@ export const GAME_CONFIG = {
   minGap: 75,
   maxGap: 145, // stays just under the normal bounce's clear height (163) —
   // gaps alone should never be literally impossible; difficulty comes from
-  // platform kinds/enemies instead.
+  // platform kinds instead.
   gapRampHeight: 5000,
   springChance: 0.1,
   jetpackChance: 0.045,
-  shieldChance: 0.045,
+  scoreBoostChance: 0.045,
   coinChance: 0.2,
   coinValue: 30,
-  enemyChanceStart: 0.04,
-  enemyChanceMax: 0.16,
-  enemyRampHeight: 6000,
   movingChanceStart: 0.08,
   movingChanceMax: 0.22,
   movingRampHeight: 5000,
@@ -61,12 +58,9 @@ const {
   gapRampHeight: GAP_RAMP_HEIGHT,
   springChance: SPRING_CHANCE,
   jetpackChance: JETPACK_CHANCE,
-  shieldChance: SHIELD_CHANCE,
+  scoreBoostChance: SCORE_BOOST_CHANCE,
   coinChance: COIN_CHANCE,
   coinValue: COIN_VALUE,
-  enemyChanceStart: ENEMY_CHANCE_START,
-  enemyChanceMax: ENEMY_CHANCE_MAX,
-  enemyRampHeight: ENEMY_RAMP_HEIGHT,
   movingChanceStart: MOVING_CHANCE_START,
   movingChanceMax: MOVING_CHANCE_MAX,
   movingRampHeight: MOVING_RAMP_HEIGHT,
@@ -122,14 +116,13 @@ function spawnRow(state) {
   state.platforms.push(platform);
   state.highestGeneratedY = y;
 
-  // A floating pickup and a patrolling enemy can both spawn near this row
-  // (independent rolls) — small enough odds that overlap is rare, and when
-  // it happens it's a nice bit of risk/reward rather than unfair.
+  // A floating pickup can spawn near this row — small enough odds across
+  // all kinds that more than one nearby is rare.
   const pickupRoll = Math.random();
   let pickupKind = null;
   if (pickupRoll < COIN_CHANCE) pickupKind = "coin";
   else if (pickupRoll < COIN_CHANCE + JETPACK_CHANCE) pickupKind = "jetpack";
-  else if (pickupRoll < COIN_CHANCE + JETPACK_CHANCE + SHIELD_CHANCE) pickupKind = "shield";
+  else if (pickupRoll < COIN_CHANCE + JETPACK_CHANCE + SCORE_BOOST_CHANCE) pickupKind = "scoreBoost";
   if (pickupKind) {
     state.pickups.push({
       x: w / 2 + Math.random() * (W - w),
@@ -137,21 +130,6 @@ function spawnRow(state) {
       w: 22,
       h: 22,
       kind: pickupKind,
-    });
-  }
-
-  const enemyChance = ramped(genHeight, ENEMY_CHANCE_START, ENEMY_CHANCE_MAX, ENEMY_RAMP_HEIGHT);
-  if (Math.random() < enemyChance) {
-    const originX = 30 + Math.random() * (W - 60);
-    state.enemies.push({
-      x: originX,
-      y: y - 30 - Math.random() * 40,
-      w: 30,
-      h: 26,
-      vx: (Math.random() < 0.5 ? -1 : 1) * (30 + Math.random() * 30),
-      originX,
-      range: 50 + Math.random() * 40,
-      dead: false,
     });
   }
 }
@@ -164,7 +142,7 @@ function spawnRow(state) {
 const DEFAULT_UPGRADES = {
   jetpackDuration: JETPACK_DURATION,
   springVelocity: SPRING_V,
-  shieldCharges: 1,
+  scoreBoostDuration: 2.5,
   coinValue: COIN_VALUE,
   bounceVelocity: BOUNCE_V,
 };
@@ -176,20 +154,20 @@ export function createGame(upgrades) {
     startY,
     height: 0, // high-water mark of climb distance — the score
     coinScore: 0,
+    bonusScore: 0, // extra points from climbing/coins while score-boosted (see scoreBoostTimer)
     score: 0,
     cameraY,
     player: { x: W / 2, y: startY, vx: 0, vy: 0, w: PLAYER_W, h: PLAYER_H, facing: 1 },
     platforms: [],
     pickups: [],
-    enemies: [],
     jetpackTimer: 0,
-    shieldCharges: 0,
+    scoreBoostTimer: 0,
     over: false,
     events: [], // consumed once per frame by React for sound effects
     input: { left: false, right: false },
     highestGeneratedY: startY,
     // Per-player upgrade levels (coins spent on jetpack duration, spring
-    // strength, shield charges, coin value) — see levels.js.
+    // strength, score-boost duration, coin value) — see levels.js.
     upgrades: upgrades || DEFAULT_UPGRADES,
   };
   // A platform right under the player so the run starts with a clean first
@@ -235,8 +213,16 @@ export function step(state, dt) {
     p.y += p.vy * dt;
   }
 
+  if (state.scoreBoostTimer > 0) state.scoreBoostTimer = Math.max(0, state.scoreBoostTimer - dt);
+
   const climbed = state.startY - p.y;
-  if (climbed > state.height) state.height = climbed;
+  if (climbed > state.height) {
+    const gain = climbed - state.height;
+    state.height = climbed;
+    // Score-boost doubles the climb's contribution to score too, added as a
+    // separate always-growing counter so score never dips when it ends.
+    if (state.scoreBoostTimer > 0) state.bonusScore += gain;
+  }
 
   const desiredCameraY = p.y - H * CAMERA_FRAC;
   state.cameraY = Math.min(state.cameraY, desiredCameraY);
@@ -261,24 +247,21 @@ export function step(state, dt) {
     }
   }
 
-  for (const en of state.enemies) {
-    if (en.dead) continue;
-    en.x += en.vx * dt;
-    if (en.x < en.originX - en.range || en.x > en.originX + en.range) en.vx *= -1;
-  }
-
   const keptPickups = [];
   for (const pk of state.pickups) {
     if (aabbOverlap(p, pk)) {
       if (pk.kind === "coin") {
-        state.coinScore += state.upgrades.coinValue;
+        // coinScore already carries the full (possibly doubled) amount, so
+        // it doesn't also need a bonusScore addition the way climbing does.
+        const boosted = state.scoreBoostTimer > 0;
+        state.coinScore += state.upgrades.coinValue * (boosted ? 2 : 1);
         state.events.push({ type: "coin" });
       } else if (pk.kind === "jetpack") {
         state.jetpackTimer = state.upgrades.jetpackDuration;
         state.events.push({ type: "jetpack" });
-      } else if (pk.kind === "shield") {
-        state.shieldCharges = state.upgrades.shieldCharges;
-        state.events.push({ type: "shield" });
+      } else if (pk.kind === "scoreBoost") {
+        state.scoreBoostTimer = state.upgrades.scoreBoostDuration;
+        state.events.push({ type: "scoreBoost" });
       }
       continue;
     }
@@ -286,39 +269,21 @@ export function step(state, dt) {
   }
   state.pickups = keptPickups;
 
-  for (const en of state.enemies) {
-    if (en.dead) continue;
-    if (aabbOverlap(p, en)) {
-      if (state.shieldCharges > 0) {
-        state.shieldCharges -= 1;
-        en.dead = true;
-        state.events.push({ type: "shieldBreak" });
-      } else {
-        state.over = true;
-        state.events.push({ type: "crash" });
-        state.score = Math.floor(state.height) + state.coinScore;
-        return { crashed: true };
-      }
-    }
-  }
-
-  // Fallen below the visible bottom of the screen — the one fail state
-  // besides an unshielded enemy hit.
+  // Fallen below the visible bottom of the screen — the one fail state.
   if (p.y - state.cameraY > H + p.h) {
     state.over = true;
     state.events.push({ type: "crash" });
-    state.score = Math.floor(state.height) + state.coinScore;
+    state.score = Math.floor(state.height) + state.coinScore + state.bonusScore;
     return { crashed: true };
   }
 
   const cleanupY = state.cameraY + H + 200;
   state.platforms = state.platforms.filter((pl) => pl.y < cleanupY);
   state.pickups = state.pickups.filter((pk) => pk.y < cleanupY);
-  state.enemies = state.enemies.filter((en) => en.y < cleanupY && !en.dead);
 
   while (state.highestGeneratedY > state.cameraY - 300) spawnRow(state);
 
-  state.score = Math.floor(state.height) + state.coinScore;
+  state.score = Math.floor(state.height) + state.coinScore + state.bonusScore;
   return { crashed: false };
 }
 
@@ -426,45 +391,21 @@ export function draw(ctx, state, logoImg) {
       ctx.beginPath();
       ctx.ellipse(0, pk.h / 2 - 2, 4, 7, 0, 0, Math.PI * 2);
       ctx.fill();
-    } else if (pk.kind === "shield") {
-      ctx.strokeStyle = "rgba(120,190,255,0.9)";
-      ctx.lineWidth = 3;
+    } else if (pk.kind === "scoreBoost") {
+      ctx.fillStyle = "#ffd23f";
       ctx.beginPath();
-      ctx.arc(0, 0, pk.w / 2, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.fillStyle = "rgba(120,190,255,0.2)";
-      ctx.beginPath();
-      ctx.arc(0, 0, pk.w / 2 - 2, 0, Math.PI * 2);
+      const spikes = 5;
+      for (let i = 0; i < spikes * 2; i++) {
+        const a = (i / (spikes * 2)) * Math.PI * 2 - Math.PI / 2;
+        const r = i % 2 === 0 ? pk.w / 2 : pk.w / 4.5;
+        const px = Math.cos(a) * r;
+        const py = Math.sin(a) * r;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
       ctx.fill();
     }
-    ctx.restore();
-  }
-
-  // Enemies
-  for (const en of state.enemies) {
-    if (en.dead) continue;
-    const sy = toScreenY(en.y);
-    if (sy < -30 || sy > H + 30) continue;
-    ctx.save();
-    ctx.translate(en.x, sy);
-    ctx.fillStyle = PINK;
-    ctx.beginPath();
-    const spikes = 8;
-    for (let i = 0; i < spikes; i++) {
-      const a = (i / spikes) * Math.PI * 2;
-      const r = i % 2 === 0 ? en.w / 2 : en.w / 3.2;
-      const px = Math.cos(a) * r;
-      const py = Math.sin(a) * r * (en.h / en.w);
-      if (i === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
-    }
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = "#fff";
-    ctx.beginPath();
-    ctx.arc(-4, -2, 2.4, 0, Math.PI * 2);
-    ctx.arc(4, -2, 2.4, 0, Math.PI * 2);
-    ctx.fill();
     ctx.restore();
   }
 
@@ -485,20 +426,19 @@ export function draw(ctx, state, logoImg) {
     ctx.fill();
   }
 
-  if (state.shieldCharges > 0) {
+  if (state.scoreBoostTimer > 0) {
     ctx.save();
-    ctx.strokeStyle = "rgba(120,190,255,0.85)";
+    const flicker = 0.75 + Math.sin(state.height * 0.4) * 0.25;
+    ctx.strokeStyle = `rgba(255,210,63,${0.8 * flicker})`;
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.arc(p.x, psy, p.w * 0.85, 0, Math.PI * 2);
     ctx.stroke();
-    if (state.shieldCharges > 1) {
-      ctx.fillStyle = "#fff";
-      ctx.font = "800 12px Poppins, sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(String(state.shieldCharges), p.x, psy - p.h * 0.85);
-    }
+    ctx.fillStyle = "#ffd23f";
+    ctx.font = "800 12px Poppins, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("×2", p.x, psy - p.h * 0.85);
     ctx.restore();
   }
 

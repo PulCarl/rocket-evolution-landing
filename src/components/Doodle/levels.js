@@ -4,7 +4,7 @@
 // imported" reasoning as api/leaderboard.js: serverless functions don't
 // bundle src/, so keep the two in sync by hand if this ever changes.
 export const MAX_LEVEL = 3;
-export const BONUS_TYPES = ["jetpack", "shield", "spring", "coinMultiplier"];
+export const BONUS_TYPES = ["jetpack", "scoreBoost", "spring", "coinMultiplier"];
 // Base cost to buy the level named by the key (i.e. LEVEL_UP_COST[2] = cost
 // to go from level 1 to level 2, at rebirth 0). Each rebirth makes every
 // level-up progressively more expensive (see levelUpCost below) — a rebirth
@@ -16,8 +16,8 @@ export function levelUpCost(targetLevel, rebirths = 0) {
   return Math.round(LEVEL_UP_COST[targetLevel] * (1 + Math.max(rebirths || 0, 0)));
 }
 
-export const BONUS_ICONS = { jetpack: "🚀", shield: "🛡️", spring: "🌀", coinMultiplier: "🪙" };
-export const BONUS_LABELS = { jetpack: "Jetpack", shield: "Bouclier", spring: "Ressort", coinMultiplier: "Pièces" };
+export const BONUS_ICONS = { jetpack: "🚀", scoreBoost: "⭐", spring: "🌀", coinMultiplier: "🪙" };
+export const BONUS_LABELS = { jetpack: "Jetpack", scoreBoost: "Score x2", spring: "Ressort", coinMultiplier: "Pièces" };
 
 // `key` is the field name in the `upgrades` object engine.js reads at
 // runtime; `values[level - 1]` is the effect at that level.
@@ -27,10 +27,10 @@ export const LEVEL_EFFECTS = {
     values: [2.2, 3.2, 4.2],
     label: (v) => `${v.toFixed(1)}s de vol`,
   },
-  shield: {
-    key: "shieldCharges",
-    values: [1, 2, 3],
-    label: (v) => `${v} coup${v > 1 ? "s" : ""} absorbé${v > 1 ? "s" : ""}`,
+  scoreBoost: {
+    key: "scoreBoostDuration",
+    values: [2.5, 3.5, 4.5],
+    label: (v) => `${v.toFixed(1)}s à x2`,
   },
   spring: {
     key: "springVelocity",
@@ -45,7 +45,7 @@ export const LEVEL_EFFECTS = {
 };
 
 export function defaultLevels() {
-  return { jetpack: 1, shield: 1, spring: 1, coinMultiplier: 1 };
+  return { jetpack: 1, scoreBoost: 1, spring: 1, coinMultiplier: 1 };
 }
 
 // Rebirth: an unlimited prestige loop, bought (not height-gated) from the
@@ -69,12 +69,11 @@ export function rebirthMultiplier(rebirths) {
 // engine.js's GAME_CONFIG.bounceVelocity.
 const BASE_BOUNCE_VELOCITY = -700;
 
-// Turns { jetpack: 2, shield: 1, ... } + a rebirth count into the flat
+// Turns { jetpack: 2, scoreBoost: 1, ... } + a rebirth count into the flat
 // upgrades object engine.js's createGame() expects (jetpackDuration,
-// shieldCharges, springVelocity, coinValue, bounceVelocity). The rebirth
-// multiplier stacks on top of whatever the coin-bought level already gives
-// for the continuous stats (flight time, bounce power, coin value); shield
-// charges stay level-only since a fractional "hit count" doesn't make sense.
+// scoreBoostDuration, springVelocity, coinValue, bounceVelocity). The
+// rebirth multiplier stacks on top of whatever the coin-bought level
+// already gives, for every continuous stat here.
 export function upgradesFromLevels(levels, rebirths = 0) {
   const lv = levels || defaultLevels();
   const mult = rebirthMultiplier(rebirths);
@@ -82,7 +81,7 @@ export function upgradesFromLevels(levels, rebirths = 0) {
   for (const [bonus, cfg] of Object.entries(LEVEL_EFFECTS)) {
     const level = lv[bonus] || 1;
     let value = cfg.values[Math.min(Math.max(level, 1), MAX_LEVEL) - 1];
-    if (bonus === "jetpack" || bonus === "spring") value *= mult;
+    if (bonus === "jetpack" || bonus === "spring" || bonus === "scoreBoost") value *= mult;
     if (bonus === "coinMultiplier") value = Math.round(value * mult);
     out[cfg.key] = value;
   }
