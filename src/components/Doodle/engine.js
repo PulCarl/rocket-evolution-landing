@@ -273,7 +273,7 @@ export function step(state, dt) {
   if (p.y - state.cameraY > H + p.h) {
     state.over = true;
     state.events.push({ type: "crash" });
-    state.score = Math.floor(state.height) + state.coinScore + state.bonusScore;
+    state.score = Math.floor(state.height) + state.coinScore + Math.floor(state.bonusScore);
     return { crashed: true };
   }
 
@@ -283,7 +283,7 @@ export function step(state, dt) {
 
   while (state.highestGeneratedY > state.cameraY - 300) spawnRow(state);
 
-  state.score = Math.floor(state.height) + state.coinScore + state.bonusScore;
+  state.score = Math.floor(state.height) + state.coinScore + Math.floor(state.bonusScore);
   return { crashed: false };
 }
 
