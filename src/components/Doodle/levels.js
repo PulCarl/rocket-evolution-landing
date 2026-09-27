@@ -65,15 +65,18 @@ export function rebirthMultiplier(rebirths) {
   return 1 + REBIRTH_BONUS_RATE * Math.max(rebirths || 0, 0);
 }
 
-// Base (rebirth 0, level 1) normal-platform bounce — must match
-// engine.js's GAME_CONFIG.bounceVelocity.
+// Base (rebirth 0, level 1) normal-platform bounce and jetpack climb speed —
+// must match engine.js's GAME_CONFIG.bounceVelocity/jetpackSpeed.
 const BASE_BOUNCE_VELOCITY = -700;
+const BASE_JETPACK_SPEED = -450;
 
 // Turns { jetpack: 2, scoreBoost: 1, ... } + a rebirth count into the flat
 // upgrades object engine.js's createGame() expects (jetpackDuration,
-// scoreBoostDuration, springVelocity, coinValue, bounceVelocity). The
-// rebirth multiplier stacks on top of whatever the coin-bought level
-// already gives, for every continuous stat here.
+// jetpackSpeed, scoreBoostDuration, springVelocity, coinValue,
+// bounceVelocity). The rebirth multiplier stacks on top of whatever the
+// coin-bought level already gives, for every continuous stat here — plus
+// bounceVelocity/jetpackSpeed, which aren't level-bought and scale with
+// rebirths alone.
 export function upgradesFromLevels(levels, rebirths = 0) {
   const lv = levels || defaultLevels();
   const mult = rebirthMultiplier(rebirths);
@@ -86,5 +89,6 @@ export function upgradesFromLevels(levels, rebirths = 0) {
     out[cfg.key] = value;
   }
   out.bounceVelocity = BASE_BOUNCE_VELOCITY * mult;
+  out.jetpackSpeed = BASE_JETPACK_SPEED * mult;
   return out;
 }

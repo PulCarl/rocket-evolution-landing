@@ -141,6 +141,7 @@ function spawnRow(state) {
 // "level" maps to these values.
 const DEFAULT_UPGRADES = {
   jetpackDuration: JETPACK_DURATION,
+  jetpackSpeed: JETPACK_SPEED,
   springVelocity: SPRING_V,
   scoreBoostDuration: 2.5,
   coinValue: COIN_VALUE,
@@ -206,7 +207,7 @@ export function step(state, dt) {
 
   if (state.jetpackTimer > 0) {
     state.jetpackTimer = Math.max(0, state.jetpackTimer - dt);
-    p.vy = JETPACK_SPEED;
+    p.vy = state.upgrades.jetpackSpeed;
     p.y += p.vy * dt;
   } else {
     p.vy += GRAVITY * dt;
