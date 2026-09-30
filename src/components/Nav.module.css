@@ -44,6 +44,11 @@
   white-space: nowrap;
 }
 
+.ribbon {
+  flex-shrink: 0;
+  margin-left: 2px;
+}
+
 .nav {
   display: flex;
   align-items: center;

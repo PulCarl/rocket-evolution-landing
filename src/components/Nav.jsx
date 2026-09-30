@@ -1,7 +1,13 @@
 import { useScrolled } from "../hooks/useScrolled.js";
 import { navLinks } from "../data/content.js";
 import logo from "../assets/logo-rocket-evolution.svg";
+import PinkRibbon from "./PinkRibbon.jsx";
 import styles from "./Nav.module.css";
+
+// Octobre Rose (Breast Cancer Awareness Month) runs the whole month of
+// October — the ribbon shows itself during it and disappears on its own
+// after, no manual cleanup needed come November.
+const isPinkOctober = new Date().getMonth() === 9;
 
 export default function Nav() {
   const scrolled = useScrolled(40);
@@ -11,6 +17,7 @@ export default function Nav() {
       <div className={styles.brand}>
         <img src={logo} width="28" height="33" alt="" className={styles.logo} />
         <span className={styles.wordmark}>ROCKET EVOLUTION</span>
+        {isPinkOctober && <PinkRibbon className={styles.ribbon} />}
       </div>
       <nav className={styles.nav}>
         {navLinks.map((link) => (
