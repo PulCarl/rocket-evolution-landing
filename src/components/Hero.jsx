@@ -51,9 +51,9 @@ export default function Hero() {
             Monte en grade. Pas tout seul.
           </Reveal>
           <Reveal as="p" delay={270} className={styles.paragraph}>
-            Rocket Evolution, c'est du coaching communautaire : des reviews de replay, des sessions live et une
-            communauté de joueurs qui progressent ensemble. Tous les rangs, du Bronze au SSL, on t'aide à débloquer
-            ta progression.
+            Rocket Evolution, c'est du coaching communautaire gratuit (reviews de replay en public, sessions live sur
+            le Discord) et du coaching 1 à 1 avec nos coachs quand tu veux aller plus loin. Tous les rangs, du Bronze
+            au SSL.
           </Reveal>
           <Reveal delay={360} className={styles.buttons}>
             <a href="https://discord.gg/6dbDnF3JCy" className={styles.primaryButton}>

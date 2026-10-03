@@ -15,36 +15,38 @@ export const navLinks = [
   { label: "Méthode", href: "#methode" },
   { label: "Coachs", href: "#coachs" },
   { label: "Résultats", href: "#resultats" },
-  { label: "Jeu", href: "#jeu" },
 ];
 
 // Le premier stat (Membres) n'est plus ici : il vient de discordStats.json,
 // mis à jour automatiquement par .github/workflows/sync-discord-stats.yml
 // (API publique des invitations Discord, toutes les 6h). Voir Hero.jsx.
 export const heroStats = [
-  { value: "2", label: "Coachs dédiés", color: "var(--orange-2)" },
+  { value: "3", label: "Coachs dédiés", color: "var(--orange-2)" },
   { value: "2026", label: "Depuis", color: "var(--pink)" },
 ];
 
 export const marqueeItems = ["Replay review", "Sessions live", "Mécaniques", "Game sense", "Rotations", "Mental"];
 
-export const steps = [
+// Les deux façons de profiter du serveur Discord (d'après la vidéo de
+// présentation) : le coaching communautaire gratuit, et le coaching 1 à 1
+// payant avec un coach. `bullets` = liste simple, `steps` = parcours numéroté.
+export const offers = [
   {
-    number: "01",
-    title: "Tu rejoins le Discord",
-    text: "Accès gratuit au serveur, aux salons par rang et aux annonces de sessions. Tu te présentes, tu dis ton rang, on te place.",
+    id: "communautaire",
+    tag: "Coaching communautaire",
+    headline: "0€",
+    title: "Gratuit, du Bronze au SSL",
+    text: "Coach Francky anime le coaching communautaire directement sur le Discord. Tu rejoins, tu regardes, tu participes.",
+    bullets: ["Reviews de replay en public", "Sessions live sur le Discord"],
     hoverColor: "var(--orange)",
   },
   {
-    number: "02",
-    title: "Tu ouvres un ticket",
-    text: "Sur le salon dédié, tu ouvres un ticket : ton rang, ton objectif, tes dispos. C'est le point de départ de ton suivi.",
-    hoverColor: "var(--orange-2)",
-  },
-  {
-    number: "03",
-    title: "Le coach te fixe un rendez-vous",
-    text: "Un coach reprend ton ticket et cale une session avec toi. Le jour J, vous bossez ensemble sur ton jeu, et c'est parti.",
+    id: "un-a-un",
+    tag: "Coaching payant",
+    headline: "1 à 1",
+    title: "Avec ton coach",
+    text: "Un suivi rien que pour toi avec Hidari ou Okami, de l'ouverture du ticket à la séance.",
+    steps: ["Tu ouvres un ticket", "Ton coach fixe le rendez-vous", "Séance en vocal privé"],
     hoverColor: "var(--pink)",
   },
 ];
@@ -53,6 +55,7 @@ export const coaches = [
   {
     id: "hidari",
     name: "Coach Hidari",
+    role: "Coaching 1 à 1",
     greeting: "Bonjour, je suis Coach Hidari.",
     bio: "J'aime Rocket League et surtout aider les joueurs à se développer. Mon objectif est d'aider chacun à comprendre le jeu, corriger ses erreurs et progresser efficacement grâce à une méthode adaptée à tous.",
     gradient: "linear-gradient(180deg, rgba(254,152,12,.09), rgba(255,255,255,.02))",
@@ -70,8 +73,27 @@ export const coaches = [
     photoPosition: "center 60%",
   },
   {
+    // Pas encore de photo ni de bio détaillée : la carte affiche une initiale
+    // à la place de la photo et reste volontairement sobre (seule info connue :
+    // coaching privé en 1 à 1). À compléter quand il y aura une photo + une bio.
+    id: "okami",
+    name: "Coach Okami",
+    role: "Coaching 1 à 1",
+    initial: "O",
+    bio: "Coaching privé en 1 à 1 sur le Discord : tu ouvres un ticket, ton coach fixe le rendez-vous et vous travaillez ton jeu en vocal privé.",
+    gradient: "linear-gradient(180deg, rgba(244,121,28,.1), rgba(255,255,255,.02))",
+    blocks: [
+      {
+        label: "Format",
+        items: ["Coaching privé", "Séance en vocal privé"],
+      },
+    ],
+    link: { label: "Ouvrir un ticket sur le Discord →", href: "https://discord.gg/6dbDnF3JCy" },
+  },
+  {
     id: "francky",
     name: "Coach Francky",
+    role: "Coaching communautaire · gratuit",
     greeting: "Bonjour, je suis Coach Francky.",
     bio: "À 31 ans, j'ai transformé ma passion pour Rocket League en expertise.",
     gradient: "linear-gradient(180deg, rgba(216,34,78,.12), rgba(255,255,255,.02))",
@@ -104,7 +126,7 @@ export const resultsStats = [
   },
   {
     value: "4 500 h",
-    text: "de coaching cumulées entre les deux coachs",
+    text: "de coaching cumulées par Hidari et Francky",
     background: "var(--ink)",
     color: "#fff",
   },

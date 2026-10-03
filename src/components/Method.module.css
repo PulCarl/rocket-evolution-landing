@@ -94,3 +94,60 @@
   color: var(--text-on-light);
 }
 
+
+.tag {
+  display: inline-block;
+  margin-bottom: 18px;
+  padding: 5px 12px;
+  border: 1px solid var(--hover-color);
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--hover-color);
+}
+
+.bullets,
+.steps {
+  list-style: none;
+  margin: 22px 0 0;
+  padding: 0;
+  border-top: 1px solid var(--border-on-light);
+}
+
+.bullets li,
+.steps li {
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border-on-light);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.bullets li::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 12px;
+  border-radius: 50%;
+  background: var(--grad-brand);
+}
+
+.steps {
+  counter-reset: step;
+}
+
+.steps li {
+  counter-increment: step;
+}
+
+.steps li::before {
+  content: counter(step, decimal-leading-zero);
+  display: inline-block;
+  min-width: 34px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--orange-2);
+}

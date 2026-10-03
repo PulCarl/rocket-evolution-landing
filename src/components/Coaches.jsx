@@ -4,6 +4,7 @@ import hidariPhoto from "../assets/images/coaches/hidari.jpg";
 import franckyPhoto from "../assets/images/coaches/francky.jpg";
 import styles from "./Coaches.module.css";
 
+// Un coach sans photo ici (ex. Okami) affiche son initiale à la place.
 const photos = { hidari: hidariPhoto, francky: franckyPhoto };
 
 export default function Coaches() {
@@ -14,7 +15,7 @@ export default function Coaches() {
           <div className={styles.eyebrow}>Les coachs</div>
         </Reveal>
         <Reveal as="h2" delay={90} className={styles.title}>
-          Hidari &amp; Francky
+          Hidari, Okami &amp; Francky
         </Reveal>
         <div className={styles.grid}>
           {coaches.map((coach, i) => (
@@ -25,16 +26,23 @@ export default function Coaches() {
               style={{ background: coach.gradient }}
             >
               <div className={styles.photo}>
-                <img
-                  src={photos[coach.id]}
-                  alt={coach.name}
-                  className={styles.photoImg}
-                  style={{ objectPosition: coach.photoPosition }}
-                />
+                {photos[coach.id] ? (
+                  <img
+                    src={photos[coach.id]}
+                    alt={coach.name}
+                    className={styles.photoImg}
+                    style={{ objectPosition: coach.photoPosition }}
+                  />
+                ) : (
+                  <div className={styles.initial} aria-hidden="true">
+                    {coach.initial}
+                  </div>
+                )}
               </div>
               <div className={styles.body}>
+                <div className={styles.role}>{coach.role}</div>
                 <h3 className={styles.name}>{coach.name}</h3>
-                <p className={styles.greeting}>{coach.greeting}</p>
+                {coach.greeting && <p className={styles.greeting}>{coach.greeting}</p>}
                 <p className={styles.bio}>{coach.bio}</p>
                 <div className={styles.blocks}>
                   {coach.blocks.map((block) => (

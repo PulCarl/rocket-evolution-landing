@@ -1,5 +1,5 @@
 import Reveal from "./Reveal.jsx";
-import { steps } from "../data/content.js";
+import { offers } from "../data/content.js";
 import styles from "./Method.module.css";
 
 export default function Method() {
@@ -10,22 +10,37 @@ export default function Method() {
           <Reveal>
             <div className={styles.eyebrow}>Comment ça marche</div>
             <h2 className={styles.title}>
-              Trois étapes,
+              Deux façons
               <br />
-              zéro blabla
+              de progresser
             </h2>
           </Reveal>
           <Reveal as="p" delay={90} className={styles.intro}>
-            Pas de programme figé. On regarde tes replays, on cible les deux erreurs qui te coûtent le plus de
-            matchs, et on travaille dessus jusqu'à ce que ça rentre.
+            Tu rejoins le Discord, puis tu choisis : le coaching communautaire, gratuit et ouvert à tous les rangs,
+            ou un coaching 1 à 1 avec ton coach.
           </Reveal>
         </div>
         <div className={styles.grid}>
-          {steps.map((step, i) => (
-            <Reveal key={step.number} delay={i * 90} className={styles.card} style={{ "--hover-color": step.hoverColor }}>
-              <div className={styles.number}>{step.number}</div>
-              <h3 className={styles.cardTitle}>{step.title}</h3>
-              <p className={styles.cardText}>{step.text}</p>
+          {offers.map((offer, i) => (
+            <Reveal key={offer.id} delay={i * 90} className={styles.card} style={{ "--hover-color": offer.hoverColor }}>
+              <div className={styles.tag}>{offer.tag}</div>
+              <div className={styles.number}>{offer.headline}</div>
+              <h3 className={styles.cardTitle}>{offer.title}</h3>
+              <p className={styles.cardText}>{offer.text}</p>
+              {offer.bullets && (
+                <ul className={styles.bullets}>
+                  {offer.bullets.map((bullet) => (
+                    <li key={bullet}>{bullet}</li>
+                  ))}
+                </ul>
+              )}
+              {offer.steps && (
+                <ol className={styles.steps}>
+                  {offer.steps.map((step) => (
+                    <li key={step}>{step}</li>
+                  ))}
+                </ol>
+              )}
             </Reveal>
           ))}
         </div>

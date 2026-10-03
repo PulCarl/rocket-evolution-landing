@@ -13,8 +13,8 @@ export default function CtaBlock() {
             Le serveur est ouvert
           </Reveal>
           <Reveal as="p" delay={90} className={styles.paragraph}>
-            Reviews publiques, salons par rang, sessions d'entraînement et recherche de coéquipiers. Gratuit, et tu
-            peux repartir quand tu veux.
+            Coaching communautaire gratuit du Bronze au SSL : reviews de replay en public et sessions live. Envie d'un
+            suivi perso ? Ouvre un ticket pour un coaching 1 à 1.
           </Reveal>
           <Reveal delay={180} className={styles.buttons}>
             <a href="https://discord.gg/6dbDnF3JCy" className={styles.primaryButton}>

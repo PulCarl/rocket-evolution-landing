@@ -7,7 +7,7 @@ export default function Footer() {
       <div className={styles.container}>
         <div className={styles.brand}>
           <span className={styles.wordmark}>ROCKET EVOLUTION</span>
-          <span className={styles.credit}>Hidari — Francky</span>
+          <span className={styles.credit}>Hidari — Okami — Francky</span>
         </div>
         <div className={styles.links}>
           {socialLinks.map((link) => (
