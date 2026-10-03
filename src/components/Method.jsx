@@ -17,14 +17,14 @@ export default function Method() {
           </Reveal>
           <Reveal as="p" delay={90} className={styles.intro}>
             Tu rejoins le Discord, puis tu choisis : le coaching communautaire, gratuit et ouvert à tous les rangs,
-            ou un coaching 1 à 1 avec ton coach.
+            ou un suivi personnalisé.
           </Reveal>
         </div>
         <div className={styles.grid}>
           {offers.map((offer, i) => (
             <Reveal key={offer.id} delay={i * 90} className={styles.card} style={{ "--hover-color": offer.hoverColor }}>
               <div className={styles.tag}>{offer.tag}</div>
-              <div className={styles.number}>{offer.headline}</div>
+              <div className={`${styles.number} ${offer.textHeadline ? styles.numberText : ""}`}>{offer.headline}</div>
               <h3 className={styles.cardTitle}>{offer.title}</h3>
               <p className={styles.cardText}>{offer.text}</p>
               {offer.bullets && (

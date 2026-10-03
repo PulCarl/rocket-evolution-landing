@@ -43,9 +43,10 @@ export const offers = [
   {
     id: "un-a-un",
     tag: "Coaching payant",
-    headline: "1 à 1",
-    title: "Avec ton coach",
-    text: "Un suivi rien que pour toi avec Hidari ou Okami, de l'ouverture du ticket à la séance.",
+    headline: "Suivi personnalisé",
+    textHeadline: true,
+    title: "Avec Hidari ou Okami",
+    text: "Un coach rien que pour toi, de l'ouverture du ticket à la séance.",
     steps: ["Tu ouvres un ticket", "Ton coach fixe le rendez-vous", "Séance en vocal privé"],
     hoverColor: "var(--pink)",
   },

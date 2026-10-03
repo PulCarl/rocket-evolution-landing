@@ -151,3 +151,12 @@
   font-weight: 800;
   color: var(--orange-2);
 }
+
+/* A worded headline ("Suivi personnalisé") instead of a short figure like
+   "0€" — smaller so it fits on one line on desktop and wraps cleanly on
+   narrow screens. */
+.numberText {
+  font-size: clamp(28px, 3.4vw, 40px);
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
