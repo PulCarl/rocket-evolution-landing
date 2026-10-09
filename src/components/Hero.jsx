@@ -1,6 +1,7 @@
 import { Suspense, lazy } from "react";
 import Reveal from "./Reveal.jsx";
 import CountUp from "./CountUp.jsx";
+import LiveBanner from "./LiveBanner.jsx";
 import { useMediaQuery } from "../hooks/useMediaQuery.js";
 import { heroStats } from "../data/content.js";
 import discordStats from "../data/discordStats.json";
@@ -24,6 +25,7 @@ export default function Hero() {
       <div className={styles.arenaGlow} aria-hidden="true" />
       <div className={styles.grid}>
         <div className={styles.textCol}>
+          <LiveBanner />
           <Reveal className={styles.badge}>
             <svg
               className={styles.badgeIcon}

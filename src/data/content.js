@@ -8,6 +8,7 @@ export const socialLinks = [
   { id: "discord", label: "Discord", href: "https://discord.gg/6dbDnF3JCy", hoverBg: "#FE980C" },
   { id: "youtube", label: "YouTube", href: "https://www.youtube.com/@RocketEvoRL", hoverBg: "#F4791C" },
   { id: "tiktok", label: "TikTok", href: "https://www.tiktok.com/@rocketevolutionrl", hoverBg: "#D8224E" },
+  { id: "twitch", label: "Twitch", href: "https://www.twitch.tv/okamylive", hoverBg: "#9146FF" },
   { id: "x", label: "X", href: "https://x.com/Coach_Hidari", hoverBg: "#FFFFFF" },
 ];
 
@@ -76,7 +77,8 @@ export const coaches = [
   {
     // Pas encore de photo ni de bio détaillée : la carte affiche une initiale
     // à la place de la photo et reste volontairement sobre (seule info connue :
-    // coaching privé en 1 à 1). À compléter quand il y aura une photo + une bio.
+    // coaching privé en 1 à 1, + sa chaîne Twitch). À compléter quand il y aura
+    // une photo + une bio.
     id: "okami",
     name: "Coach Okami",
     role: "Coaching 1 à 1",
@@ -89,7 +91,7 @@ export const coaches = [
         items: ["Coaching privé", "Séance en vocal privé"],
       },
     ],
-    link: { label: "Ouvrir un ticket sur le Discord →", href: "https://discord.gg/6dbDnF3JCy" },
+    link: { label: "@okamylive →", href: "https://www.twitch.tv/okamylive" },
   },
   {
     id: "francky",

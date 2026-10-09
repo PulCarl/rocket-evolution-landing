@@ -11,6 +11,7 @@ En quelques mots, sans jargon technique :
 - **Page d'accueil** : présentation rapide des deux formules (coaching communautaire gratuit, coaching 1 à 1), un gros bouton pour rejoindre le Discord, et le nombre de membres Discord affiché — mis à jour tout seul, sans qu'on ait à y toucher.
 - **Témoignages** : des avis de membres qui ont progressé (ex. "Or 3 → Platine 2"). Un membre poste son avis dans un salon Discord, un coach valide d'un ✅, et il apparaît automatiquement sur le site.
 - **Dernières vidéos** : les 3 dernières vidéos YouTube de la chaîne, toujours à jour toutes seules.
+- **Live Twitch** : quand la chaîne Twitch d'Okami (`okamylive`) est en direct, un bandeau "En live" apparaît tout en haut de la page d'accueil, avec le titre du stream et le nombre de spectateurs ; il disparaît tout seul à la fin du live (vérifié toutes les 1 à 2 minutes). Il faut pour ça deux variables sur Vercel, `TWITCH_CLIENT_ID` et `TWITCH_CLIENT_SECRET` (application gratuite à créer sur https://dev.twitch.tv/console/apps) — sans elles, le bandeau ne s'affiche simplement jamais.
 - Le site s'affiche bien aussi bien sur ordinateur que sur téléphone.
 
 Rien n'est fait à la main au quotidien : les membres, les avis et les vidéos se mettent à jour tout seuls — la seule chose qui reste manuelle, c'est la validation des avis par un coach.
