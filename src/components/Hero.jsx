@@ -27,7 +27,6 @@ export default function Hero() {
       <div className={styles.grid}>
         <div className={styles.textCol}>
           <LiveBanner />
-          <Reveal className="pill-tag">Coaching Rocket League · France</Reveal>
           <Reveal as="h1" delay={90} className={styles.title}>
             Coaching
             <br />
@@ -44,16 +43,14 @@ export default function Hero() {
             Monte en grade. Pas tout seul.
           </Reveal>
           <Reveal as="p" delay={270} className={styles.paragraph}>
-            Rocket Evolution, c'est du coaching communautaire gratuit (reviews de replay en public, sessions live sur
-            le Discord) et du coaching 1 à 1 avec nos coachs quand tu veux aller plus loin. Tous les rangs, du Bronze
-            au SSL.
+            Reviews de replay et sessions live gratuites. Suivi personnalisé en option. Du Bronze au SSL.
           </Reveal>
           <Reveal delay={360} className={styles.buttons}>
             <a href="https://discord.gg/6dbDnF3JCy" className={styles.primaryButton}>
-              Rejoindre la communauté →
+              Rejoindre le Discord →
             </a>
             <a href="https://www.youtube.com/@RocketEvoRL" className={styles.secondaryButton}>
-              Voir la chaîne YouTube
+              Chaîne YouTube
             </a>
           </Reveal>
           <Reveal delay={360} className={styles.stats}>
