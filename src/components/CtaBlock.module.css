@@ -9,7 +9,8 @@
   margin: 0 auto;
   border-radius: 32px;
   padding: clamp(48px, 7vw, 88px) clamp(32px, 6vw, 72px);
-  background: var(--grad-brand-cta);
+  background: radial-gradient(circle at 100% 100%, rgba(216, 34, 78, 0.95), rgba(216, 34, 78, 0) 52%),
+    linear-gradient(135deg, var(--orange), var(--orange-2));
   position: relative;
   overflow: hidden;
 }
@@ -53,14 +54,14 @@
   letter-spacing: -0.03em;
   text-transform: uppercase;
   margin: 0 0 20px;
-  color: #fff;
+  color: var(--ink);
 }
 
 .paragraph {
   margin: 0 0 34px;
   font-size: 16px;
   line-height: 1.7;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--ink);
   max-width: 520px;
 }
 
@@ -93,14 +94,14 @@
 }
 
 .secondaryButton {
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  color: #fff;
+  border: 2px solid var(--ink);
+  color: var(--ink);
 }
 
 .secondaryButton:hover {
-  color: var(--ink);
-  background: #fff;
-  border-color: #fff;
+  color: #fff;
+  background: var(--ink);
+  border-color: var(--ink);
   transform: translateY(-2px) scale(1.02);
 }
 

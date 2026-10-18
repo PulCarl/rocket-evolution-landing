@@ -93,10 +93,10 @@
   padding: 5px 12px;
   border: 1px solid var(--hover-color);
   border-radius: 999px;
-  font-size: 11px;
-  letter-spacing: 0.12em;
+  font-size: 12px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--hover-color);
+  color: var(--ink);
 }
 
 .bullets,
@@ -141,7 +141,7 @@
   min-width: 34px;
   font-family: var(--font-display);
   font-weight: 800;
-  color: var(--orange-2);
+  color: var(--pink);
 }
 
 /* A worded headline ("Suivi personnalisé") instead of a short figure like

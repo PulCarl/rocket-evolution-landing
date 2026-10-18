@@ -47,7 +47,6 @@
   font-size: 13px;
   line-height: 1.6;
   margin-top: 10px;
-  opacity: 0.92;
 }
 
 .statCardOutline .statText {
@@ -76,5 +75,5 @@
   font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(29, 29, 29, 0.5);
+  color: var(--text-on-light);
 }

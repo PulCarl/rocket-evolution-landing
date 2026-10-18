@@ -12,7 +12,7 @@ import styles from "./Hero.module.css";
 const FennecCar3D = lazy(() => import("./FennecCar3D.jsx"));
 
 const allStats = [
-  { value: String(discordStats.memberCount), label: "Membres Discord", color: "var(--orange)" },
+  { value: String(discordStats.memberCount), label: "Membres Discord" },
   ...heroStats,
 ];
 
@@ -59,7 +59,7 @@ export default function Hero() {
           <Reveal delay={360} className={styles.stats}>
             {allStats.map((stat) => (
               <div key={stat.label}>
-                <div className={styles.statValue} style={{ color: stat.color }}>
+                <div className={styles.statValue}>
                   <CountUp value={stat.value} />
                 </div>
                 <div className={styles.statLabel}>{stat.label}</div>

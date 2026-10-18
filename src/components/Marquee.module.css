@@ -2,8 +2,8 @@
    of a flat color smear. */
 .wrapper {
   overflow: hidden;
-  background: repeating-linear-gradient(120deg, rgba(255, 255, 255, 0.1) 0 3px, transparent 3px 34px),
-    linear-gradient(90deg, #fe980c, #f4791c 50%, #d8224e);
+  background: repeating-linear-gradient(120deg, rgba(255, 255, 255, 0.16) 0 3px, transparent 3px 34px),
+    linear-gradient(90deg, var(--orange), var(--orange-2));
   padding: 14px 0;
 }
 
@@ -38,6 +38,6 @@
   font-size: 15px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #fff;
+  color: var(--ink);
   white-space: nowrap;
 }

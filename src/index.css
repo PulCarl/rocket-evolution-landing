@@ -10,7 +10,7 @@
   --grad-card-2: linear-gradient(135deg, #f4791c, #d8224e);
 
   --text-on-dark: rgba(255, 255, 255, 0.66);
-  --text-on-light: rgba(29, 29, 29, 0.62);
+  --text-on-light: rgba(29, 29, 29, 0.7);
   --border-on-dark: rgba(255, 255, 255, 0.12);
   --border-on-light: rgba(29, 29, 29, 0.12);
 
@@ -21,6 +21,15 @@
   --font-body: "Azeret Mono", monospace;
 
   --container: 1200px;
+}
+
+/* La barre de réseaux flottante occupe la marge de droite : sous ~1370px on
+   resserre le conteneur (symétriquement) pour qu'elle ne recouvre jamais le
+   contenu. En dessous de 900px elle passe en bas de l'écran. */
+@media (min-width: 901px) {
+  :root {
+    --container: min(1200px, calc(100vw - 170px));
+  }
 }
 
 * {
@@ -104,9 +113,9 @@ img {
   border-radius: 999px;
   background: linear-gradient(90deg, var(--orange), var(--orange-2));
   box-shadow: 0 4px 0 rgba(29, 29, 29, 0.16);
-  color: #fff;
+  color: var(--ink);
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.06em;
   line-height: 1.2;
   text-transform: uppercase;
@@ -126,4 +135,22 @@ summary,
 select,
 label[for] {
   cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fe980c'/%3E%3Cstop offset='1' stop-color='%23d8224e'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M4 3 L4 22 L9.2 17.3 L12.6 25 L16.4 23.3 L13 15.8 L20 15.6 Z' fill='url(%23g)' stroke='%23fff' stroke-width='1.8' stroke-linejoin='round'/%3E%3C/svg%3E") 4 3, pointer;
+}
+
+/* Lien d'évitement : invisible, apparaît au premier Tab pour sauter le menu. */
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -80px;
+  z-index: 400;
+  padding: 12px 20px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 13px;
+}
+
+.skip-link:focus {
+  top: 12px;
+  color: #fff;
 }

@@ -16,10 +16,13 @@ import styles from "./App.module.css";
 export default function App() {
   return (
     <div className={styles.page}>
+      <a href="#main" className="skip-link">
+        Aller au contenu
+      </a>
       <Preloader />
       <SocialRail />
       <Nav />
-      <main>
+      <main id="main">
         <Hero />
         <Marquee />
         <Method />

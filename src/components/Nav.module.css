@@ -56,7 +56,7 @@
 }
 
 .navLink {
-  padding: 10px 16px;
+  padding: 13px 16px;
   border-radius: 999px;
   color: rgba(255, 255, 255, 0.72);
   transition: color 0.2s ease, background-color 0.2s ease;
@@ -72,19 +72,19 @@
   align-items: center;
   white-space: nowrap;
   margin-left: 10px;
-  padding: 11px 22px;
+  padding: 14px 22px;
   border-radius: 999px;
-  background: var(--grad-brand);
-  color: #fff;
+  background: linear-gradient(90deg, var(--orange), var(--orange-2));
+  color: var(--ink);
   font-weight: 700;
   letter-spacing: 0.06em;
   transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 0.25s ease;
 }
 
 .cta:hover {
-  color: #fff;
+  color: var(--ink);
   transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 8px 20px rgba(216, 34, 78, 0.45);
+  box-shadow: 0 8px 20px rgba(254, 152, 12, 0.45);
 }
 
 .cta:active {
@@ -102,9 +102,13 @@
 }
 
 @media (max-width: 480px) {
+  .header {
+    padding: 8px 10px 8px 16px;
+  }
+
   .cta {
-    padding: 10px 16px;
-    font-size: 11px;
+    padding: 13px 16px;
+    font-size: 12px;
   }
 }
 

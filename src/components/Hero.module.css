@@ -56,7 +56,7 @@
   margin: 0 0 26px;
   padding: 6px 30px 6px 6px;
   border-radius: 999px;
-  background: var(--grad-brand);
+  background: var(--pink);
   box-shadow: 0 6px 0 rgba(29, 29, 29, 0.14);
   color: #fff;
   font-family: var(--font-display);
@@ -107,13 +107,13 @@
 }
 
 .primaryButton {
-  background: var(--grad-brand);
-  color: #fff;
+  background: linear-gradient(90deg, var(--orange), var(--orange-2));
+  color: var(--ink);
   box-shadow: 0 6px 0 rgba(29, 29, 29, 0.14);
 }
 
 .primaryButton:hover {
-  color: #fff;
+  color: var(--ink);
   transform: translateY(-2px);
 }
 
@@ -141,11 +141,12 @@
   font-family: var(--font-display);
   font-size: 30px;
   line-height: 1;
+  color: var(--ink);
 }
 
 .statLabel {
-  font-size: 11px;
-  letter-spacing: 0.1em;
+  font-size: 12px;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-on-light);
   margin-top: 8px;

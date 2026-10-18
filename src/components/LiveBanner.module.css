@@ -27,9 +27,9 @@
   gap: 8px;
   padding: 6px 12px;
   border-radius: 999px;
-  background: #e91916;
+  background: #d4140f;
   color: #fff;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -67,8 +67,8 @@
 }
 
 .meta {
-  font-size: 11px;
-  color: rgba(29, 29, 29, 0.5);
+  font-size: 12px;
+  color: var(--text-on-light);
 }
 
 .cta {

@@ -22,8 +22,8 @@ export const navLinks = [
 // mis à jour automatiquement par .github/workflows/sync-discord-stats.yml
 // (API publique des invitations Discord, toutes les 6h). Voir Hero.jsx.
 export const heroStats = [
-  { value: "3", label: "Coachs dédiés", color: "var(--orange-2)" },
-  { value: "2026", label: "Depuis", color: "var(--pink)" },
+  { value: "3", label: "Coachs dédiés" },
+  { value: "2026", label: "Depuis" },
 ];
 
 export const marqueeItems = ["Replay review", "Sessions live", "Mécaniques", "Game sense", "Rotations", "Mental"];
@@ -118,13 +118,13 @@ export const resultsStats = [
   {
     value: "+1",
     text: "rang gagné minimum, souvent un nouveau peak, pour chaque joueur suivi régulièrement",
-    background: "var(--grad-card-1)",
-    color: "#fff",
+    background: "var(--orange)",
+    color: "var(--ink)",
   },
   {
     value: "50+",
     text: "replays analysés depuis l'ouverture du serveur",
-    background: "var(--grad-card-2)",
+    background: "var(--pink)",
     color: "#fff",
   },
   {
