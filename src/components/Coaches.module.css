@@ -10,14 +10,6 @@
   margin: 0 auto;
 }
 
-.eyebrow {
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--orange);
-  margin-bottom: 14px;
-}
-
 .title {
   font-family: var(--font-display);
   font-weight: 800;

@@ -11,18 +11,15 @@
   gap: 24px;
   padding: 10px 12px 10px 20px;
   border-radius: 999px;
-  background: rgba(29, 29, 29, 0.62);
-  backdrop-filter: blur(18px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.38);
+  background: var(--ink);
+  box-shadow: 0 12px 30px rgba(29, 29, 29, 0.28);
   transition: width 0.35s cubic-bezier(0.2, 0.7, 0.3, 1), background-color 0.3s ease, box-shadow 0.3s ease, top 0.3s ease;
 }
 
 .header.scrolled {
   width: min(980px, calc(100% - 36px));
   top: 12px;
-  background: rgba(29, 29, 29, 0.82);
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 26px rgba(29, 29, 29, 0.34);
 }
 
 .brand {
@@ -38,8 +35,8 @@
 .wordmark {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 16px;
-  letter-spacing: -0.02em;
+  font-size: 14px;
+  letter-spacing: 0;
   color: #fff;
   white-space: nowrap;
 }
@@ -73,6 +70,7 @@
 .cta {
   display: inline-flex;
   align-items: center;
+  white-space: nowrap;
   margin-left: 10px;
   padding: 11px 22px;
   border-radius: 999px;
@@ -110,7 +108,7 @@
   }
 }
 
-@media (max-width: 380px) {
+@media (max-width: 470px) {
   .wordmark {
     display: none;
   }

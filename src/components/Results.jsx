@@ -9,7 +9,7 @@ export default function Results() {
     <section id="resultats" data-bg="light" className={styles.section}>
       <div className={styles.container}>
         <Reveal>
-          <div className={styles.eyebrow}>Résultats</div>
+          <div className="pill-tag">Résultats</div>
         </Reveal>
         <Reveal as="h2" delay={90} className={styles.title}>
           Ce que ça donne

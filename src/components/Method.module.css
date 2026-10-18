@@ -21,14 +21,6 @@
   margin-bottom: 56px;
 }
 
-.eyebrow {
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--pink);
-  margin-bottom: 14px;
-}
-
 .title {
   font-family: var(--font-display);
   font-weight: 800;

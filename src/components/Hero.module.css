@@ -1,32 +1,18 @@
+/* Accueil clair, comme les bannières de la charte : fond blanc/gris pâle et
+   grandes courbes orange→rouge, le noir réservé aux contrastes. */
 .hero {
   position: relative;
-  padding: 150px 20px 80px;
+  padding: 150px 20px 90px;
   overflow: hidden;
+  background: linear-gradient(180deg, #ececec 0%, #f7f7f7 55%, #ffffff 100%);
+  color: var(--ink);
 }
 
-/* Arena-floor grid instead of a generic gradient blob — same motif as the
-   mini-game's scrolling floor ticks, so the hero reads as a Rocket League
-   arena rather than a stock SaaS background. */
-.arenaGrid {
+.arcs {
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  background-size: 56px 56px;
-  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, black 40%, transparent 85%);
-  mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, black 40%, transparent 85%);
-  pointer-events: none;
-}
-
-/* One directional glow behind the car, like a stadium light rig, instead of
-   two symmetric floating color circles. */
-.arenaGlow {
-  position: absolute;
-  top: -200px;
-  right: -220px;
-  width: 720px;
-  height: 560px;
-  background: radial-gradient(ellipse, rgba(254, 152, 12, 0.3), rgba(216, 34, 78, 0.12) 55%, transparent 75%);
+  width: 100%;
+  height: 100%;
   pointer-events: none;
 }
 
@@ -40,59 +26,55 @@
   align-items: center;
 }
 
-/* Angled tag instead of a soft rounded pill — reads closer to an in-game
-   rank/HUD chip than a generic SaaS badge. */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 20px 9px 16px;
-  border: 1px solid rgba(254, 152, 12, 0.5);
-  background: linear-gradient(90deg, rgba(254, 152, 12, 0.14), transparent 80%);
-  clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--orange);
-  margin-bottom: 28px;
-}
-
-.badgeIcon {
-  flex: none;
-  filter: drop-shadow(0 0 6px rgba(254, 152, 12, 0.7));
-}
-
 .textCol {
   container-type: inline-size;
 }
 
 .title {
   font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(32px, 11cqi, 92px);
-  line-height: 0.94;
-  letter-spacing: -0.035em;
-  margin: 0 0 24px;
+  font-size: clamp(30px, 8.6cqi, 76px);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  margin: 0 0 26px;
   text-transform: uppercase;
   text-wrap: balance;
-  overflow-wrap: break-word;
 }
 
 .gradientText {
+  white-space: nowrap;
   background: var(--grad-brand);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
+/* Bandeau-pilule des miniatures : dégradé de marque, logo dans un rond blanc. */
 .slogan {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  margin: 0 0 26px;
+  padding: 6px 30px 6px 6px;
+  border-radius: 999px;
+  background: var(--grad-brand);
+  box-shadow: 0 6px 0 rgba(29, 29, 29, 0.14);
+  color: #fff;
   font-family: var(--font-display);
-  font-weight: 700;
-  font-size: clamp(18px, 2vw, 24px);
-  letter-spacing: -0.01em;
+  font-size: clamp(12px, 1.35vw, 17px);
+  line-height: 1.25;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0 0 22px;
+  text-wrap: balance;
+}
+
+.sloganLogo {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-right: 16px;
+  border-radius: 50%;
+  background: #fff;
 }
 
 .paragraph {
@@ -100,7 +82,7 @@
   margin: 0 0 36px;
   font-size: 16px;
   line-height: 1.7;
-  color: rgba(255, 255, 255, 0.66);
+  color: var(--text-on-light);
   text-wrap: pretty;
 }
 
@@ -127,23 +109,23 @@
 .primaryButton {
   background: var(--grad-brand);
   color: #fff;
+  box-shadow: 0 6px 0 rgba(29, 29, 29, 0.14);
 }
 
 .primaryButton:hover {
   color: #fff;
-  opacity: 0.9;
-  transform: translateY(-2px) scale(1.02);
+  transform: translateY(-2px);
 }
 
 .secondaryButton {
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  color: #fff;
+  border: 2px solid var(--ink);
+  color: var(--ink);
 }
 
 .secondaryButton:hover {
-  color: var(--orange);
-  border-color: var(--orange);
-  transform: translateY(-2px) scale(1.02);
+  color: var(--pink);
+  border-color: var(--pink);
+  transform: translateY(-2px);
 }
 
 .stats {
@@ -151,14 +133,13 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
   max-width: 520px;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 2px solid var(--ink);
   padding-top: 24px;
 }
 
 .statValue {
   font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 32px;
+  font-size: 30px;
   line-height: 1;
 }
 
@@ -166,8 +147,8 @@
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
-  margin-top: 6px;
+  color: var(--text-on-light);
+  margin-top: 8px;
 }
 
 .visual {
@@ -177,8 +158,23 @@
   align-items: center;
 }
 
+/* Tablette : la colonne de texte est étroite, on pousse les courbes vers la
+   droite pour qu'elles ne passent pas derrière le paragraphe. */
+@media (min-width: 781px) and (max-width: 1000px) {
+  .arcs {
+    transform: translateX(16%);
+  }
+}
+
 @media (max-width: 780px) {
   .visual {
     display: none;
+  }
+
+  .arcs {
+    height: 620px;
+    opacity: 0.2;
+    -webkit-mask-image: linear-gradient(#000 45%, transparent);
+    mask-image: linear-gradient(#000 45%, transparent);
   }
 }

@@ -2,9 +2,11 @@ import { Suspense, lazy } from "react";
 import Reveal from "./Reveal.jsx";
 import CountUp from "./CountUp.jsx";
 import LiveBanner from "./LiveBanner.jsx";
+import HeroArcs from "./HeroArcs.jsx";
 import { useMediaQuery } from "../hooks/useMediaQuery.js";
 import { heroStats } from "../data/content.js";
 import discordStats from "../data/discordStats.json";
+import logo from "../assets/logo-rocket-evolution.svg";
 import styles from "./Hero.module.css";
 
 const FennecCar3D = lazy(() => import("./FennecCar3D.jsx"));
@@ -20,36 +22,25 @@ export default function Hero() {
   const showVisual = useMediaQuery("(min-width: 780px)");
 
   return (
-    <section className={styles.hero}>
-      <div className={styles.arenaGrid} aria-hidden="true" />
-      <div className={styles.arenaGlow} aria-hidden="true" />
+    <section data-bg="light" className={styles.hero}>
+      <HeroArcs />
       <div className={styles.grid}>
         <div className={styles.textCol}>
           <LiveBanner />
-          <Reveal className={styles.badge}>
-            <svg
-              className={styles.badgeIcon}
-              width="11"
-              height="11"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <polyline points="4 2 14 12 4 22" />
-              <polyline points="12 2 22 12 12 22" opacity="0.5" />
-            </svg>
-            Coaching Rocket League · France
-          </Reveal>
+          <Reveal className="pill-tag">Coaching Rocket League · France</Reveal>
           <Reveal as="h1" delay={90} className={styles.title}>
-            Coaching <span className={styles.gradientText}>Rocket League</span>
+            Coaching
+            <br />
+            <span className={styles.gradientText}>Rocket League</span>
             <br />
             communautaire
           </Reveal>
+          {/* Même lockup que les miniatures YouTube : bandeau dégradé en pilule,
+              logo dans un rond blanc à gauche. */}
           <Reveal delay={180} className={styles.slogan}>
+            <span className={styles.sloganLogo}>
+              <img src={logo} alt="" width="22" height="26" />
+            </span>
             Monte en grade. Pas tout seul.
           </Reveal>
           <Reveal as="p" delay={270} className={styles.paragraph}>

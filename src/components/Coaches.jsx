@@ -12,7 +12,7 @@ export default function Coaches() {
     <section id="coachs" data-bg="dark" className={styles.section}>
       <div className={styles.container}>
         <Reveal>
-          <div className={styles.eyebrow}>Les coachs</div>
+          <div className="pill-tag">Les coachs</div>
         </Reveal>
         <Reveal as="h2" delay={90} className={styles.title}>
           Hidari, Okami &amp; Francky

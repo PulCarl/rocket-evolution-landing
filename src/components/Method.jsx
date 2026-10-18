@@ -8,7 +8,7 @@ export default function Method() {
       <div className={styles.container}>
         <div className={styles.head}>
           <Reveal>
-            <div className={styles.eyebrow}>Comment ça marche</div>
+            <div className="pill-tag">Comment ça marche</div>
             <h2 className={styles.title}>
               Deux façons
               <br />

@@ -14,7 +14,10 @@
   --border-on-dark: rgba(255, 255, 255, 0.12);
   --border-on-light: rgba(29, 29, 29, 0.12);
 
-  --font-display: "Poppins", sans-serif;
+  /* Police de titres de la charte graphique. Une seule graisse existe (400) :
+     les font-weight 700/800 des composants ne doivent surtout pas la mettre en
+     faux-gras, d'où font-synthesis: none plus bas. */
+  --font-display: "BBH Hegarty", "Arial Black", sans-serif;
   --font-body: "Azeret Mono", monospace;
 
   --container: 1200px;
@@ -26,6 +29,7 @@
 
 html {
   scroll-behavior: smooth;
+  font-synthesis: none;
 }
 
 html,
@@ -88,4 +92,22 @@ img {
     opacity: 1;
     transform: none;
   }
+}
+
+/* Étiquette en pilule des miniatures YouTube (« APPRENDRE », « NOUVELLE
+   MÉTHODE ») : remplace les petits libellés mono au-dessus des titres. */
+.pill-tag {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 18px;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--orange), var(--orange-2));
+  box-shadow: 0 4px 0 rgba(29, 29, 29, 0.16);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  text-transform: uppercase;
 }

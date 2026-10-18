@@ -7,14 +7,15 @@
   padding: 12px 14px 12px 16px;
   border: 1px solid rgba(145, 70, 255, 0.55);
   border-radius: 16px;
-  background: linear-gradient(90deg, rgba(145, 70, 255, 0.2), rgba(145, 70, 255, 0.06));
-  color: #fff;
+  background: #fff;
+  box-shadow: 0 6px 0 rgba(145, 70, 255, 0.22);
+  color: var(--ink);
   animation: bannerIn 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) both;
   transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.3, 1), border-color 0.25s ease;
 }
 
 .banner:hover {
-  color: #fff;
+  color: var(--ink);
   transform: translateY(-2px);
   border-color: rgba(145, 70, 255, 0.95);
 }
@@ -27,6 +28,7 @@
   padding: 6px 12px;
   border-radius: 999px;
   background: #e91916;
+  color: #fff;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -61,12 +63,12 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.72);
+  color: var(--text-on-light);
 }
 
 .meta {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(29, 29, 29, 0.5);
 }
 
 .cta {
@@ -74,6 +76,7 @@
   padding: 9px 16px;
   border-radius: 999px;
   background: #9146ff;
+  color: #fff;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
