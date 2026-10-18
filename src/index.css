@@ -111,3 +111,19 @@ img {
   line-height: 1.2;
   text-transform: uppercase;
 }
+
+/* Curseurs de marque, rendus par le navigateur (aucun JS, aucun retard) : flèche
+   noire à contour blanc, et la même en dégradé orange→rouge sur ce qui se clique.
+   Remplace l'ancien point + anneau qui traînait derrière la souris. */
+html {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpath d='M4 3 L4 22 L9.2 17.3 L12.6 25 L16.4 23.3 L13 15.8 L20 15.6 Z' fill='%231d1d1d' stroke='%23fff' stroke-width='1.8' stroke-linejoin='round'/%3E%3C/svg%3E") 4 3, auto;
+}
+
+a,
+button,
+[role="button"],
+summary,
+select,
+label[for] {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fe980c'/%3E%3Cstop offset='1' stop-color='%23d8224e'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M4 3 L4 22 L9.2 17.3 L12.6 25 L16.4 23.3 L13 15.8 L20 15.6 Z' fill='url(%23g)' stroke='%23fff' stroke-width='1.8' stroke-linejoin='round'/%3E%3C/svg%3E") 4 3, pointer;
+}

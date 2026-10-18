@@ -1,6 +1,5 @@
 import { Analytics } from "@vercel/analytics/react";
 import Preloader from "./components/Preloader.jsx";
-import CustomCursor from "./components/CustomCursor.jsx";
 import SocialRail from "./components/SocialRail.jsx";
 import Nav from "./components/Nav.jsx";
 import Hero from "./components/Hero.jsx";
@@ -18,7 +17,6 @@ export default function App() {
   return (
     <div className={styles.page}>
       <Preloader />
-      <CustomCursor />
       <SocialRail />
       <Nav />
       <main>
